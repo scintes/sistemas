@@ -296,6 +296,22 @@ class choja_mantenimientos_view extends choja_mantenimientos {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanView()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("hoja_mantenimientoslist.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("hoja_mantenimientoslist.php"));
+		}
 
 		// Get export parameters
 		$custom = "";
@@ -539,12 +555,12 @@ class choja_mantenimientos_view extends choja_mantenimientos {
 		// Edit
 		$item = &$option->Add("edit");
 		$item->Body = "<a class=\"ewAction ewEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewPageEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewPageEditLink")) . "\" href=\"" . ew_HtmlEncode($this->EditUrl) . "\">" . $Language->Phrase("ViewPageEditLink") . "</a>";
-		$item->Visible = ($this->EditUrl <> "" && $Security->CanEdit());
+		$item->Visible = ($this->EditUrl <> "" && $Security->CanEdit()&& $this->ShowOptionLink('edit'));
 
 		// Delete
 		$item = &$option->Add("delete");
 		$item->Body = "<a class=\"ewAction ewDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("ViewPageDeleteLink") . "</a>";
-		$item->Visible = ($this->DeleteUrl <> "" && $Security->CanDelete());
+		$item->Visible = ($this->DeleteUrl <> "" && $Security->CanDelete() && $this->ShowOptionLink('delete'));
 		$option = &$options["detail"];
 		$DetailTableLink = "";
 		$DetailViewTblVar = "";
@@ -731,6 +747,7 @@ class choja_mantenimientos_view extends choja_mantenimientos {
 		} else {
 			$this->id_tipo_mantenimiento->VirtualValue = ""; // Clear value
 		}
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 		if (!isset($GLOBALS["gastos_mantenimientos_grid"])) $GLOBALS["gastos_mantenimientos_grid"] = new cgastos_mantenimientos_grid;
 		$sDetailFilter = $GLOBALS["gastos_mantenimientos"]->SqlDetailFilter_hoja_mantenimientos();
 		$sDetailFilter = str_replace("@id_hoja_mantenimeinto@", ew_AdjustSql($this->codigo->DbValue), $sDetailFilter);
@@ -749,6 +766,7 @@ class choja_mantenimientos_view extends choja_mantenimientos {
 		$this->id_vehiculo->DbValue = $row['id_vehiculo'];
 		$this->id_taller->DbValue = $row['id_taller'];
 		$this->id_tipo_mantenimiento->DbValue = $row['id_tipo_mantenimiento'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Render row values based on field settings
@@ -774,6 +792,7 @@ class choja_mantenimientos_view extends choja_mantenimientos {
 		// id_vehiculo
 		// id_taller
 		// id_tipo_mantenimiento
+		// id_usuario
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -1068,6 +1087,14 @@ class choja_mantenimientos_view extends choja_mantenimientos {
 
 		// Output data
 		$Doc->Export();
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->id_usuario->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up detail parms based on QueryString

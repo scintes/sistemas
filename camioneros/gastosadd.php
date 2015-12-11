@@ -246,6 +246,22 @@ class cgastos_add extends cgastos {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanAdd()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("gastoslist.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("gastoslist.php"));
+		}
 
 		// Create form object
 		$objForm = new cFormObj();
@@ -483,6 +499,15 @@ class cgastos_add extends cgastos {
 			$this->LoadRowValues($rs); // Load row values
 			$rs->Close();
 		}
+
+		// Check if valid user id
+		if ($res) {
+			$res = $this->ShowOptionLink('add');
+			if (!$res) {
+				$sUserIdMsg = $Language->Phrase("NoPermission");
+				$this->setFailureMessage($sUserIdMsg);
+			}
+		}
 		return $res;
 	}
 
@@ -510,6 +535,7 @@ class cgastos_add extends cgastos {
 		} else {
 			$this->id_hoja_ruta->VirtualValue = ""; // Clear value
 		}
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Load DbValue from recordset
@@ -522,6 +548,7 @@ class cgastos_add extends cgastos {
 		$this->Importe->DbValue = $row['Importe'];
 		$this->id_tipo_gasto->DbValue = $row['id_tipo_gasto'];
 		$this->id_hoja_ruta->DbValue = $row['id_hoja_ruta'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Load old record
@@ -567,6 +594,7 @@ class cgastos_add extends cgastos {
 		// Importe
 		// id_tipo_gasto
 		// id_hoja_ruta
+		// id_usuario
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -864,6 +892,48 @@ class cgastos_add extends cgastos {
 	function AddRow($rsold = NULL) {
 		global $conn, $Language, $Security;
 
+		// Check if valid key values for master user
+		if ($Security->CurrentUserID() <> "" && !$Security->IsAdmin()) { // Non system admin
+			$sMasterFilter = $this->SqlMasterFilter_hoja_rutas();
+			if (strval($this->id_hoja_ruta->CurrentValue) <> "" &&
+				$this->getCurrentMasterTable() == "hoja_rutas") {
+				$sMasterFilter = str_replace("@codigo@", ew_AdjustSql($this->id_hoja_ruta->CurrentValue), $sMasterFilter);
+			} else {
+				$sMasterFilter = "";
+			}
+			if ($sMasterFilter <> "") {
+				$rsmaster = $GLOBALS["hoja_rutas"]->LoadRs($sMasterFilter);
+				$this->MasterRecordExists = ($rsmaster && !$rsmaster->EOF);
+				if (!$this->MasterRecordExists) {
+					$sMasterUserIdMsg = str_replace("%c", CurrentUserID(), $Language->Phrase("UnAuthorizedMasterUserID"));
+					$sMasterUserIdMsg = str_replace("%f", $sMasterFilter, $sMasterUserIdMsg);
+					$this->setFailureMessage($sMasterUserIdMsg);
+					return FALSE;
+				} else {
+					$rsmaster->Close();
+				}
+			}
+			$sMasterFilter = $this->SqlMasterFilter_tipo_gastos();
+			if (strval($this->id_tipo_gasto->CurrentValue) <> "" &&
+				$this->getCurrentMasterTable() == "tipo_gastos") {
+				$sMasterFilter = str_replace("@codigo@", ew_AdjustSql($this->id_tipo_gasto->CurrentValue), $sMasterFilter);
+			} else {
+				$sMasterFilter = "";
+			}
+			if ($sMasterFilter <> "") {
+				$rsmaster = $GLOBALS["tipo_gastos"]->LoadRs($sMasterFilter);
+				$this->MasterRecordExists = ($rsmaster && !$rsmaster->EOF);
+				if (!$this->MasterRecordExists) {
+					$sMasterUserIdMsg = str_replace("%c", CurrentUserID(), $Language->Phrase("UnAuthorizedMasterUserID"));
+					$sMasterUserIdMsg = str_replace("%f", $sMasterFilter, $sMasterUserIdMsg);
+					$this->setFailureMessage($sMasterUserIdMsg);
+					return FALSE;
+				} else {
+					$rsmaster->Close();
+				}
+			}
+		}
+
 		// Check referential integrity for master table 'hoja_rutas'
 		$bValidMasterRecord = TRUE;
 		$sMasterFilter = $this->SqlMasterFilter_hoja_rutas();
@@ -923,6 +993,11 @@ class cgastos_add extends cgastos {
 		// id_hoja_ruta
 		$this->id_hoja_ruta->SetDbValueDef($rsnew, $this->id_hoja_ruta->CurrentValue, NULL, FALSE);
 
+		// id_usuario
+		if (!$Security->IsAdmin() && $Security->IsLoggedIn()) { // Non system admin
+			$rsnew['id_usuario'] = CurrentUserID();
+		}
+
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
 		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
@@ -957,6 +1032,14 @@ class cgastos_add extends cgastos {
 			$this->Row_Inserted($rs, $rsnew);
 		}
 		return $AddRow;
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->id_usuario->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up master/detail based on QueryString
@@ -1273,7 +1356,9 @@ if (is_array($gastos->id_tipo_gasto->EditValue)) {
 }
 ?>
 </select>
+<?php if (AllowAdd(CurrentProjectID() . "tipo_gastos")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $gastos->id_tipo_gasto->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_tipo_gasto',url:'tipo_gastosaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_tipo_gasto"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $gastos->id_tipo_gasto->FldCaption() ?></span></button>
+<?php } ?>
 <?php
 $sSqlWrk = "SELECT DISTINCT `codigo`, `codigo` AS `DispFld`, `tipo_gasto` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `tipo_gastos`";
 $sWhereWrk = "";
@@ -1317,6 +1402,7 @@ $sSqlWrk .= " ORDER BY `tipo_gasto` ASC";
 <?php
 $sSqlWrk = "SELECT `codigo`, `codigo` AS `DispFld`, `fecha_ini` AS `Disp2Fld`, `Origen` AS `Disp3Fld` FROM `hoja_rutas`";
 $sWhereWrk = "`codigo` LIKE '{query_value}%' OR CONCAT(`codigo`,'" . ew_ValueSeparator(1, $Page->id_hoja_ruta) . "',DATE_FORMAT(`fecha_ini`, '%d/%m/%Y'),'" . ew_ValueSeparator(2, $Page->id_hoja_ruta) . "',`Origen`) LIKE '{query_value}%'";
+if (!$GLOBALS["gastos"]->UserIDAllow("add")) $sWhereWrk = $GLOBALS["hoja_rutas"]->AddUserIDFilter($sWhereWrk);
 
 // Call Lookup selecting
 $gastos->Lookup_Selecting($gastos->id_hoja_ruta, $sWhereWrk);

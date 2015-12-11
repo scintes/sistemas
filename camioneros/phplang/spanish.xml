@@ -417,36 +417,6 @@
 <phrase id="footertext" value="&amp;copy;2015 e.World Technology Ltd. All rights reserved."/>
 <menu id="23"><phrase id="menutext" value="Inicio"/>
 </menu>
-<menu id="15"><phrase id="menutext" value="ABM de Datos Base"/>
-</menu>
-<menu id="11"><phrase id="menutext" value="ABM - Tipo Cargas"/>
-</menu>
-<menu id="12"><phrase id="menutext" value="ABM - Tipo Gastos"/>
-</menu>
-<menu id="13"><phrase id="menutext" value="ABM - Tipo Mantenimientos"/>
-</menu>
-<menu id="47"><phrase id="menutext" value="Regiones"/>
-</menu>
-<menu id="7"><phrase id="menutext" value="ABM - Localidades"/>
-</menu>
-<menu id="9"><phrase id="menutext" value="ABM - Provincias"/>
-</menu>
-<menu id="48"><phrase id="menutext" value="Vehiculos"/>
-</menu>
-<menu id="10"><phrase id="menutext" value="ABM - Talleres"/>
-</menu>
-<menu id="8"><phrase id="menutext" value="ABM - Marcas"/>
-</menu>
-<menu id="14"><phrase id="menutext" value="ABM - Vehiculos"/>
-</menu>
-<menu id="84"><phrase id="menutext" value="Personas"/>
-</menu>
-<menu id="2"><phrase id="menutext" value="ABM - Clientes"/>
-</menu>
-<menu id="1"><phrase id="menutext" value="ABM - Choferes"/>
-</menu>
-<menu id="76"><phrase id="menutext" value="ABM - Usuarios"/>
-</menu>
 <menu id="116"><phrase id="menutext" value="Hojas de Rutas"/>
 </menu>
 <menu id="6"><phrase id="menutext" value="Hoja Rutas"/>
@@ -478,6 +448,44 @@
 <menu id="118"><phrase id="menutext" value="Listados"/>
 </menu>
 <menu id="49"><phrase id="menutext" value="Acerca de"/>
+</menu>
+<menu id="153"><phrase id="menutext" value="Configuración"/>
+</menu>
+<menu id="15"><phrase id="menutext" value="ABM de Datos Base"/>
+</menu>
+<menu id="11"><phrase id="menutext" value="ABM - Tipo Cargas"/>
+</menu>
+<menu id="12"><phrase id="menutext" value="ABM - Tipo Gastos"/>
+</menu>
+<menu id="13"><phrase id="menutext" value="ABM - Tipo Mantenimientos"/>
+</menu>
+<menu id="47"><phrase id="menutext" value="Regiones"/>
+</menu>
+<menu id="7"><phrase id="menutext" value="ABM - Localidades"/>
+</menu>
+<menu id="9"><phrase id="menutext" value="ABM - Provincias"/>
+</menu>
+<menu id="48"><phrase id="menutext" value="Vehiculos"/>
+</menu>
+<menu id="10"><phrase id="menutext" value="ABM - Talleres"/>
+</menu>
+<menu id="8"><phrase id="menutext" value="ABM - Marcas"/>
+</menu>
+<menu id="14"><phrase id="menutext" value="ABM - Vehiculos"/>
+</menu>
+<menu id="84"><phrase id="menutext" value="Personas"/>
+</menu>
+<menu id="2"><phrase id="menutext" value="ABM - Clientes"/>
+</menu>
+<menu id="1"><phrase id="menutext" value="ABM - Choferes"/>
+</menu>
+<menu id="154"><phrase id="menutext" value="Usuarios"/>
+</menu>
+<menu id="119"><phrase id="menutext" value="Nivel Permisos Usuario"/>
+</menu>
+<menu id="120"><phrase id="menutext" value="Nivel Usuario"/>
+</menu>
+<menu id="76"><phrase id="menutext" value="ABM - Usuarios"/>
 </menu>
 <table id="choferes"><phrase id="tblcaption" value="ABM - Choferes"/>
 <field id="codigo"><phrase id="fldcaption" value="Código"/>
@@ -534,6 +542,8 @@
 </field>
 <field id="id_hoja_ruta"><phrase id="fldcaption" value="Hoja de Ruta"/>
 </field>
+<field id="id_usuario"><phrase id="fldcaption" value="id usuario"/>
+</field>
 </table>
 <table id="hoja_mantenimientos"><phrase id="tblcaption" value="Hoja Mantenimientos"/>
 <phrase id="tblpagecaption1" value="Mantenimiento"/>
@@ -548,6 +558,8 @@
 <field id="id_taller"><phrase id="fldcaption" value="Taller"/>
 </field>
 <field id="id_tipo_mantenimiento"><phrase id="fldcaption" value="Tipo mantenimiento"/>
+</field>
+<field id="id_usuario"><phrase id="fldcaption" value="id usuario"/>
 </field>
 </table>
 <table id="hoja_rutas"><phrase id="tblcaption" value="Hoja Rutas"/>
@@ -584,6 +596,8 @@
 <field id="tarifa"><phrase id="fldcaption" value="Tarifa"/>
 </field>
 <field id="porcentaje"><phrase id="fldcaption" value="Porc. %"/>
+</field>
+<field id="id_usuario"><phrase id="fldcaption" value="id usuario"/>
 </field>
 </table>
 <table id="localidades"><phrase id="tblcaption" value="ABM - Localidades"/>
@@ -884,6 +898,10 @@
 </field>
 <field id="nombre"><phrase id="fldcaption" value="Nombre"/>
 </field>
+<field id="_email"><phrase id="fldcaption" value="Email"/>
+</field>
+<field id="activo"><phrase id="fldcaption" value="activo"/>
+</field>
 </table>
 <table id="v_listado_totales_por_hoja_ruta"><phrase id="tblcaption" value="Liistado de Totales por vehiculo y clientes"/>
 <field id="codigo"><phrase id="fldcaption" value="Código"/>
@@ -939,6 +957,22 @@
 <field id="id_tipo_gasto"><phrase id="fldcaption" value="id tipo gasto"/>
 </field>
 <field id="id_hoja_mantenimeinto"><phrase id="fldcaption" value="id hoja mantenimeinto"/>
+</field>
+<field id="id_usuario"><phrase id="fldcaption" value="id usuario"/>
+</field>
+</table>
+<table id="nivel_permisos_usuario"><phrase id="tblcaption" value="nivel permisos usuario"/>
+<field id="id_nivel_usuario"><phrase id="fldcaption" value="id nivel usuario"/>
+</field>
+<field id="nombre_tabla"><phrase id="fldcaption" value="nombre tabla"/>
+</field>
+<field id="permisos"><phrase id="fldcaption" value="permisos"/>
+</field>
+</table>
+<table id="nivel_usuario"><phrase id="tblcaption" value="nivel usuario"/>
+<field id="codigo"><phrase id="fldcaption" value="codigo"/>
+</field>
+<field id="nombre_nivel"><phrase id="fldcaption" value="nombre nivel"/>
 </field>
 </table>
 </project>

@@ -234,6 +234,22 @@ class cusuarios_update extends cusuarios {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanEdit()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("usuarioslist.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("usuarioslist.php"));
+		}
 
 		// Create form object
 		$objForm = new cFormObj();
@@ -329,6 +345,24 @@ class cusuarios_update extends cusuarios {
 
 		// Try to load keys from list form
 		$this->RecKeys = $this->GetRecordKeys(); // Load record keys
+
+		// Check if valid user id
+		$sql = $this->GetSQL($this->GetKeyFilter(), "");
+		if ($this->Recordset = ew_LoadRecordset($sql)) {
+			$res = TRUE;
+			while (!$this->Recordset->EOF) {
+				$this->LoadRowValues($this->Recordset);
+				if (!$this->ShowOptionLink('update')) {
+					$sUserIdMsg = $Language->Phrase("NoEditPermission");
+					$this->setFailureMessage($sUserIdMsg);
+					$res = FALSE;
+					break;
+				}
+				$this->Recordset->MoveNext();
+			}
+			$this->Recordset->Close();
+			if (!$res) $this->Page_Terminate("usuarioslist.php"); // Return to list
+		}
 		if (@$_POST["a_update"] <> "") {
 
 			// Get action
@@ -375,6 +409,8 @@ class cusuarios_update extends cusuarios {
 					$this->usuario->setDbValue($this->Recordset->fields('usuario'));
 					$this->contrasenia->setDbValue($this->Recordset->fields('contrasenia'));
 					$this->nombre->setDbValue($this->Recordset->fields('nombre'));
+					$this->_email->setDbValue($this->Recordset->fields('email'));
+					$this->activo->setDbValue($this->Recordset->fields('activo'));
 				} else {
 					if (!ew_CompareValue($this->codigo->DbValue, $this->Recordset->fields('codigo')))
 						$this->codigo->CurrentValue = NULL;
@@ -384,6 +420,10 @@ class cusuarios_update extends cusuarios {
 						$this->contrasenia->CurrentValue = NULL;
 					if (!ew_CompareValue($this->nombre->DbValue, $this->Recordset->fields('nombre')))
 						$this->nombre->CurrentValue = NULL;
+					if (!ew_CompareValue($this->_email->DbValue, $this->Recordset->fields('email')))
+						$this->_email->CurrentValue = NULL;
+					if (!ew_CompareValue($this->activo->DbValue, $this->Recordset->fields('activo')))
+						$this->activo->CurrentValue = NULL;
 				}
 				$i++;
 				$this->Recordset->MoveNext();
@@ -466,6 +506,14 @@ class cusuarios_update extends cusuarios {
 			$this->nombre->setFormValue($objForm->GetValue("x_nombre"));
 		}
 		$this->nombre->MultiUpdate = $objForm->GetValue("u_nombre");
+		if (!$this->_email->FldIsDetailKey) {
+			$this->_email->setFormValue($objForm->GetValue("x__email"));
+		}
+		$this->_email->MultiUpdate = $objForm->GetValue("u__email");
+		if (!$this->activo->FldIsDetailKey) {
+			$this->activo->setFormValue($objForm->GetValue("x_activo"));
+		}
+		$this->activo->MultiUpdate = $objForm->GetValue("u_activo");
 	}
 
 	// Restore form values
@@ -475,6 +523,8 @@ class cusuarios_update extends cusuarios {
 		$this->usuario->CurrentValue = $this->usuario->FormValue;
 		$this->contrasenia->CurrentValue = $this->contrasenia->FormValue;
 		$this->nombre->CurrentValue = $this->nombre->FormValue;
+		$this->_email->CurrentValue = $this->_email->FormValue;
+		$this->activo->CurrentValue = $this->activo->FormValue;
 	}
 
 	// Load recordset
@@ -527,6 +577,8 @@ class cusuarios_update extends cusuarios {
 		$this->usuario->setDbValue($rs->fields('usuario'));
 		$this->contrasenia->setDbValue($rs->fields('contrasenia'));
 		$this->nombre->setDbValue($rs->fields('nombre'));
+		$this->_email->setDbValue($rs->fields('email'));
+		$this->activo->setDbValue($rs->fields('activo'));
 	}
 
 	// Load DbValue from recordset
@@ -537,6 +589,8 @@ class cusuarios_update extends cusuarios {
 		$this->usuario->DbValue = $row['usuario'];
 		$this->contrasenia->DbValue = $row['contrasenia'];
 		$this->nombre->DbValue = $row['nombre'];
+		$this->_email->DbValue = $row['email'];
+		$this->activo->DbValue = $row['activo'];
 	}
 
 	// Render row values based on field settings
@@ -554,6 +608,8 @@ class cusuarios_update extends cusuarios {
 		// usuario
 		// contrasenia
 		// nombre
+		// email
+		// activo
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -572,6 +628,39 @@ class cusuarios_update extends cusuarios {
 			// nombre
 			$this->nombre->ViewValue = $this->nombre->CurrentValue;
 			$this->nombre->ViewCustomAttributes = "";
+
+			// email
+			$this->_email->ViewValue = $this->_email->CurrentValue;
+			$this->_email->ViewValue = strtolower($this->_email->ViewValue);
+			$this->_email->ViewCustomAttributes = "";
+
+			// activo
+			if ($Security->CanAdmin()) { // System admin
+			if (strval($this->activo->CurrentValue) <> "") {
+				$sFilterWrk = "`codigo`" . ew_SearchString("=", $this->activo->CurrentValue, EW_DATATYPE_NUMBER);
+			$sSqlWrk = "SELECT `codigo`, `nombre_nivel` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `nivel_usuario`";
+			$sWhereWrk = "";
+			if ($sFilterWrk <> "") {
+				ew_AddFilter($sWhereWrk, $sFilterWrk);
+			}
+
+			// Call Lookup selecting
+			$this->Lookup_Selecting($this->activo, $sWhereWrk);
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+				$rswrk = $conn->Execute($sSqlWrk);
+				if ($rswrk && !$rswrk->EOF) { // Lookup values found
+					$this->activo->ViewValue = $rswrk->fields('DispFld');
+					$rswrk->Close();
+				} else {
+					$this->activo->ViewValue = $this->activo->CurrentValue;
+				}
+			} else {
+				$this->activo->ViewValue = NULL;
+			}
+			} else {
+				$this->activo->ViewValue = "********";
+			}
+			$this->activo->ViewCustomAttributes = "";
 
 			// codigo
 			$this->codigo->LinkCustomAttributes = "";
@@ -592,6 +681,16 @@ class cusuarios_update extends cusuarios {
 			$this->nombre->LinkCustomAttributes = "";
 			$this->nombre->HrefValue = "";
 			$this->nombre->TooltipValue = "";
+
+			// email
+			$this->_email->LinkCustomAttributes = "";
+			$this->_email->HrefValue = "";
+			$this->_email->TooltipValue = "";
+
+			// activo
+			$this->activo->LinkCustomAttributes = "";
+			$this->activo->HrefValue = "";
+			$this->activo->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_EDIT) { // Edit row
 
 			// codigo
@@ -618,6 +717,35 @@ class cusuarios_update extends cusuarios {
 			$this->nombre->EditValue = ew_HtmlEncode($this->nombre->CurrentValue);
 			$this->nombre->PlaceHolder = ew_RemoveHtml($this->nombre->FldCaption());
 
+			// email
+			$this->_email->EditAttrs["class"] = "form-control";
+			$this->_email->EditCustomAttributes = "";
+			$this->_email->EditValue = ew_HtmlEncode($this->_email->CurrentValue);
+			$this->_email->PlaceHolder = ew_RemoveHtml($this->_email->FldCaption());
+
+			// activo
+			$this->activo->EditAttrs["class"] = "form-control";
+			$this->activo->EditCustomAttributes = "";
+			if (!$Security->CanAdmin()) { // System admin
+				$this->activo->EditValue = "********";
+			} else {
+			$sFilterWrk = "";
+			$sSqlWrk = "SELECT `codigo`, `nombre_nivel` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `nivel_usuario`";
+			$sWhereWrk = "";
+			if ($sFilterWrk <> "") {
+				ew_AddFilter($sWhereWrk, $sFilterWrk);
+			}
+
+			// Call Lookup selecting
+			$this->Lookup_Selecting($this->activo, $sWhereWrk);
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = $conn->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			array_unshift($arwrk, array("", $Language->Phrase("PleaseSelect"), "", "", "", "", "", "", ""));
+			$this->activo->EditValue = $arwrk;
+			}
+
 			// Edit refer script
 			// codigo
 
@@ -631,6 +759,12 @@ class cusuarios_update extends cusuarios {
 
 			// nombre
 			$this->nombre->HrefValue = "";
+
+			// email
+			$this->_email->HrefValue = "";
+
+			// activo
+			$this->activo->HrefValue = "";
 		}
 		if ($this->RowType == EW_ROWTYPE_ADD ||
 			$this->RowType == EW_ROWTYPE_EDIT ||
@@ -654,6 +788,8 @@ class cusuarios_update extends cusuarios {
 		if ($this->usuario->MultiUpdate == "1") $lUpdateCnt++;
 		if ($this->contrasenia->MultiUpdate == "1") $lUpdateCnt++;
 		if ($this->nombre->MultiUpdate == "1") $lUpdateCnt++;
+		if ($this->_email->MultiUpdate == "1") $lUpdateCnt++;
+		if ($this->activo->MultiUpdate == "1") $lUpdateCnt++;
 		if ($lUpdateCnt == 0) {
 			$gsFormError = $Language->Phrase("NoFieldSelected");
 			return FALSE;
@@ -665,6 +801,20 @@ class cusuarios_update extends cusuarios {
 		if ($this->codigo->MultiUpdate <> "") {
 			if (!ew_CheckInteger($this->codigo->FormValue)) {
 				ew_AddMessage($gsFormError, $this->codigo->FldErrMsg());
+			}
+		}
+		if ($this->usuario->MultiUpdate <> "" && !$this->usuario->FldIsDetailKey && !is_null($this->usuario->FormValue) && $this->usuario->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->usuario->FldCaption(), $this->usuario->ReqErrMsg));
+		}
+		if ($this->contrasenia->MultiUpdate <> "" && !$this->contrasenia->FldIsDetailKey && !is_null($this->contrasenia->FormValue) && $this->contrasenia->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->contrasenia->FldCaption(), $this->contrasenia->ReqErrMsg));
+		}
+		if ($this->_email->MultiUpdate <> "" && !$this->_email->FldIsDetailKey && !is_null($this->_email->FormValue) && $this->_email->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->_email->FldCaption(), $this->_email->ReqErrMsg));
+		}
+		if ($this->_email->MultiUpdate <> "") {
+			if (!ew_CheckEmail($this->_email->FormValue)) {
+				ew_AddMessage($gsFormError, $this->_email->FldErrMsg());
 			}
 		}
 
@@ -709,6 +859,14 @@ class cusuarios_update extends cusuarios {
 			// nombre
 			$this->nombre->SetDbValueDef($rsnew, $this->nombre->CurrentValue, NULL, $this->nombre->ReadOnly || $this->nombre->MultiUpdate <> "1");
 
+			// email
+			$this->_email->SetDbValueDef($rsnew, $this->_email->CurrentValue, NULL, $this->_email->ReadOnly || $this->_email->MultiUpdate <> "1");
+
+			// activo
+			if ($Security->CanAdmin()) { // System admin
+			$this->activo->SetDbValueDef($rsnew, $this->activo->CurrentValue, NULL, $this->activo->ReadOnly || $this->activo->MultiUpdate <> "1");
+			}
+
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
 			if ($bUpdateRow) {
@@ -739,6 +897,14 @@ class cusuarios_update extends cusuarios {
 			$this->Row_Updated($rsold, $rsnew);
 		$rs->Close();
 		return $EditRow;
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->codigo->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up Breadcrumb
@@ -872,6 +1038,28 @@ fusuariosupdate.Validate = function() {
 			uelm = this.GetElements("u" + infix + "_codigo");
 			if (uelm && uelm.checked && elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($usuarios->codigo->FldErrMsg()) ?>");
+			elm = this.GetElements("x" + infix + "_usuario");
+			uelm = this.GetElements("u" + infix + "_usuario");
+			if (uelm && uelm.checked) {
+				if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+					return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $usuarios->usuario->FldCaption(), $usuarios->usuario->ReqErrMsg)) ?>");
+			}
+			elm = this.GetElements("x" + infix + "_contrasenia");
+			uelm = this.GetElements("u" + infix + "_contrasenia");
+			if (uelm && uelm.checked) {
+				if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+					return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $usuarios->contrasenia->FldCaption(), $usuarios->contrasenia->ReqErrMsg)) ?>");
+			}
+			elm = this.GetElements("x" + infix + "__email");
+			uelm = this.GetElements("u" + infix + "__email");
+			if (uelm && uelm.checked) {
+				if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+					return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $usuarios->_email->FldCaption(), $usuarios->_email->ReqErrMsg)) ?>");
+			}
+			elm = this.GetElements("x" + infix + "__email");
+			uelm = this.GetElements("u" + infix + "__email");
+			if (uelm && uelm.checked && elm && !ew_CheckEmail(elm.value))
+				return this.OnError(elm, "<?php echo ew_JsEncode2($usuarios->_email->FldErrMsg()) ?>");
 
 			// Set up row object
 			ew_ElementsToRow(fobj);
@@ -899,8 +1087,9 @@ fusuariosupdate.ValidateRequired = false;
 <?php } ?>
 
 // Dynamic selection lists
-// Form object for search
+fusuariosupdate.Lists["x_activo"] = {"LinkField":"x_codigo","Ajax":null,"AutoFill":false,"DisplayFields":["x_nombre_nivel","","",""],"ParentFields":[],"FilterFields":[],"Options":[]};
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -963,6 +1152,56 @@ $usuarios_update->ShowMessage();
 <input type="text" data-field="x_nombre" name="x_nombre" id="x_nombre" size="30" maxlength="150" placeholder="<?php echo ew_HtmlEncode($usuarios->nombre->PlaceHolder) ?>" value="<?php echo $usuarios->nombre->EditValue ?>"<?php echo $usuarios->nombre->EditAttributes() ?>>
 </span>
 <?php echo $usuarios->nombre->CustomMsg ?></div></div>
+	</div>
+<?php } ?>
+<?php if ($usuarios->_email->Visible) { // email ?>
+	<div id="r__email" class="form-group">
+		<label for="x__email" class="col-sm-2 control-label">
+<input type="checkbox" name="u__email" id="u__email" value="1"<?php echo ($usuarios->_email->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+ <?php echo $usuarios->_email->FldCaption() ?></label>
+		<div class="col-sm-10"><div<?php echo $usuarios->_email->CellAttributes() ?>>
+<span id="el_usuarios__email">
+<input type="text" data-field="x__email" name="x__email" id="x__email" size="30" maxlength="250" placeholder="<?php echo ew_HtmlEncode($usuarios->_email->PlaceHolder) ?>" value="<?php echo $usuarios->_email->EditValue ?>"<?php echo $usuarios->_email->EditAttributes() ?>>
+</span>
+<?php echo $usuarios->_email->CustomMsg ?></div></div>
+	</div>
+<?php } ?>
+<?php if ($usuarios->activo->Visible) { // activo ?>
+	<div id="r_activo" class="form-group">
+		<label for="x_activo" class="col-sm-2 control-label">
+<input type="checkbox" name="u_activo" id="u_activo" value="1"<?php echo ($usuarios->activo->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+ <?php echo $usuarios->activo->FldCaption() ?></label>
+		<div class="col-sm-10"><div<?php echo $usuarios->activo->CellAttributes() ?>>
+<?php if (!$Security->IsAdmin() && $Security->IsLoggedIn()) { // Non system admin ?>
+<span id="el_usuarios_activo">
+<p class="form-control-static"><?php echo $usuarios->activo->EditValue ?></p>
+</span>
+<?php } else { ?>
+<span id="el_usuarios_activo">
+<select data-field="x_activo" id="x_activo" name="x_activo"<?php echo $usuarios->activo->EditAttributes() ?>>
+<?php
+if (is_array($usuarios->activo->EditValue)) {
+	$arwrk = $usuarios->activo->EditValue;
+	$rowswrk = count($arwrk);
+	$emptywrk = TRUE;
+	for ($rowcntwrk = 0; $rowcntwrk < $rowswrk; $rowcntwrk++) {
+		$selwrk = (strval($usuarios->activo->CurrentValue) == strval($arwrk[$rowcntwrk][0])) ? " selected=\"selected\"" : "";
+		if ($selwrk <> "") $emptywrk = FALSE;
+?>
+<option value="<?php echo ew_HtmlEncode($arwrk[$rowcntwrk][0]) ?>"<?php echo $selwrk ?>>
+<?php echo $arwrk[$rowcntwrk][1] ?>
+</option>
+<?php
+	}
+}
+?>
+</select>
+<script type="text/javascript">
+fusuariosupdate.Lists["x_activo"].Options = <?php echo (is_array($usuarios->activo->EditValue)) ? ew_ArrayToJson($usuarios->activo->EditValue, 1) : "[]" ?>;
+</script>
+</span>
+<?php } ?>
+<?php echo $usuarios->activo->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 	<div class="form-group">

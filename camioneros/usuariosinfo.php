@@ -11,6 +11,8 @@ class cusuarios extends cTable {
 	var $usuario;
 	var $contrasenia;
 	var $nombre;
+	var $_email;
+	var $activo;
 
 	//
 	// Table class constructor
@@ -54,6 +56,15 @@ class cusuarios extends cTable {
 		// nombre
 		$this->nombre = new cField('usuarios', 'usuarios', 'x_nombre', 'nombre', '`nombre`', '`nombre`', 200, -1, FALSE, '`nombre`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
 		$this->fields['nombre'] = &$this->nombre;
+
+		// email
+		$this->_email = new cField('usuarios', 'usuarios', 'x__email', 'email', '`email`', '`email`', 200, -1, FALSE, '`email`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->_email->FldDefaultErrMsg = $Language->Phrase("IncorrectEmail");
+		$this->fields['email'] = &$this->_email;
+
+		// activo
+		$this->activo = new cField('usuarios', 'usuarios', 'x_activo', 'activo', '`activo`', '`activo`', 3, -1, FALSE, '`activo`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->fields['activo'] = &$this->activo;
 	}
 
 	// Single column sort
@@ -181,12 +192,18 @@ class cusuarios extends cTable {
 
 	// Apply User ID filters
 	function ApplyUserIDFilters($sFilter) {
+		global $Security;
+
+		// Add User ID filter
+		if (!$this->AllowAnonymousUser() && $Security->CurrentUserID() <> "" && !$Security->IsAdmin()) { // Non system admin
+			$sFilter = $this->AddUserIDFilter($sFilter);
+		}
 		return $sFilter;
 	}
 
 	// Check if User ID security allows view all
 	function UserIDAllow($id = "") {
-		$allow = EW_USER_ID_ALLOW;
+		$allow = $this->UserIDAllowSecurity;
 		switch ($id) {
 			case "add":
 			case "copy":
@@ -537,6 +554,8 @@ class cusuarios extends cTable {
 		$this->usuario->setDbValue($rs->fields('usuario'));
 		$this->contrasenia->setDbValue($rs->fields('contrasenia'));
 		$this->nombre->setDbValue($rs->fields('nombre'));
+		$this->_email->setDbValue($rs->fields('email'));
+		$this->activo->setDbValue($rs->fields('activo'));
 	}
 
 	// Render list row values
@@ -551,6 +570,8 @@ class cusuarios extends cTable {
 		// usuario
 		// contrasenia
 		// nombre
+		// email
+		// activo
 		// codigo
 
 		$this->codigo->ViewValue = $this->codigo->CurrentValue;
@@ -567,6 +588,39 @@ class cusuarios extends cTable {
 		// nombre
 		$this->nombre->ViewValue = $this->nombre->CurrentValue;
 		$this->nombre->ViewCustomAttributes = "";
+
+		// email
+		$this->_email->ViewValue = $this->_email->CurrentValue;
+		$this->_email->ViewValue = strtolower($this->_email->ViewValue);
+		$this->_email->ViewCustomAttributes = "";
+
+		// activo
+		if ($Security->CanAdmin()) { // System admin
+		if (strval($this->activo->CurrentValue) <> "") {
+			$sFilterWrk = "`codigo`" . ew_SearchString("=", $this->activo->CurrentValue, EW_DATATYPE_NUMBER);
+		$sSqlWrk = "SELECT `codigo`, `nombre_nivel` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `nivel_usuario`";
+		$sWhereWrk = "";
+		if ($sFilterWrk <> "") {
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+		}
+
+		// Call Lookup selecting
+		$this->Lookup_Selecting($this->activo, $sWhereWrk);
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = $conn->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$this->activo->ViewValue = $rswrk->fields('DispFld');
+				$rswrk->Close();
+			} else {
+				$this->activo->ViewValue = $this->activo->CurrentValue;
+			}
+		} else {
+			$this->activo->ViewValue = NULL;
+		}
+		} else {
+			$this->activo->ViewValue = "********";
+		}
+		$this->activo->ViewCustomAttributes = "";
 
 		// codigo
 		$this->codigo->LinkCustomAttributes = "";
@@ -587,6 +641,16 @@ class cusuarios extends cTable {
 		$this->nombre->LinkCustomAttributes = "";
 		$this->nombre->HrefValue = "";
 		$this->nombre->TooltipValue = "";
+
+		// email
+		$this->_email->LinkCustomAttributes = "";
+		$this->_email->HrefValue = "";
+		$this->_email->TooltipValue = "";
+
+		// activo
+		$this->activo->LinkCustomAttributes = "";
+		$this->activo->HrefValue = "";
+		$this->activo->TooltipValue = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -623,6 +687,20 @@ class cusuarios extends cTable {
 		$this->nombre->EditValue = ew_HtmlEncode($this->nombre->CurrentValue);
 		$this->nombre->PlaceHolder = ew_RemoveHtml($this->nombre->FldCaption());
 
+		// email
+		$this->_email->EditAttrs["class"] = "form-control";
+		$this->_email->EditCustomAttributes = "";
+		$this->_email->EditValue = ew_HtmlEncode($this->_email->CurrentValue);
+		$this->_email->PlaceHolder = ew_RemoveHtml($this->_email->FldCaption());
+
+		// activo
+		$this->activo->EditAttrs["class"] = "form-control";
+		$this->activo->EditCustomAttributes = "";
+		if (!$Security->CanAdmin()) { // System admin
+			$this->activo->EditValue = "********";
+		} else {
+		}
+
 		// Call Row Rendered event
 		$this->Row_Rendered();
 	}
@@ -654,11 +732,15 @@ class cusuarios extends cTable {
 					if ($this->usuario->Exportable) $Doc->ExportCaption($this->usuario);
 					if ($this->contrasenia->Exportable) $Doc->ExportCaption($this->contrasenia);
 					if ($this->nombre->Exportable) $Doc->ExportCaption($this->nombre);
+					if ($this->_email->Exportable) $Doc->ExportCaption($this->_email);
+					if ($this->activo->Exportable) $Doc->ExportCaption($this->activo);
 				} else {
 					if ($this->codigo->Exportable) $Doc->ExportCaption($this->codigo);
 					if ($this->usuario->Exportable) $Doc->ExportCaption($this->usuario);
 					if ($this->contrasenia->Exportable) $Doc->ExportCaption($this->contrasenia);
 					if ($this->nombre->Exportable) $Doc->ExportCaption($this->nombre);
+					if ($this->_email->Exportable) $Doc->ExportCaption($this->_email);
+					if ($this->activo->Exportable) $Doc->ExportCaption($this->activo);
 				}
 				$Doc->EndExportRow();
 			}
@@ -694,11 +776,15 @@ class cusuarios extends cTable {
 						if ($this->usuario->Exportable) $Doc->ExportField($this->usuario);
 						if ($this->contrasenia->Exportable) $Doc->ExportField($this->contrasenia);
 						if ($this->nombre->Exportable) $Doc->ExportField($this->nombre);
+						if ($this->_email->Exportable) $Doc->ExportField($this->_email);
+						if ($this->activo->Exportable) $Doc->ExportField($this->activo);
 					} else {
 						if ($this->codigo->Exportable) $Doc->ExportField($this->codigo);
 						if ($this->usuario->Exportable) $Doc->ExportField($this->usuario);
 						if ($this->contrasenia->Exportable) $Doc->ExportField($this->contrasenia);
 						if ($this->nombre->Exportable) $Doc->ExportField($this->nombre);
+						if ($this->_email->Exportable) $Doc->ExportField($this->_email);
+						if ($this->activo->Exportable) $Doc->ExportField($this->activo);
 					}
 					$Doc->EndExportRow();
 				}
@@ -712,6 +798,74 @@ class cusuarios extends cTable {
 		if (!$Doc->ExportCustom) {
 			$Doc->ExportTableFooter();
 		}
+	}
+
+	// User ID filter
+	function UserIDFilter($userid) {
+		$sUserIDFilter = '`codigo` = ' . ew_QuotedValue($userid, EW_DATATYPE_NUMBER);
+		$sParentUserIDFilter = '`codigo` IN (SELECT `codigo` FROM ' . "`usuarios`" . ' WHERE `codigo` = ' . ew_QuotedValue($userid, EW_DATATYPE_NUMBER) . ')';
+		$sUserIDFilter = "($sUserIDFilter) OR ($sParentUserIDFilter)";
+		return $sUserIDFilter;
+	}
+
+	// Add User ID filter
+	function AddUserIDFilter($sFilter) {
+		global $Security;
+		$sFilterWrk = "";
+		$id = (CurrentPageID() == "list") ? $this->CurrentAction : CurrentPageID();
+		if (!$this->UserIDAllow($id) && !$Security->IsAdmin()) {
+			$sFilterWrk = $Security->UserIDList();
+			if ($sFilterWrk <> "")
+				$sFilterWrk = '`codigo` IN (' . $sFilterWrk . ')';
+		}
+
+		// Call User ID Filtering event
+		$this->UserID_Filtering($sFilterWrk);
+		ew_AddFilter($sFilter, $sFilterWrk);
+		return $sFilter;
+	}
+
+	// Add Parent User ID filter
+	function AddParentUserIDFilter($sFilter, $userid) {
+		global $Security;
+		if (!$Security->IsAdmin()) {
+			$result = $Security->ParentUserIDList($userid);
+			if ($result <> "")
+				$result = '`codigo` IN (' . $result . ')';
+			ew_AddFilter($result, $sFilter);
+			return $result;
+		} else {
+			return $sFilter;
+		}
+	}
+
+	// User ID subquery
+	function GetUserIDSubquery(&$fld, &$masterfld) {
+		global $conn;
+		$sWrk = "";
+		$sSql = "SELECT " . $masterfld->FldExpression . " FROM `usuarios`";
+		$sFilter = $this->AddUserIDFilter("");
+		if ($sFilter <> "") $sSql .= " WHERE " . $sFilter;
+
+		// Use subquery
+		if (EW_USE_SUBQUERY_FOR_MASTER_USER_ID) {
+			$sWrk = $sSql;
+		} else {
+
+			// List all values
+			if ($rs = $conn->Execute($sSql)) {
+				while (!$rs->EOF) {
+					if ($sWrk <> "") $sWrk .= ",";
+					$sWrk .= ew_QuotedValue($rs->fields[0], $masterfld->FldDataType);
+					$rs->MoveNext();
+				}
+				$rs->Close();
+			}
+		}
+		if ($sWrk <> "") {
+			$sWrk = $fld->FldExpression . " IN (" . $sWrk . ")";
+		}
+		return $sWrk;
 	}
 
 	// Get auto fill value

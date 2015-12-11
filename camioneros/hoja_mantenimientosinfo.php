@@ -13,6 +13,7 @@ class choja_mantenimientos extends cTable {
 	var $id_vehiculo;
 	var $id_taller;
 	var $id_tipo_mantenimiento;
+	var $id_usuario;
 
 	//
 	// Table class constructor
@@ -69,6 +70,11 @@ class choja_mantenimientos extends cTable {
 		$this->id_tipo_mantenimiento = new cField('hoja_mantenimientos', 'hoja_mantenimientos', 'x_id_tipo_mantenimiento', 'id_tipo_mantenimiento', '`id_tipo_mantenimiento`', '`id_tipo_mantenimiento`', 3, -1, FALSE, '`EV__id_tipo_mantenimiento`', TRUE, TRUE, TRUE, 'FORMATTED TEXT');
 		$this->id_tipo_mantenimiento->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_tipo_mantenimiento'] = &$this->id_tipo_mantenimiento;
+
+		// id_usuario
+		$this->id_usuario = new cField('hoja_mantenimientos', 'hoja_mantenimientos', 'x_id_usuario', 'id_usuario', '`id_usuario`', '`id_usuario`', 3, -1, FALSE, '`id_usuario`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->id_usuario->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['id_usuario'] = &$this->id_usuario;
 	}
 
 	// Single column sort
@@ -248,12 +254,18 @@ class choja_mantenimientos extends cTable {
 
 	// Apply User ID filters
 	function ApplyUserIDFilters($sFilter) {
+		global $Security;
+
+		// Add User ID filter
+		if (!$this->AllowAnonymousUser() && $Security->CurrentUserID() <> "" && !$Security->IsAdmin()) { // Non system admin
+			$sFilter = $this->AddUserIDFilter($sFilter);
+		}
 		return $sFilter;
 	}
 
 	// Check if User ID security allows view all
 	function UserIDAllow($id = "") {
-		$allow = EW_USER_ID_ALLOW;
+		$allow = $this->UserIDAllowSecurity;
 		switch ($id) {
 			case "add":
 			case "copy":
@@ -642,6 +654,7 @@ class choja_mantenimientos extends cTable {
 		$this->id_vehiculo->setDbValue($rs->fields('id_vehiculo'));
 		$this->id_taller->setDbValue($rs->fields('id_taller'));
 		$this->id_tipo_mantenimiento->setDbValue($rs->fields('id_tipo_mantenimiento'));
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Render list row values
@@ -658,8 +671,11 @@ class choja_mantenimientos extends cTable {
 		// id_vehiculo
 		// id_taller
 		// id_tipo_mantenimiento
-		// codigo
+		// id_usuario
 
+		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
+
+		// codigo
 		$this->codigo->ViewValue = $this->codigo->CurrentValue;
 		$this->codigo->ViewCustomAttributes = "";
 
@@ -761,6 +777,10 @@ class choja_mantenimientos extends cTable {
 		}
 		$this->id_tipo_mantenimiento->ViewCustomAttributes = "";
 
+		// id_usuario
+		$this->id_usuario->ViewValue = $this->id_usuario->CurrentValue;
+		$this->id_usuario->ViewCustomAttributes = "";
+
 		// codigo
 		$this->codigo->LinkCustomAttributes = "";
 		$this->codigo->HrefValue = "";
@@ -790,6 +810,11 @@ class choja_mantenimientos extends cTable {
 		$this->id_tipo_mantenimiento->LinkCustomAttributes = "";
 		$this->id_tipo_mantenimiento->HrefValue = "";
 		$this->id_tipo_mantenimiento->TooltipValue = "";
+
+		// id_usuario
+		$this->id_usuario->LinkCustomAttributes = "";
+		$this->id_usuario->HrefValue = "";
+		$this->id_usuario->TooltipValue = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -832,7 +857,9 @@ class choja_mantenimientos extends cTable {
 		$this->id_tipo_mantenimiento->EditAttrs["class"] = "form-control";
 		$this->id_tipo_mantenimiento->EditCustomAttributes = "";
 
+		// id_usuario
 		// Call Row Rendered event
+
 		$this->Row_Rendered();
 	}
 
@@ -929,6 +956,52 @@ class choja_mantenimientos extends cTable {
 		if (!$Doc->ExportCustom) {
 			$Doc->ExportTableFooter();
 		}
+	}
+
+	// Add User ID filter
+	function AddUserIDFilter($sFilter) {
+		global $Security;
+		$sFilterWrk = "";
+		$id = (CurrentPageID() == "list") ? $this->CurrentAction : CurrentPageID();
+		if (!$this->UserIDAllow($id) && !$Security->IsAdmin()) {
+			$sFilterWrk = $Security->UserIDList();
+			if ($sFilterWrk <> "")
+				$sFilterWrk = '`id_usuario` IN (' . $sFilterWrk . ')';
+		}
+
+		// Call User ID Filtering event
+		$this->UserID_Filtering($sFilterWrk);
+		ew_AddFilter($sFilter, $sFilterWrk);
+		return $sFilter;
+	}
+
+	// User ID subquery
+	function GetUserIDSubquery(&$fld, &$masterfld) {
+		global $conn;
+		$sWrk = "";
+		$sSql = "SELECT " . $masterfld->FldExpression . " FROM `hoja_mantenimientos`";
+		$sFilter = $this->AddUserIDFilter("");
+		if ($sFilter <> "") $sSql .= " WHERE " . $sFilter;
+
+		// Use subquery
+		if (EW_USE_SUBQUERY_FOR_MASTER_USER_ID) {
+			$sWrk = $sSql;
+		} else {
+
+			// List all values
+			if ($rs = $conn->Execute($sSql)) {
+				while (!$rs->EOF) {
+					if ($sWrk <> "") $sWrk .= ",";
+					$sWrk .= ew_QuotedValue($rs->fields[0], $masterfld->FldDataType);
+					$rs->MoveNext();
+				}
+				$rs->Close();
+			}
+		}
+		if ($sWrk <> "") {
+			$sWrk = $fld->FldExpression . " IN (" . $sWrk . ")";
+		}
+		return $sWrk;
 	}
 
 	// Get auto fill value

@@ -313,6 +313,18 @@ class cchoferes_list extends cchoferes {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanList()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("index.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
 
 		// Get export parameters
 		$custom = "";

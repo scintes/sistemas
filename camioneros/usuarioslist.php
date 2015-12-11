@@ -309,6 +309,22 @@ class cusuarios_list extends cusuarios {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanList()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("index.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate();
+		}
 
 		// Get export parameters
 		$custom = "";
@@ -658,6 +674,8 @@ class cusuarios_list extends cusuarios {
 		$this->BuildBasicSearchSQL($sWhere, $this->usuario, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->contrasenia, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->nombre, $arKeywords, $type);
+		$this->BuildBasicSearchSQL($sWhere, $this->_email, $arKeywords, $type);
+		$this->BuildBasicSearchSQL($sWhere, $this->activo, $arKeywords, $type);
 		return $sWhere;
 	}
 
@@ -815,6 +833,8 @@ class cusuarios_list extends cusuarios {
 			$this->UpdateSort($this->usuario); // usuario
 			$this->UpdateSort($this->contrasenia); // contrasenia
 			$this->UpdateSort($this->nombre); // nombre
+			$this->UpdateSort($this->_email); // email
+			$this->UpdateSort($this->activo); // activo
 			$this->setStartRecordNumber(1); // Reset start position
 		}
 	}
@@ -851,6 +871,8 @@ class cusuarios_list extends cusuarios {
 				$this->usuario->setSort("");
 				$this->contrasenia->setSort("");
 				$this->nombre->setSort("");
+				$this->_email->setSort("");
+				$this->activo->setSort("");
 			}
 
 			// Reset start position
@@ -924,14 +946,14 @@ class cusuarios_list extends cusuarios {
 
 		// "view"
 		$oListOpt = &$this->ListOptions->Items["view"];
-		if ($Security->CanView())
+		if ($Security->CanView() && $this->ShowOptionLink('view'))
 			$oListOpt->Body = "<a class=\"ewRowLink ewView\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewLink")) . "\" href=\"" . ew_HtmlEncode($this->ViewUrl) . "\">" . $Language->Phrase("ViewLink") . "</a>";
 		else
 			$oListOpt->Body = "";
 
 		// "edit"
 		$oListOpt = &$this->ListOptions->Items["edit"];
-		if ($Security->CanEdit()) {
+		if ($Security->CanEdit() && $this->ShowOptionLink('edit')) {
 			$oListOpt->Body = "<a class=\"ewRowLink ewEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" href=\"" . ew_HtmlEncode($this->EditUrl) . "\">" . $Language->Phrase("EditLink") . "</a>";
 		} else {
 			$oListOpt->Body = "";
@@ -939,7 +961,7 @@ class cusuarios_list extends cusuarios {
 
 		// "copy"
 		$oListOpt = &$this->ListOptions->Items["copy"];
-		if ($Security->CanAdd()) {
+		if ($Security->CanAdd() && $this->ShowOptionLink('add')) {
 			$oListOpt->Body = "<a class=\"ewRowLink ewCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("CopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("CopyLink")) . "\" href=\"" . ew_HtmlEncode($this->CopyUrl) . "\">" . $Language->Phrase("CopyLink") . "</a>";
 		} else {
 			$oListOpt->Body = "";
@@ -947,7 +969,7 @@ class cusuarios_list extends cusuarios {
 
 		// "delete"
 		$oListOpt = &$this->ListOptions->Items["delete"];
-		if ($Security->CanDelete())
+		if ($Security->CanDelete() && $this->ShowOptionLink('delete'))
 			$oListOpt->Body = "<a class=\"ewRowLink ewDelete\"" . "" . " title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("DeleteLink") . "</a>";
 		else
 			$oListOpt->Body = "";
@@ -1200,6 +1222,8 @@ class cusuarios_list extends cusuarios {
 		$this->usuario->setDbValue($rs->fields('usuario'));
 		$this->contrasenia->setDbValue($rs->fields('contrasenia'));
 		$this->nombre->setDbValue($rs->fields('nombre'));
+		$this->_email->setDbValue($rs->fields('email'));
+		$this->activo->setDbValue($rs->fields('activo'));
 	}
 
 	// Load DbValue from recordset
@@ -1210,6 +1234,8 @@ class cusuarios_list extends cusuarios {
 		$this->usuario->DbValue = $row['usuario'];
 		$this->contrasenia->DbValue = $row['contrasenia'];
 		$this->nombre->DbValue = $row['nombre'];
+		$this->_email->DbValue = $row['email'];
+		$this->activo->DbValue = $row['activo'];
 	}
 
 	// Load old record
@@ -1255,6 +1281,8 @@ class cusuarios_list extends cusuarios {
 		// usuario
 		// contrasenia
 		// nombre
+		// email
+		// activo
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -1273,6 +1301,39 @@ class cusuarios_list extends cusuarios {
 			// nombre
 			$this->nombre->ViewValue = $this->nombre->CurrentValue;
 			$this->nombre->ViewCustomAttributes = "";
+
+			// email
+			$this->_email->ViewValue = $this->_email->CurrentValue;
+			$this->_email->ViewValue = strtolower($this->_email->ViewValue);
+			$this->_email->ViewCustomAttributes = "";
+
+			// activo
+			if ($Security->CanAdmin()) { // System admin
+			if (strval($this->activo->CurrentValue) <> "") {
+				$sFilterWrk = "`codigo`" . ew_SearchString("=", $this->activo->CurrentValue, EW_DATATYPE_NUMBER);
+			$sSqlWrk = "SELECT `codigo`, `nombre_nivel` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `nivel_usuario`";
+			$sWhereWrk = "";
+			if ($sFilterWrk <> "") {
+				ew_AddFilter($sWhereWrk, $sFilterWrk);
+			}
+
+			// Call Lookup selecting
+			$this->Lookup_Selecting($this->activo, $sWhereWrk);
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+				$rswrk = $conn->Execute($sSqlWrk);
+				if ($rswrk && !$rswrk->EOF) { // Lookup values found
+					$this->activo->ViewValue = $rswrk->fields('DispFld');
+					$rswrk->Close();
+				} else {
+					$this->activo->ViewValue = $this->activo->CurrentValue;
+				}
+			} else {
+				$this->activo->ViewValue = NULL;
+			}
+			} else {
+				$this->activo->ViewValue = "********";
+			}
+			$this->activo->ViewCustomAttributes = "";
 
 			// codigo
 			$this->codigo->LinkCustomAttributes = "";
@@ -1293,6 +1354,16 @@ class cusuarios_list extends cusuarios {
 			$this->nombre->LinkCustomAttributes = "";
 			$this->nombre->HrefValue = "";
 			$this->nombre->TooltipValue = "";
+
+			// email
+			$this->_email->LinkCustomAttributes = "";
+			$this->_email->HrefValue = "";
+			$this->_email->TooltipValue = "";
+
+			// activo
+			$this->activo->LinkCustomAttributes = "";
+			$this->activo->HrefValue = "";
+			$this->activo->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -1441,6 +1512,14 @@ class cusuarios_list extends cusuarios {
 
 		// Output data
 		$Doc->Export();
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->codigo->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up Breadcrumb
@@ -1619,8 +1698,9 @@ fusuarioslist.ValidateRequired = false;
 <?php } ?>
 
 // Dynamic selection lists
-// Form object for search
+fusuarioslist.Lists["x_activo"] = {"LinkField":"x_codigo","Ajax":null,"AutoFill":false,"DisplayFields":["x_nombre_nivel","","",""],"ParentFields":[],"FilterFields":[],"Options":[]};
 
+// Form object for search
 var fusuarioslistsrch = new ew_Form("fusuarioslistsrch");
 </script>
 <script type="text/javascript">
@@ -1806,6 +1886,24 @@ $usuarios_list->ListOptions->Render("header", "left");
         </div></div></th>
 	<?php } ?>
 <?php } ?>		
+<?php if ($usuarios->_email->Visible) { // email ?>
+	<?php if ($usuarios->SortUrl($usuarios->_email) == "") { ?>
+		<th data-name="_email"><div id="elh_usuarios__email" class="usuarios__email"><div class="ewTableHeaderCaption"><?php echo $usuarios->_email->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="_email"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $usuarios->SortUrl($usuarios->_email) ?>',1);"><div id="elh_usuarios__email" class="usuarios__email">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $usuarios->_email->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($usuarios->_email->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($usuarios->_email->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+        </div></div></th>
+	<?php } ?>
+<?php } ?>		
+<?php if ($usuarios->activo->Visible) { // activo ?>
+	<?php if ($usuarios->SortUrl($usuarios->activo) == "") { ?>
+		<th data-name="activo"><div id="elh_usuarios_activo" class="usuarios_activo"><div class="ewTableHeaderCaption"><?php echo $usuarios->activo->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="activo"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $usuarios->SortUrl($usuarios->activo) ?>',1);"><div id="elh_usuarios_activo" class="usuarios_activo">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $usuarios->activo->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($usuarios->activo->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($usuarios->activo->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+        </div></div></th>
+	<?php } ?>
+<?php } ?>		
 <?php
 
 // Render list options (header, right)
@@ -1893,6 +1991,18 @@ $usuarios_list->ListOptions->Render("body", "left", $usuarios_list->RowCnt);
 		<td data-name="nombre"<?php echo $usuarios->nombre->CellAttributes() ?>>
 <span<?php echo $usuarios->nombre->ViewAttributes() ?>>
 <?php echo $usuarios->nombre->ListViewValue() ?></span>
+</td>
+	<?php } ?>
+	<?php if ($usuarios->_email->Visible) { // email ?>
+		<td data-name="_email"<?php echo $usuarios->_email->CellAttributes() ?>>
+<span<?php echo $usuarios->_email->ViewAttributes() ?>>
+<?php echo $usuarios->_email->ListViewValue() ?></span>
+</td>
+	<?php } ?>
+	<?php if ($usuarios->activo->Visible) { // activo ?>
+		<td data-name="activo"<?php echo $usuarios->activo->CellAttributes() ?>>
+<span<?php echo $usuarios->activo->ViewAttributes() ?>>
+<?php echo $usuarios->activo->ListViewValue() ?></span>
 </td>
 	<?php } ?>
 <?php

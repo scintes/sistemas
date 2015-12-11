@@ -239,6 +239,22 @@ class choja_mantenimientos_edit extends choja_mantenimientos {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanEdit()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("hoja_mantenimientoslist.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("hoja_mantenimientoslist.php"));
+		}
 
 		// Create form object
 		$objForm = new cFormObj();
@@ -560,6 +576,15 @@ class choja_mantenimientos_edit extends choja_mantenimientos {
 			$this->LoadRowValues($rs); // Load row values
 			$rs->Close();
 		}
+
+		// Check if valid user id
+		if ($res) {
+			$res = $this->ShowOptionLink('edit');
+			if (!$res) {
+				$sUserIdMsg = $Language->Phrase("NoPermission");
+				$this->setFailureMessage($sUserIdMsg);
+			}
+		}
 		return $res;
 	}
 
@@ -592,6 +617,7 @@ class choja_mantenimientos_edit extends choja_mantenimientos {
 		} else {
 			$this->id_tipo_mantenimiento->VirtualValue = ""; // Clear value
 		}
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Load DbValue from recordset
@@ -604,6 +630,7 @@ class choja_mantenimientos_edit extends choja_mantenimientos {
 		$this->id_vehiculo->DbValue = $row['id_vehiculo'];
 		$this->id_taller->DbValue = $row['id_taller'];
 		$this->id_tipo_mantenimiento->DbValue = $row['id_tipo_mantenimiento'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Render row values based on field settings
@@ -623,6 +650,7 @@ class choja_mantenimientos_edit extends choja_mantenimientos {
 		// id_vehiculo
 		// id_taller
 		// id_tipo_mantenimiento
+		// id_usuario
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -991,6 +1019,14 @@ class choja_mantenimientos_edit extends choja_mantenimientos {
 		return $EditRow;
 	}
 
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->id_usuario->CurrentValue);
+		return TRUE;
+	}
+
 	// Set up detail parms based on QueryString
 	function SetUpDetailParms() {
 
@@ -1296,7 +1332,9 @@ if (is_array($hoja_mantenimientos->id_vehiculo->EditValue)) {
 }
 ?>
 </select>
+<?php if (AllowAdd(CurrentProjectID() . "vehiculos")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $hoja_mantenimientos->id_vehiculo->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_vehiculo',url:'vehiculosaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_vehiculo"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $hoja_mantenimientos->id_vehiculo->FldCaption() ?></span></button>
+<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `Patente` AS `DispFld`, `modelo` AS `Disp2Fld`, `nombre` AS `Disp3Fld`, '' AS `Disp4Fld` FROM `vehiculos`";
 $sWhereWrk = "";
@@ -1337,7 +1375,9 @@ if (is_array($hoja_mantenimientos->id_taller->EditValue)) {
 }
 ?>
 </select>
+<?php if (AllowAdd(CurrentProjectID() . "talleres")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $hoja_mantenimientos->id_taller->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_taller',url:'talleresaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_taller"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $hoja_mantenimientos->id_taller->FldCaption() ?></span></button>
+<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `taller` AS `DispFld`, `tel` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `talleres`";
 $sWhereWrk = "";
@@ -1375,7 +1415,9 @@ if (is_array($hoja_mantenimientos->id_tipo_mantenimiento->EditValue)) {
 }
 ?>
 </select>
+<?php if (AllowAdd(CurrentProjectID() . "tipo_mantenimientos")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $hoja_mantenimientos->id_tipo_mantenimiento->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_tipo_mantenimiento',url:'tipo_mantenimientosaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_tipo_mantenimiento"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $hoja_mantenimientos->id_tipo_mantenimiento->FldCaption() ?></span></button>
+<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `tipo_mantenimiento` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `tipo_mantenimientos`";
 $sWhereWrk = "";

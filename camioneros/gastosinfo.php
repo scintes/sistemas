@@ -13,6 +13,7 @@ class cgastos extends cTable {
 	var $Importe;
 	var $id_tipo_gasto;
 	var $id_hoja_ruta;
+	var $id_usuario;
 
 	//
 	// Table class constructor
@@ -68,6 +69,11 @@ class cgastos extends cTable {
 		$this->id_hoja_ruta = new cField('gastos', 'gastos', 'x_id_hoja_ruta', 'id_hoja_ruta', '`id_hoja_ruta`', '`id_hoja_ruta`', 3, -1, FALSE, '`EV__id_hoja_ruta`', TRUE, FALSE, TRUE, 'FORMATTED TEXT');
 		$this->id_hoja_ruta->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_hoja_ruta'] = &$this->id_hoja_ruta;
+
+		// id_usuario
+		$this->id_usuario = new cField('gastos', 'gastos', 'x_id_usuario', 'id_usuario', '`id_usuario`', '`id_usuario`', 3, -1, FALSE, '`id_usuario`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->id_usuario->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['id_usuario'] = &$this->id_usuario;
 	}
 
 	// Single column sort
@@ -292,12 +298,18 @@ class cgastos extends cTable {
 
 	// Apply User ID filters
 	function ApplyUserIDFilters($sFilter) {
+		global $Security;
+
+		// Add User ID filter
+		if (!$this->AllowAnonymousUser() && $Security->CurrentUserID() <> "" && !$Security->IsAdmin()) { // Non system admin
+			$sFilter = $this->AddUserIDFilter($sFilter);
+		}
 		return $sFilter;
 	}
 
 	// Check if User ID security allows view all
 	function UserIDAllow($id = "") {
-		$allow = EW_USER_ID_ALLOW;
+		$allow = $this->UserIDAllowSecurity;
 		switch ($id) {
 			case "add":
 			case "copy":
@@ -674,6 +686,7 @@ class cgastos extends cTable {
 		$this->Importe->setDbValue($rs->fields('Importe'));
 		$this->id_tipo_gasto->setDbValue($rs->fields('id_tipo_gasto'));
 		$this->id_hoja_ruta->setDbValue($rs->fields('id_hoja_ruta'));
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Render list row values
@@ -690,8 +703,11 @@ class cgastos extends cTable {
 		// Importe
 		// id_tipo_gasto
 		// id_hoja_ruta
-		// codigo
+		// id_usuario
 
+		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
+
+		// codigo
 		$this->codigo->ViewValue = $this->codigo->CurrentValue;
 		$this->codigo->ViewCustomAttributes = "";
 
@@ -775,6 +791,10 @@ class cgastos extends cTable {
 		}
 		$this->id_hoja_ruta->ViewCustomAttributes = "";
 
+		// id_usuario
+		$this->id_usuario->ViewValue = $this->id_usuario->CurrentValue;
+		$this->id_usuario->ViewCustomAttributes = "";
+
 		// codigo
 		$this->codigo->LinkCustomAttributes = "";
 		$this->codigo->HrefValue = "";
@@ -804,6 +824,11 @@ class cgastos extends cTable {
 		$this->id_hoja_ruta->LinkCustomAttributes = "";
 		$this->id_hoja_ruta->HrefValue = "";
 		$this->id_hoja_ruta->TooltipValue = "";
+
+		// id_usuario
+		$this->id_usuario->LinkCustomAttributes = "";
+		$this->id_usuario->HrefValue = "";
+		$this->id_usuario->TooltipValue = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -921,7 +946,9 @@ class cgastos extends cTable {
 		$this->id_hoja_ruta->PlaceHolder = ew_RemoveHtml($this->id_hoja_ruta->FldCaption());
 		}
 
+		// id_usuario
 		// Call Row Rendered event
+
 		$this->Row_Rendered();
 	}
 
@@ -1018,6 +1045,74 @@ class cgastos extends cTable {
 		if (!$Doc->ExportCustom) {
 			$Doc->ExportTableFooter();
 		}
+	}
+
+	// Add User ID filter
+	function AddUserIDFilter($sFilter) {
+		global $Security;
+		$sFilterWrk = "";
+		$id = (CurrentPageID() == "list") ? $this->CurrentAction : CurrentPageID();
+		if (!$this->UserIDAllow($id) && !$Security->IsAdmin()) {
+			$sFilterWrk = $Security->UserIDList();
+			if ($sFilterWrk <> "")
+				$sFilterWrk = '`id_usuario` IN (' . $sFilterWrk . ')';
+		}
+
+		// Call User ID Filtering event
+		$this->UserID_Filtering($sFilterWrk);
+		ew_AddFilter($sFilter, $sFilterWrk);
+		return $sFilter;
+	}
+
+	// User ID subquery
+	function GetUserIDSubquery(&$fld, &$masterfld) {
+		global $conn;
+		$sWrk = "";
+		$sSql = "SELECT " . $masterfld->FldExpression . " FROM `gastos`";
+		$sFilter = $this->AddUserIDFilter("");
+		if ($sFilter <> "") $sSql .= " WHERE " . $sFilter;
+
+		// Use subquery
+		if (EW_USE_SUBQUERY_FOR_MASTER_USER_ID) {
+			$sWrk = $sSql;
+		} else {
+
+			// List all values
+			if ($rs = $conn->Execute($sSql)) {
+				while (!$rs->EOF) {
+					if ($sWrk <> "") $sWrk .= ",";
+					$sWrk .= ew_QuotedValue($rs->fields[0], $masterfld->FldDataType);
+					$rs->MoveNext();
+				}
+				$rs->Close();
+			}
+		}
+		if ($sWrk <> "") {
+			$sWrk = $fld->FldExpression . " IN (" . $sWrk . ")";
+		}
+		return $sWrk;
+	}
+
+	// Add master User ID filter
+	function AddMasterUserIDFilter($sFilter, $sCurrentMasterTable) {
+		$sFilterWrk = $sFilter;
+		if ($sCurrentMasterTable == "hoja_rutas") {
+			$sFilterWrk = $GLOBALS["hoja_rutas"]->AddUserIDFilter($sFilterWrk);
+		}
+		return $sFilterWrk;
+	}
+
+	// Add detail User ID filter
+	function AddDetailUserIDFilter($sFilter, $sCurrentMasterTable) {
+		$sFilterWrk = $sFilter;
+		if ($sCurrentMasterTable == "hoja_rutas") {
+			$mastertable = $GLOBALS["hoja_rutas"];
+			if (!$mastertable->UserIDAllow()) {
+				$sSubqueryWrk = $mastertable->GetUserIDSubquery($this->id_hoja_ruta, $mastertable->codigo);
+				ew_AddFilter($sFilterWrk, $sSubqueryWrk);
+			}
+		}
+		return $sFilterWrk;
 	}
 
 	// Get auto fill value

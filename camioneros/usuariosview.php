@@ -291,6 +291,22 @@ class cusuarios_view extends cusuarios {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanView()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("usuarioslist.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("usuarioslist.php"));
+		}
 
 		// Get export parameters
 		$custom = "";
@@ -522,17 +538,17 @@ class cusuarios_view extends cusuarios {
 		// Edit
 		$item = &$option->Add("edit");
 		$item->Body = "<a class=\"ewAction ewEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewPageEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewPageEditLink")) . "\" href=\"" . ew_HtmlEncode($this->EditUrl) . "\">" . $Language->Phrase("ViewPageEditLink") . "</a>";
-		$item->Visible = ($this->EditUrl <> "" && $Security->CanEdit());
+		$item->Visible = ($this->EditUrl <> "" && $Security->CanEdit()&& $this->ShowOptionLink('edit'));
 
 		// Copy
 		$item = &$option->Add("copy");
 		$item->Body = "<a class=\"ewAction ewCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewPageCopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewPageCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->CopyUrl) . "\">" . $Language->Phrase("ViewPageCopyLink") . "</a>";
-		$item->Visible = ($this->CopyUrl <> "" && $Security->CanAdd());
+		$item->Visible = ($this->CopyUrl <> "" && $Security->CanAdd() && $this->ShowOptionLink('add'));
 
 		// Delete
 		$item = &$option->Add("delete");
 		$item->Body = "<a class=\"ewAction ewDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("ViewPageDeleteLink") . "</a>";
-		$item->Visible = ($this->DeleteUrl <> "" && $Security->CanDelete());
+		$item->Visible = ($this->DeleteUrl <> "" && $Security->CanDelete() && $this->ShowOptionLink('delete'));
 
 		// Set up action default
 		$option = &$options["action"];
@@ -631,6 +647,8 @@ class cusuarios_view extends cusuarios {
 		$this->usuario->setDbValue($rs->fields('usuario'));
 		$this->contrasenia->setDbValue($rs->fields('contrasenia'));
 		$this->nombre->setDbValue($rs->fields('nombre'));
+		$this->_email->setDbValue($rs->fields('email'));
+		$this->activo->setDbValue($rs->fields('activo'));
 	}
 
 	// Load DbValue from recordset
@@ -641,6 +659,8 @@ class cusuarios_view extends cusuarios {
 		$this->usuario->DbValue = $row['usuario'];
 		$this->contrasenia->DbValue = $row['contrasenia'];
 		$this->nombre->DbValue = $row['nombre'];
+		$this->_email->DbValue = $row['email'];
+		$this->activo->DbValue = $row['activo'];
 	}
 
 	// Render row values based on field settings
@@ -664,6 +684,8 @@ class cusuarios_view extends cusuarios {
 		// usuario
 		// contrasenia
 		// nombre
+		// email
+		// activo
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -682,6 +704,39 @@ class cusuarios_view extends cusuarios {
 			// nombre
 			$this->nombre->ViewValue = $this->nombre->CurrentValue;
 			$this->nombre->ViewCustomAttributes = "";
+
+			// email
+			$this->_email->ViewValue = $this->_email->CurrentValue;
+			$this->_email->ViewValue = strtolower($this->_email->ViewValue);
+			$this->_email->ViewCustomAttributes = "";
+
+			// activo
+			if ($Security->CanAdmin()) { // System admin
+			if (strval($this->activo->CurrentValue) <> "") {
+				$sFilterWrk = "`codigo`" . ew_SearchString("=", $this->activo->CurrentValue, EW_DATATYPE_NUMBER);
+			$sSqlWrk = "SELECT `codigo`, `nombre_nivel` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `nivel_usuario`";
+			$sWhereWrk = "";
+			if ($sFilterWrk <> "") {
+				ew_AddFilter($sWhereWrk, $sFilterWrk);
+			}
+
+			// Call Lookup selecting
+			$this->Lookup_Selecting($this->activo, $sWhereWrk);
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+				$rswrk = $conn->Execute($sSqlWrk);
+				if ($rswrk && !$rswrk->EOF) { // Lookup values found
+					$this->activo->ViewValue = $rswrk->fields('DispFld');
+					$rswrk->Close();
+				} else {
+					$this->activo->ViewValue = $this->activo->CurrentValue;
+				}
+			} else {
+				$this->activo->ViewValue = NULL;
+			}
+			} else {
+				$this->activo->ViewValue = "********";
+			}
+			$this->activo->ViewCustomAttributes = "";
 
 			// codigo
 			$this->codigo->LinkCustomAttributes = "";
@@ -702,6 +757,16 @@ class cusuarios_view extends cusuarios {
 			$this->nombre->LinkCustomAttributes = "";
 			$this->nombre->HrefValue = "";
 			$this->nombre->TooltipValue = "";
+
+			// email
+			$this->_email->LinkCustomAttributes = "";
+			$this->_email->HrefValue = "";
+			$this->_email->TooltipValue = "";
+
+			// activo
+			$this->activo->LinkCustomAttributes = "";
+			$this->activo->HrefValue = "";
+			$this->activo->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -844,6 +909,14 @@ class cusuarios_view extends cusuarios {
 
 		// Output data
 		$Doc->Export();
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->codigo->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up Breadcrumb
@@ -989,8 +1062,9 @@ fusuariosview.ValidateRequired = false;
 <?php } ?>
 
 // Dynamic selection lists
-// Form object for search
+fusuariosview.Lists["x_activo"] = {"LinkField":"x_codigo","Ajax":null,"AutoFill":false,"DisplayFields":["x_nombre_nivel","","",""],"ParentFields":[],"FilterFields":[],"Options":[]};
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -1090,6 +1164,28 @@ $usuarios_view->ShowMessage();
 <span id="el_usuarios_nombre">
 <span<?php echo $usuarios->nombre->ViewAttributes() ?>>
 <?php echo $usuarios->nombre->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
+<?php if ($usuarios->_email->Visible) { // email ?>
+	<tr id="r__email">
+		<td><span id="elh_usuarios__email"><?php echo $usuarios->_email->FldCaption() ?></span></td>
+		<td<?php echo $usuarios->_email->CellAttributes() ?>>
+<span id="el_usuarios__email">
+<span<?php echo $usuarios->_email->ViewAttributes() ?>>
+<?php echo $usuarios->_email->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
+<?php if ($usuarios->activo->Visible) { // activo ?>
+	<tr id="r_activo">
+		<td><span id="elh_usuarios_activo"><?php echo $usuarios->activo->FldCaption() ?></span></td>
+		<td<?php echo $usuarios->activo->CellAttributes() ?>>
+<span id="el_usuarios_activo">
+<span<?php echo $usuarios->activo->ViewAttributes() ?>>
+<?php echo $usuarios->activo->ViewValue ?></span>
 </span>
 </td>
 	</tr>

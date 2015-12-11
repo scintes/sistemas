@@ -24,6 +24,7 @@ class choja_rutas extends cTable {
 	var $kg_carga;
 	var $tarifa;
 	var $porcentaje;
+	var $id_usuario;
 
 	//
 	// Table class constructor
@@ -132,6 +133,11 @@ class choja_rutas extends cTable {
 		$this->porcentaje = new cField('hoja_rutas', 'hoja_rutas', 'x_porcentaje', 'porcentaje', '`porcentaje`', '`porcentaje`', 131, -1, FALSE, '`porcentaje`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
 		$this->porcentaje->FldDefaultErrMsg = $Language->Phrase("IncorrectFloat");
 		$this->fields['porcentaje'] = &$this->porcentaje;
+
+		// id_usuario
+		$this->id_usuario = new cField('hoja_rutas', 'hoja_rutas', 'x_id_usuario', 'id_usuario', '`id_usuario`', '`id_usuario`', 3, -1, FALSE, '`id_usuario`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->id_usuario->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['id_usuario'] = &$this->id_usuario;
 	}
 
 	// Single column sort
@@ -311,12 +317,18 @@ class choja_rutas extends cTable {
 
 	// Apply User ID filters
 	function ApplyUserIDFilters($sFilter) {
+		global $Security;
+
+		// Add User ID filter
+		if (!$this->AllowAnonymousUser() && $Security->CurrentUserID() <> "" && !$Security->IsAdmin()) { // Non system admin
+			$sFilter = $this->AddUserIDFilter($sFilter);
+		}
 		return $sFilter;
 	}
 
 	// Check if User ID security allows view all
 	function UserIDAllow($id = "") {
-		$allow = EW_USER_ID_ALLOW;
+		$allow = $this->UserIDAllowSecurity;
 		switch ($id) {
 			case "add":
 			case "copy":
@@ -739,6 +751,7 @@ class choja_rutas extends cTable {
 		$this->kg_carga->setDbValue($rs->fields('kg_carga'));
 		$this->tarifa->setDbValue($rs->fields('tarifa'));
 		$this->porcentaje->setDbValue($rs->fields('porcentaje'));
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Render list row values
@@ -766,8 +779,11 @@ class choja_rutas extends cTable {
 		// kg_carga
 		// tarifa
 		// porcentaje
-		// codigo
+		// id_usuario
 
+		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
+
+		// codigo
 		$this->codigo->ViewValue = $this->codigo->CurrentValue;
 		$this->codigo->ViewCustomAttributes = "";
 
@@ -970,6 +986,10 @@ class choja_rutas extends cTable {
 		$this->porcentaje->ViewValue = $this->porcentaje->CurrentValue;
 		$this->porcentaje->ViewCustomAttributes = "";
 
+		// id_usuario
+		$this->id_usuario->ViewValue = $this->id_usuario->CurrentValue;
+		$this->id_usuario->ViewCustomAttributes = "";
+
 		// codigo
 		$this->codigo->LinkCustomAttributes = "";
 		$this->codigo->HrefValue = "";
@@ -1054,6 +1074,11 @@ class choja_rutas extends cTable {
 		$this->porcentaje->LinkCustomAttributes = "";
 		$this->porcentaje->HrefValue = "";
 		$this->porcentaje->TooltipValue = "";
+
+		// id_usuario
+		$this->id_usuario->LinkCustomAttributes = "";
+		$this->id_usuario->HrefValue = "";
+		$this->id_usuario->TooltipValue = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -1161,7 +1186,9 @@ class choja_rutas extends cTable {
 		$this->porcentaje->PlaceHolder = ew_RemoveHtml($this->porcentaje->FldCaption());
 		if (strval($this->porcentaje->EditValue) <> "" && is_numeric($this->porcentaje->EditValue)) $this->porcentaje->EditValue = ew_FormatNumber($this->porcentaje->EditValue, -2, -1, -2, 0);
 
+		// id_usuario
 		// Call Row Rendered event
+
 		$this->Row_Rendered();
 	}
 
@@ -1268,6 +1295,52 @@ class choja_rutas extends cTable {
 		if (!$Doc->ExportCustom) {
 			$Doc->ExportTableFooter();
 		}
+	}
+
+	// Add User ID filter
+	function AddUserIDFilter($sFilter) {
+		global $Security;
+		$sFilterWrk = "";
+		$id = (CurrentPageID() == "list") ? $this->CurrentAction : CurrentPageID();
+		if (!$this->UserIDAllow($id) && !$Security->IsAdmin()) {
+			$sFilterWrk = $Security->UserIDList();
+			if ($sFilterWrk <> "")
+				$sFilterWrk = '`id_usuario` IN (' . $sFilterWrk . ')';
+		}
+
+		// Call User ID Filtering event
+		$this->UserID_Filtering($sFilterWrk);
+		ew_AddFilter($sFilter, $sFilterWrk);
+		return $sFilter;
+	}
+
+	// User ID subquery
+	function GetUserIDSubquery(&$fld, &$masterfld) {
+		global $conn;
+		$sWrk = "";
+		$sSql = "SELECT " . $masterfld->FldExpression . " FROM `hoja_rutas`";
+		$sFilter = $this->AddUserIDFilter("");
+		if ($sFilter <> "") $sSql .= " WHERE " . $sFilter;
+
+		// Use subquery
+		if (EW_USE_SUBQUERY_FOR_MASTER_USER_ID) {
+			$sWrk = $sSql;
+		} else {
+
+			// List all values
+			if ($rs = $conn->Execute($sSql)) {
+				while (!$rs->EOF) {
+					if ($sWrk <> "") $sWrk .= ",";
+					$sWrk .= ew_QuotedValue($rs->fields[0], $masterfld->FldDataType);
+					$rs->MoveNext();
+				}
+				$rs->Close();
+			}
+		}
+		if ($sWrk <> "") {
+			$sWrk = $fld->FldExpression . " IN (" . $sWrk . ")";
+		}
+		return $sWrk;
 	}
 
 	// Get auto fill value

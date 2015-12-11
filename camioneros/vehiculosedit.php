@@ -238,6 +238,18 @@ class cvehiculos_edit extends cvehiculos {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanEdit()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("vehiculoslist.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
 
 		// Create form object
 		$objForm = new cFormObj();
@@ -1279,7 +1291,9 @@ if (is_array($vehiculos->id_chofer->EditValue)) {
 }
 ?>
 </select>
+<?php if (AllowAdd(CurrentProjectID() . "choferes")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $vehiculos->id_chofer->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_chofer',url:'choferesaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_chofer"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $vehiculos->id_chofer->FldCaption() ?></span></button>
+<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `codigo` AS `DispFld`, `nombre` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `choferes`";
 $sWhereWrk = "";
@@ -1320,7 +1334,9 @@ if (is_array($vehiculos->id_guarda->EditValue)) {
 }
 ?>
 </select>
+<?php if (AllowAdd(CurrentProjectID() . "choferes")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $vehiculos->id_guarda->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_guarda',url:'choferesaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_guarda"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $vehiculos->id_guarda->FldCaption() ?></span></button>
+<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `codigo` AS `DispFld`, `nombre` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `choferes`";
 $sWhereWrk = "";
@@ -1361,7 +1377,9 @@ if (is_array($vehiculos->id_marca->EditValue)) {
 }
 ?>
 </select>
+<?php if (AllowAdd(CurrentProjectID() . "marcas")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $vehiculos->id_marca->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_marca',url:'marcasaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_marca"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $vehiculos->id_marca->FldCaption() ?></span></button>
+<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `marca` AS `DispFld`, `modelo` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `marcas`";
 $sWhereWrk = "";

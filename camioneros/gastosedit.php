@@ -246,6 +246,22 @@ class cgastos_edit extends cgastos {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanEdit()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("gastoslist.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("gastoslist.php"));
+		}
 
 		// Create form object
 		$objForm = new cFormObj();
@@ -553,6 +569,15 @@ class cgastos_edit extends cgastos {
 			$this->LoadRowValues($rs); // Load row values
 			$rs->Close();
 		}
+
+		// Check if valid user id
+		if ($res) {
+			$res = $this->ShowOptionLink('edit');
+			if (!$res) {
+				$sUserIdMsg = $Language->Phrase("NoPermission");
+				$this->setFailureMessage($sUserIdMsg);
+			}
+		}
 		return $res;
 	}
 
@@ -580,6 +605,7 @@ class cgastos_edit extends cgastos {
 		} else {
 			$this->id_hoja_ruta->VirtualValue = ""; // Clear value
 		}
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Load DbValue from recordset
@@ -592,6 +618,7 @@ class cgastos_edit extends cgastos {
 		$this->Importe->DbValue = $row['Importe'];
 		$this->id_tipo_gasto->DbValue = $row['id_tipo_gasto'];
 		$this->id_hoja_ruta->DbValue = $row['id_hoja_ruta'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Render row values based on field settings
@@ -615,6 +642,7 @@ class cgastos_edit extends cgastos {
 		// Importe
 		// id_tipo_gasto
 		// id_hoja_ruta
+		// id_usuario
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -1034,6 +1062,14 @@ class cgastos_edit extends cgastos {
 		return $EditRow;
 	}
 
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->id_usuario->CurrentValue);
+		return TRUE;
+	}
+
 	// Set up master/detail based on QueryString
 	function SetUpMasterParms() {
 		$bValidMaster = FALSE;
@@ -1389,7 +1425,9 @@ if (is_array($gastos->id_tipo_gasto->EditValue)) {
 }
 ?>
 </select>
+<?php if (AllowAdd(CurrentProjectID() . "tipo_gastos")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $gastos->id_tipo_gasto->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_tipo_gasto',url:'tipo_gastosaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_tipo_gasto"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $gastos->id_tipo_gasto->FldCaption() ?></span></button>
+<?php } ?>
 <?php
 $sSqlWrk = "SELECT DISTINCT `codigo`, `codigo` AS `DispFld`, `tipo_gasto` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `tipo_gastos`";
 $sWhereWrk = "";
@@ -1433,6 +1471,7 @@ $sSqlWrk .= " ORDER BY `tipo_gasto` ASC";
 <?php
 $sSqlWrk = "SELECT `codigo`, `codigo` AS `DispFld`, `fecha_ini` AS `Disp2Fld`, `Origen` AS `Disp3Fld` FROM `hoja_rutas`";
 $sWhereWrk = "`codigo` LIKE '{query_value}%' OR CONCAT(`codigo`,'" . ew_ValueSeparator(1, $Page->id_hoja_ruta) . "',DATE_FORMAT(`fecha_ini`, '%d/%m/%Y'),'" . ew_ValueSeparator(2, $Page->id_hoja_ruta) . "',`Origen`) LIKE '{query_value}%'";
+if (!$GLOBALS["gastos"]->UserIDAllow("edit")) $sWhereWrk = $GLOBALS["hoja_rutas"]->AddUserIDFilter($sWhereWrk);
 
 // Call Lookup selecting
 $gastos->Lookup_Selecting($gastos->id_hoja_ruta, $sWhereWrk);

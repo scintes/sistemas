@@ -314,6 +314,22 @@ class choja_rutas_list extends choja_rutas {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanList()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("index.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate();
+		}
 
 		// Get export parameters
 		$custom = "";
@@ -1175,14 +1191,14 @@ class choja_rutas_list extends choja_rutas {
 
 		// "view"
 		$oListOpt = &$this->ListOptions->Items["view"];
-		if ($Security->CanView())
+		if ($Security->CanView() && $this->ShowOptionLink('view'))
 			$oListOpt->Body = "<a class=\"ewRowLink ewView\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewLink")) . "\" href=\"" . ew_HtmlEncode($this->ViewUrl) . "\">" . $Language->Phrase("ViewLink") . "</a>";
 		else
 			$oListOpt->Body = "";
 
 		// "edit"
 		$oListOpt = &$this->ListOptions->Items["edit"];
-		if ($Security->CanEdit()) {
+		if ($Security->CanEdit() && $this->ShowOptionLink('edit')) {
 			$oListOpt->Body = "<a class=\"ewRowLink ewEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" href=\"" . ew_HtmlEncode($this->EditUrl) . "\">" . $Language->Phrase("EditLink") . "</a>";
 		} else {
 			$oListOpt->Body = "";
@@ -1190,7 +1206,7 @@ class choja_rutas_list extends choja_rutas {
 
 		// "copy"
 		$oListOpt = &$this->ListOptions->Items["copy"];
-		if ($Security->CanAdd()) {
+		if ($Security->CanAdd() && $this->ShowOptionLink('add')) {
 			$oListOpt->Body = "<a class=\"ewRowLink ewCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("CopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("CopyLink")) . "\" href=\"" . ew_HtmlEncode($this->CopyUrl) . "\">" . $Language->Phrase("CopyLink") . "</a>";
 		} else {
 			$oListOpt->Body = "";
@@ -1198,7 +1214,7 @@ class choja_rutas_list extends choja_rutas {
 
 		// "delete"
 		$oListOpt = &$this->ListOptions->Items["delete"];
-		if ($Security->CanDelete())
+		if ($Security->CanDelete() && $this->ShowOptionLink('delete'))
 			$oListOpt->Body = "<a class=\"ewRowLink ewDelete\"" . "" . " title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("DeleteLink") . "</a>";
 		else
 			$oListOpt->Body = "";
@@ -1208,22 +1224,22 @@ class choja_rutas_list extends choja_rutas {
 
 		// "detail_gastos"
 		$oListOpt = &$this->ListOptions->Items["detail_gastos"];
-		if ($Security->AllowList(CurrentProjectID() . 'gastos')) {
+		if ($Security->AllowList(CurrentProjectID() . 'gastos') && $this->ShowOptionLink()) {
 			$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("gastos", "TblCaption");
 			$body .= str_replace("%c", $this->gastos_Count, $Language->Phrase("DetailCount"));
 			$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("gastoslist.php?" . EW_TABLE_SHOW_MASTER . "=hoja_rutas&fk_codigo=" . urlencode(strval($this->codigo->CurrentValue)) . "") . "\">" . $body . "</a>";
 			$links = "";
-			if ($GLOBALS["gastos_grid"]->DetailView && $Security->CanView() && $Security->AllowView(CurrentProjectID() . 'gastos')) {
+			if ($GLOBALS["gastos_grid"]->DetailView && $Security->CanView() && $this->ShowOptionLink('view') && $Security->AllowView(CurrentProjectID() . 'gastos')) {
 				$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=gastos")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
 				if ($DetailViewTblVar <> "") $DetailViewTblVar .= ",";
 				$DetailViewTblVar .= "gastos";
 			}
-			if ($GLOBALS["gastos_grid"]->DetailEdit && $Security->CanEdit() && $Security->AllowEdit(CurrentProjectID() . 'gastos')) {
+			if ($GLOBALS["gastos_grid"]->DetailEdit && $Security->CanEdit() && $this->ShowOptionLink('edit') && $Security->AllowEdit(CurrentProjectID() . 'gastos')) {
 				$links .= "<li><a class=\"ewRowLink ewDetailEdit\" data-action=\"edit\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=gastos")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailEditLink")) . "</a></li>";
 				if ($DetailEditTblVar <> "") $DetailEditTblVar .= ",";
 				$DetailEditTblVar .= "gastos";
 			}
-			if ($GLOBALS["gastos_grid"]->DetailAdd && $Security->CanAdd() && $Security->AllowAdd(CurrentProjectID() . 'gastos')) {
+			if ($GLOBALS["gastos_grid"]->DetailAdd && $Security->CanAdd() && $this->ShowOptionLink('add') && $Security->AllowAdd(CurrentProjectID() . 'gastos')) {
 				$links .= "<li><a class=\"ewRowLink ewDetailCopy\" data-action=\"add\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=gastos")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailCopyLink")) . "</a></li>";
 				if ($DetailCopyTblVar <> "") $DetailCopyTblVar .= ",";
 				$DetailCopyTblVar .= "gastos";
@@ -1656,6 +1672,7 @@ class choja_rutas_list extends choja_rutas {
 		$this->kg_carga->setDbValue($rs->fields('kg_carga'));
 		$this->tarifa->setDbValue($rs->fields('tarifa'));
 		$this->porcentaje->setDbValue($rs->fields('porcentaje'));
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 		if (!isset($GLOBALS["gastos_grid"])) $GLOBALS["gastos_grid"] = new cgastos_grid;
 		$sDetailFilter = $GLOBALS["gastos"]->SqlDetailFilter_hoja_rutas();
 		$sDetailFilter = str_replace("@id_hoja_ruta@", ew_AdjustSql($this->codigo->DbValue), $sDetailFilter);
@@ -1685,6 +1702,7 @@ class choja_rutas_list extends choja_rutas {
 		$this->kg_carga->DbValue = $row['kg_carga'];
 		$this->tarifa->DbValue = $row['tarifa'];
 		$this->porcentaje->DbValue = $row['porcentaje'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Load old record
@@ -1755,7 +1773,9 @@ class choja_rutas_list extends choja_rutas {
 		// kg_carga
 		// tarifa
 		// porcentaje
+		// id_usuario
 
+		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
 			// fecha_ini
@@ -2226,6 +2246,14 @@ class choja_rutas_list extends choja_rutas {
 
 		// Output data
 		$Doc->Export();
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->id_usuario->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up Breadcrumb

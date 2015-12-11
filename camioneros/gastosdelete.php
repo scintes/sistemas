@@ -246,6 +246,22 @@ class cgastos_delete extends cgastos {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanDelete()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("gastoslist.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("gastoslist.php"));
+		}
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
 		$this->codigo->Visible = !$this->IsAdd() && !$this->IsCopy() && !$this->IsGridAdd();
 
@@ -355,6 +371,24 @@ class cgastos_delete extends cgastos {
 
 		$this->CurrentFilter = $sFilter;
 
+		// Check if valid user id
+		$sql = $this->GetSQL($this->CurrentFilter, "");
+		if ($this->Recordset = ew_LoadRecordset($sql)) {
+			$res = TRUE;
+			while (!$this->Recordset->EOF) {
+				$this->LoadRowValues($this->Recordset);
+				if (!$this->ShowOptionLink('delete')) {
+					$sUserIdMsg = $Language->Phrase("NoDeletePermission");
+					$this->setFailureMessage($sUserIdMsg);
+					$res = FALSE;
+					break;
+				}
+				$this->Recordset->MoveNext();
+			}
+			$this->Recordset->Close();
+			if (!$res) $this->Page_Terminate("gastoslist.php"); // Return to list
+		}
+
 		// Get action
 		if (@$_POST["a_delete"] <> "") {
 			$this->CurrentAction = $_POST["a_delete"];
@@ -435,6 +469,7 @@ class cgastos_delete extends cgastos {
 		} else {
 			$this->id_hoja_ruta->VirtualValue = ""; // Clear value
 		}
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Load DbValue from recordset
@@ -447,6 +482,7 @@ class cgastos_delete extends cgastos {
 		$this->Importe->DbValue = $row['Importe'];
 		$this->id_tipo_gasto->DbValue = $row['id_tipo_gasto'];
 		$this->id_hoja_ruta->DbValue = $row['id_hoja_ruta'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Render row values based on field settings
@@ -470,7 +506,9 @@ class cgastos_delete extends cgastos {
 		// Importe
 		// id_tipo_gasto
 		// id_hoja_ruta
+		// id_usuario
 
+		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
 			// codigo
@@ -673,6 +711,14 @@ class cgastos_delete extends cgastos {
 			}
 		}
 		return $DeleteRows;
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->id_usuario->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up master/detail based on QueryString

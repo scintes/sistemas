@@ -246,6 +246,22 @@ class cgastos_mantenimientos_update extends cgastos_mantenimientos {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanEdit()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("gastos_mantenimientoslist.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("gastos_mantenimientoslist.php"));
+		}
 
 		// Create form object
 		$objForm = new cFormObj();
@@ -340,6 +356,24 @@ class cgastos_mantenimientos_update extends cgastos_mantenimientos {
 
 		// Try to load keys from list form
 		$this->RecKeys = $this->GetRecordKeys(); // Load record keys
+
+		// Check if valid user id
+		$sql = $this->GetSQL($this->GetKeyFilter(), "");
+		if ($this->Recordset = ew_LoadRecordset($sql)) {
+			$res = TRUE;
+			while (!$this->Recordset->EOF) {
+				$this->LoadRowValues($this->Recordset);
+				if (!$this->ShowOptionLink('update')) {
+					$sUserIdMsg = $Language->Phrase("NoEditPermission");
+					$this->setFailureMessage($sUserIdMsg);
+					$res = FALSE;
+					break;
+				}
+				$this->Recordset->MoveNext();
+			}
+			$this->Recordset->Close();
+			if (!$res) $this->Page_Terminate("gastos_mantenimientoslist.php"); // Return to list
+		}
 		if (@$_POST["a_update"] <> "") {
 
 			// Get action
@@ -551,6 +585,7 @@ class cgastos_mantenimientos_update extends cgastos_mantenimientos {
 			$this->id_tipo_gasto->VirtualValue = ""; // Clear value
 		}
 		$this->id_hoja_mantenimeinto->setDbValue($rs->fields('id_hoja_mantenimeinto'));
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Load DbValue from recordset
@@ -562,6 +597,7 @@ class cgastos_mantenimientos_update extends cgastos_mantenimientos {
 		$this->fecha->DbValue = $row['fecha'];
 		$this->id_tipo_gasto->DbValue = $row['id_tipo_gasto'];
 		$this->id_hoja_mantenimeinto->DbValue = $row['id_hoja_mantenimeinto'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Render row values based on field settings
@@ -580,6 +616,7 @@ class cgastos_mantenimientos_update extends cgastos_mantenimientos {
 		// fecha
 		// id_tipo_gasto
 		// id_hoja_mantenimeinto
+		// id_usuario
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -870,6 +907,14 @@ class cgastos_mantenimientos_update extends cgastos_mantenimientos {
 			$this->Row_Updated($rsold, $rsnew);
 		$rs->Close();
 		return $EditRow;
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->id_usuario->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up Breadcrumb

@@ -238,6 +238,22 @@ class choja_mantenimientos_delete extends choja_mantenimientos {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanDelete()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("hoja_mantenimientoslist.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("hoja_mantenimientoslist.php"));
+		}
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
 		$this->codigo->Visible = !$this->IsAdd() && !$this->IsCopy() && !$this->IsGridAdd();
 
@@ -352,6 +368,24 @@ class choja_mantenimientos_delete extends choja_mantenimientos {
 
 		$this->CurrentFilter = $sFilter;
 
+		// Check if valid user id
+		$sql = $this->GetSQL($this->CurrentFilter, "");
+		if ($this->Recordset = ew_LoadRecordset($sql)) {
+			$res = TRUE;
+			while (!$this->Recordset->EOF) {
+				$this->LoadRowValues($this->Recordset);
+				if (!$this->ShowOptionLink('delete')) {
+					$sUserIdMsg = $Language->Phrase("NoDeletePermission");
+					$this->setFailureMessage($sUserIdMsg);
+					$res = FALSE;
+					break;
+				}
+				$this->Recordset->MoveNext();
+			}
+			$this->Recordset->Close();
+			if (!$res) $this->Page_Terminate("hoja_mantenimientoslist.php"); // Return to list
+		}
+
 		// Get action
 		if (@$_POST["a_delete"] <> "") {
 			$this->CurrentAction = $_POST["a_delete"];
@@ -437,6 +471,7 @@ class choja_mantenimientos_delete extends choja_mantenimientos {
 		} else {
 			$this->id_tipo_mantenimiento->VirtualValue = ""; // Clear value
 		}
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Load DbValue from recordset
@@ -449,6 +484,7 @@ class choja_mantenimientos_delete extends choja_mantenimientos {
 		$this->id_vehiculo->DbValue = $row['id_vehiculo'];
 		$this->id_taller->DbValue = $row['id_taller'];
 		$this->id_tipo_mantenimiento->DbValue = $row['id_tipo_mantenimiento'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Render row values based on field settings
@@ -468,7 +504,9 @@ class choja_mantenimientos_delete extends choja_mantenimientos {
 		// id_vehiculo
 		// id_taller
 		// id_tipo_mantenimiento
+		// id_usuario
 
+		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
 			// codigo
@@ -689,6 +727,14 @@ class choja_mantenimientos_delete extends choja_mantenimientos {
 			}
 		}
 		return $DeleteRows;
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->id_usuario->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up Breadcrumb

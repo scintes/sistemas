@@ -321,6 +321,22 @@ class cgastos_mantenimientos_list extends cgastos_mantenimientos {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanList()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("index.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate();
+		}
 
 		// Create form object
 		$objForm = new cFormObj();
@@ -636,6 +652,14 @@ class cgastos_mantenimientos_list extends cgastos_mantenimientos {
 		// Restore master/detail filter
 		$this->DbMasterFilter = $this->GetMasterFilter(); // Restore master filter
 		$this->DbDetailFilter = $this->GetDetailFilter(); // Restore detail filter
+
+		// Add master User ID filter
+		if ($Security->CurrentUserID() <> "" && !$Security->IsAdmin()) { // Non system admin
+			if ($this->getCurrentMasterTable() == "hoja_mantenimientos")
+				$this->DbMasterFilter = $this->AddMasterUserIDFilter($this->DbMasterFilter, "hoja_mantenimientos"); // Add master User ID filter
+			if ($this->getCurrentMasterTable() == "tipo_gastos")
+				$this->DbMasterFilter = $this->AddMasterUserIDFilter($this->DbMasterFilter, "tipo_gastos"); // Add master User ID filter
+		}
 		ew_AddFilter($sFilter, $this->DbDetailFilter);
 		ew_AddFilter($sFilter, $this->SearchWhere);
 
@@ -718,6 +742,14 @@ class cgastos_mantenimientos_list extends cgastos_mantenimientos {
 		}
 		if ($bInlineEdit) {
 			if ($this->LoadRow()) {
+
+				// Check if valid user id
+				if (!$this->ShowOptionLink('edit')) {
+					$sUserIdMsg = $Language->Phrase("NoEditPermission");
+					$this->setFailureMessage($sUserIdMsg);
+					$this->ClearInlineMode(); // Clear inline edit mode
+					return;
+				}
 				$this->setKey("codigo", $this->codigo->CurrentValue); // Set up inline edit key
 				$_SESSION[EW_SESSION_INLINE_MODE] = "edit"; // Enable inline edit
 			}
@@ -781,6 +813,14 @@ class cgastos_mantenimientos_list extends cgastos_mantenimientos {
 				$this->setKey("codigo", ""); // Clear key
 				$this->CurrentAction = "add";
 			}
+		}
+
+		// Check if valid user id
+		if ($this->LoadRow() && !$this->ShowOptionLink('add')) {
+			$sUserIdMsg = $Language->Phrase("NoAddPermission");
+			$this->setFailureMessage($sUserIdMsg);
+			$this->ClearInlineMode(); // Clear inline edit mode
+			return;
 		}
 		$_SESSION[EW_SESSION_INLINE_MODE] = "add"; // Enable inline add
 	}
@@ -1170,14 +1210,14 @@ class cgastos_mantenimientos_list extends cgastos_mantenimientos {
 
 		// "view"
 		$oListOpt = &$this->ListOptions->Items["view"];
-		if ($Security->CanView())
+		if ($Security->CanView() && $this->ShowOptionLink('view'))
 			$oListOpt->Body = "<a class=\"ewRowLink ewView\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewLink")) . "\" href=\"" . ew_HtmlEncode($this->ViewUrl) . "\">" . $Language->Phrase("ViewLink") . "</a>";
 		else
 			$oListOpt->Body = "";
 
 		// "edit"
 		$oListOpt = &$this->ListOptions->Items["edit"];
-		if ($Security->CanEdit()) {
+		if ($Security->CanEdit() && $this->ShowOptionLink('edit')) {
 			$oListOpt->Body = "<a class=\"ewRowLink ewEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" href=\"" . ew_HtmlEncode($this->EditUrl) . "\">" . $Language->Phrase("EditLink") . "</a>";
 			$oListOpt->Body .= "<a class=\"ewRowLink ewInlineEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("InlineEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("InlineEditLink")) . "\" href=\"" . ew_HtmlEncode(ew_GetHashUrl($this->InlineEditUrl, $this->PageObjName . "_row_" . $this->RowCnt)) . "\">" . $Language->Phrase("InlineEditLink") . "</a>";
 		} else {
@@ -1186,7 +1226,7 @@ class cgastos_mantenimientos_list extends cgastos_mantenimientos {
 
 		// "copy"
 		$oListOpt = &$this->ListOptions->Items["copy"];
-		if ($Security->CanAdd()) {
+		if ($Security->CanAdd() && $this->ShowOptionLink('add')) {
 			$oListOpt->Body = "<a class=\"ewRowLink ewCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("CopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("CopyLink")) . "\" href=\"" . ew_HtmlEncode($this->CopyUrl) . "\">" . $Language->Phrase("CopyLink") . "</a>";
 			$oListOpt->Body .= "<a class=\"ewRowLink ewInlineCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("InlineCopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("InlineCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->InlineCopyUrl) . "\">" . $Language->Phrase("InlineCopyLink") . "</a>";
 		} else {
@@ -1195,7 +1235,7 @@ class cgastos_mantenimientos_list extends cgastos_mantenimientos {
 
 		// "delete"
 		$oListOpt = &$this->ListOptions->Items["delete"];
-		if ($Security->CanDelete())
+		if ($Security->CanDelete() && $this->ShowOptionLink('delete'))
 			$oListOpt->Body = "<a class=\"ewRowLink ewDelete\"" . "" . " title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("DeleteLink") . "</a>";
 		else
 			$oListOpt->Body = "";
@@ -1507,6 +1547,7 @@ class cgastos_mantenimientos_list extends cgastos_mantenimientos {
 			$this->id_tipo_gasto->VirtualValue = ""; // Clear value
 		}
 		$this->id_hoja_mantenimeinto->setDbValue($rs->fields('id_hoja_mantenimeinto'));
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Load DbValue from recordset
@@ -1518,6 +1559,7 @@ class cgastos_mantenimientos_list extends cgastos_mantenimientos {
 		$this->fecha->DbValue = $row['fecha'];
 		$this->id_tipo_gasto->DbValue = $row['id_tipo_gasto'];
 		$this->id_hoja_mantenimeinto->DbValue = $row['id_hoja_mantenimeinto'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Load old record
@@ -1564,7 +1606,9 @@ class cgastos_mantenimientos_list extends cgastos_mantenimientos {
 		// fecha
 		// id_tipo_gasto
 		// id_hoja_mantenimeinto
+		// id_usuario
 
+		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
 			// codigo
@@ -1968,6 +2012,48 @@ class cgastos_mantenimientos_list extends cgastos_mantenimientos {
 	function AddRow($rsold = NULL) {
 		global $conn, $Language, $Security;
 
+		// Check if valid key values for master user
+		if ($Security->CurrentUserID() <> "" && !$Security->IsAdmin()) { // Non system admin
+			$sMasterFilter = $this->SqlMasterFilter_hoja_mantenimientos();
+			if (strval($this->id_hoja_mantenimeinto->CurrentValue) <> "" &&
+				$this->getCurrentMasterTable() == "hoja_mantenimientos") {
+				$sMasterFilter = str_replace("@codigo@", ew_AdjustSql($this->id_hoja_mantenimeinto->CurrentValue), $sMasterFilter);
+			} else {
+				$sMasterFilter = "";
+			}
+			if ($sMasterFilter <> "") {
+				$rsmaster = $GLOBALS["hoja_mantenimientos"]->LoadRs($sMasterFilter);
+				$this->MasterRecordExists = ($rsmaster && !$rsmaster->EOF);
+				if (!$this->MasterRecordExists) {
+					$sMasterUserIdMsg = str_replace("%c", CurrentUserID(), $Language->Phrase("UnAuthorizedMasterUserID"));
+					$sMasterUserIdMsg = str_replace("%f", $sMasterFilter, $sMasterUserIdMsg);
+					$this->setFailureMessage($sMasterUserIdMsg);
+					return FALSE;
+				} else {
+					$rsmaster->Close();
+				}
+			}
+			$sMasterFilter = $this->SqlMasterFilter_tipo_gastos();
+			if (strval($this->id_tipo_gasto->CurrentValue) <> "" &&
+				$this->getCurrentMasterTable() == "tipo_gastos") {
+				$sMasterFilter = str_replace("@codigo@", ew_AdjustSql($this->id_tipo_gasto->CurrentValue), $sMasterFilter);
+			} else {
+				$sMasterFilter = "";
+			}
+			if ($sMasterFilter <> "") {
+				$rsmaster = $GLOBALS["tipo_gastos"]->LoadRs($sMasterFilter);
+				$this->MasterRecordExists = ($rsmaster && !$rsmaster->EOF);
+				if (!$this->MasterRecordExists) {
+					$sMasterUserIdMsg = str_replace("%c", CurrentUserID(), $Language->Phrase("UnAuthorizedMasterUserID"));
+					$sMasterUserIdMsg = str_replace("%f", $sMasterFilter, $sMasterUserIdMsg);
+					$this->setFailureMessage($sMasterUserIdMsg);
+					return FALSE;
+				} else {
+					$rsmaster->Close();
+				}
+			}
+		}
+
 		// Load db values from rsold
 		if ($rsold) {
 			$this->LoadDbValues($rsold);
@@ -1985,6 +2071,11 @@ class cgastos_mantenimientos_list extends cgastos_mantenimientos {
 
 		// id_hoja_mantenimeinto
 		$this->id_hoja_mantenimeinto->SetDbValueDef($rsnew, $this->id_hoja_mantenimeinto->CurrentValue, NULL, FALSE);
+
+		// id_usuario
+		if (!$Security->IsAdmin() && $Security->IsLoggedIn()) { // Non system admin
+			$rsnew['id_usuario'] = CurrentUserID();
+		}
 
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
@@ -2201,6 +2292,14 @@ class cgastos_mantenimientos_list extends cgastos_mantenimientos {
 
 		// Output data
 		$Doc->Export();
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->id_usuario->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up master/detail based on QueryString
@@ -2780,7 +2879,9 @@ if (is_array($gastos_mantenimientos->id_tipo_gasto->EditValue)) {
 }
 ?>
 </select>
+<?php if (AllowAdd(CurrentProjectID() . "tipo_gastos")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $gastos_mantenimientos->id_tipo_gasto->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x<?php echo $gastos_mantenimientos_list->RowIndex ?>_id_tipo_gasto',url:'tipo_gastosaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x<?php echo $gastos_mantenimientos_list->RowIndex ?>_id_tipo_gasto"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $gastos_mantenimientos->id_tipo_gasto->FldCaption() ?></span></button>
+<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `tipo_gasto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `tipo_gastos`";
 $sWhereWrk = "";
@@ -2984,7 +3085,9 @@ if (is_array($gastos_mantenimientos->id_tipo_gasto->EditValue)) {
 }
 ?>
 </select>
+<?php if (AllowAdd(CurrentProjectID() . "tipo_gastos")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $gastos_mantenimientos->id_tipo_gasto->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x<?php echo $gastos_mantenimientos_list->RowIndex ?>_id_tipo_gasto',url:'tipo_gastosaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x<?php echo $gastos_mantenimientos_list->RowIndex ?>_id_tipo_gasto"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $gastos_mantenimientos->id_tipo_gasto->FldCaption() ?></span></button>
+<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `tipo_gasto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `tipo_gastos`";
 $sWhereWrk = "";

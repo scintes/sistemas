@@ -234,6 +234,22 @@ class cusuarios_delete extends cusuarios {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanDelete()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("usuarioslist.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("usuarioslist.php"));
+		}
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
 		$this->codigo->Visible = !$this->IsAdd() && !$this->IsCopy() && !$this->IsGridAdd();
 
@@ -340,6 +356,24 @@ class cusuarios_delete extends cusuarios {
 
 		$this->CurrentFilter = $sFilter;
 
+		// Check if valid user id
+		$sql = $this->GetSQL($this->CurrentFilter, "");
+		if ($this->Recordset = ew_LoadRecordset($sql)) {
+			$res = TRUE;
+			while (!$this->Recordset->EOF) {
+				$this->LoadRowValues($this->Recordset);
+				if (!$this->ShowOptionLink('delete')) {
+					$sUserIdMsg = $Language->Phrase("NoDeletePermission");
+					$this->setFailureMessage($sUserIdMsg);
+					$res = FALSE;
+					break;
+				}
+				$this->Recordset->MoveNext();
+			}
+			$this->Recordset->Close();
+			if (!$res) $this->Page_Terminate("usuarioslist.php"); // Return to list
+		}
+
 		// Get action
 		if (@$_POST["a_delete"] <> "") {
 			$this->CurrentAction = $_POST["a_delete"];
@@ -408,6 +442,8 @@ class cusuarios_delete extends cusuarios {
 		$this->usuario->setDbValue($rs->fields('usuario'));
 		$this->contrasenia->setDbValue($rs->fields('contrasenia'));
 		$this->nombre->setDbValue($rs->fields('nombre'));
+		$this->_email->setDbValue($rs->fields('email'));
+		$this->activo->setDbValue($rs->fields('activo'));
 	}
 
 	// Load DbValue from recordset
@@ -418,6 +454,8 @@ class cusuarios_delete extends cusuarios {
 		$this->usuario->DbValue = $row['usuario'];
 		$this->contrasenia->DbValue = $row['contrasenia'];
 		$this->nombre->DbValue = $row['nombre'];
+		$this->_email->DbValue = $row['email'];
+		$this->activo->DbValue = $row['activo'];
 	}
 
 	// Render row values based on field settings
@@ -435,6 +473,8 @@ class cusuarios_delete extends cusuarios {
 		// usuario
 		// contrasenia
 		// nombre
+		// email
+		// activo
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -453,6 +493,39 @@ class cusuarios_delete extends cusuarios {
 			// nombre
 			$this->nombre->ViewValue = $this->nombre->CurrentValue;
 			$this->nombre->ViewCustomAttributes = "";
+
+			// email
+			$this->_email->ViewValue = $this->_email->CurrentValue;
+			$this->_email->ViewValue = strtolower($this->_email->ViewValue);
+			$this->_email->ViewCustomAttributes = "";
+
+			// activo
+			if ($Security->CanAdmin()) { // System admin
+			if (strval($this->activo->CurrentValue) <> "") {
+				$sFilterWrk = "`codigo`" . ew_SearchString("=", $this->activo->CurrentValue, EW_DATATYPE_NUMBER);
+			$sSqlWrk = "SELECT `codigo`, `nombre_nivel` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `nivel_usuario`";
+			$sWhereWrk = "";
+			if ($sFilterWrk <> "") {
+				ew_AddFilter($sWhereWrk, $sFilterWrk);
+			}
+
+			// Call Lookup selecting
+			$this->Lookup_Selecting($this->activo, $sWhereWrk);
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+				$rswrk = $conn->Execute($sSqlWrk);
+				if ($rswrk && !$rswrk->EOF) { // Lookup values found
+					$this->activo->ViewValue = $rswrk->fields('DispFld');
+					$rswrk->Close();
+				} else {
+					$this->activo->ViewValue = $this->activo->CurrentValue;
+				}
+			} else {
+				$this->activo->ViewValue = NULL;
+			}
+			} else {
+				$this->activo->ViewValue = "********";
+			}
+			$this->activo->ViewCustomAttributes = "";
 
 			// codigo
 			$this->codigo->LinkCustomAttributes = "";
@@ -473,6 +546,16 @@ class cusuarios_delete extends cusuarios {
 			$this->nombre->LinkCustomAttributes = "";
 			$this->nombre->HrefValue = "";
 			$this->nombre->TooltipValue = "";
+
+			// email
+			$this->_email->LinkCustomAttributes = "";
+			$this->_email->HrefValue = "";
+			$this->_email->TooltipValue = "";
+
+			// activo
+			$this->activo->LinkCustomAttributes = "";
+			$this->activo->HrefValue = "";
+			$this->activo->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -560,6 +643,14 @@ class cusuarios_delete extends cusuarios {
 			}
 		}
 		return $DeleteRows;
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->codigo->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up Breadcrumb
@@ -678,8 +769,9 @@ fusuariosdelete.ValidateRequired = false;
 <?php } ?>
 
 // Dynamic selection lists
-// Form object for search
+fusuariosdelete.Lists["x_activo"] = {"LinkField":"x_codigo","Ajax":null,"AutoFill":false,"DisplayFields":["x_nombre_nivel","","",""],"ParentFields":[],"FilterFields":[],"Options":[]};
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -733,6 +825,12 @@ $usuarios_delete->ShowMessage();
 <?php if ($usuarios->nombre->Visible) { // nombre ?>
 		<th><span id="elh_usuarios_nombre" class="usuarios_nombre"><?php echo $usuarios->nombre->FldCaption() ?></span></th>
 <?php } ?>
+<?php if ($usuarios->_email->Visible) { // email ?>
+		<th><span id="elh_usuarios__email" class="usuarios__email"><?php echo $usuarios->_email->FldCaption() ?></span></th>
+<?php } ?>
+<?php if ($usuarios->activo->Visible) { // activo ?>
+		<th><span id="elh_usuarios_activo" class="usuarios_activo"><?php echo $usuarios->activo->FldCaption() ?></span></th>
+<?php } ?>
 	</tr>
 	</thead>
 	<tbody>
@@ -783,6 +881,22 @@ while (!$usuarios_delete->Recordset->EOF) {
 <span id="el<?php echo $usuarios_delete->RowCnt ?>_usuarios_nombre" class="usuarios_nombre">
 <span<?php echo $usuarios->nombre->ViewAttributes() ?>>
 <?php echo $usuarios->nombre->ListViewValue() ?></span>
+</span>
+</td>
+<?php } ?>
+<?php if ($usuarios->_email->Visible) { // email ?>
+		<td<?php echo $usuarios->_email->CellAttributes() ?>>
+<span id="el<?php echo $usuarios_delete->RowCnt ?>_usuarios__email" class="usuarios__email">
+<span<?php echo $usuarios->_email->ViewAttributes() ?>>
+<?php echo $usuarios->_email->ListViewValue() ?></span>
+</span>
+</td>
+<?php } ?>
+<?php if ($usuarios->activo->Visible) { // activo ?>
+		<td<?php echo $usuarios->activo->CellAttributes() ?>>
+<span id="el<?php echo $usuarios_delete->RowCnt ?>_usuarios_activo" class="usuarios_activo">
+<span<?php echo $usuarios->activo->ViewAttributes() ?>>
+<?php echo $usuarios->activo->ListViewValue() ?></span>
 </span>
 </td>
 <?php } ?>

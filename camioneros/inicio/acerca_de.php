@@ -189,6 +189,9 @@ class cacerca_de_php {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();

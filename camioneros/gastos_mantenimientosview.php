@@ -303,6 +303,22 @@ class cgastos_mantenimientos_view extends cgastos_mantenimientos {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanView()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("gastos_mantenimientoslist.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("gastos_mantenimientoslist.php"));
+		}
 
 		// Get export parameters
 		$custom = "";
@@ -537,17 +553,17 @@ class cgastos_mantenimientos_view extends cgastos_mantenimientos {
 		// Edit
 		$item = &$option->Add("edit");
 		$item->Body = "<a class=\"ewAction ewEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewPageEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewPageEditLink")) . "\" href=\"" . ew_HtmlEncode($this->EditUrl) . "\">" . $Language->Phrase("ViewPageEditLink") . "</a>";
-		$item->Visible = ($this->EditUrl <> "" && $Security->CanEdit());
+		$item->Visible = ($this->EditUrl <> "" && $Security->CanEdit()&& $this->ShowOptionLink('edit'));
 
 		// Copy
 		$item = &$option->Add("copy");
 		$item->Body = "<a class=\"ewAction ewCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewPageCopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewPageCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->CopyUrl) . "\">" . $Language->Phrase("ViewPageCopyLink") . "</a>";
-		$item->Visible = ($this->CopyUrl <> "" && $Security->CanAdd());
+		$item->Visible = ($this->CopyUrl <> "" && $Security->CanAdd() && $this->ShowOptionLink('add'));
 
 		// Delete
 		$item = &$option->Add("delete");
 		$item->Body = "<a class=\"ewAction ewDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("ViewPageDeleteLink") . "</a>";
-		$item->Visible = ($this->DeleteUrl <> "" && $Security->CanDelete());
+		$item->Visible = ($this->DeleteUrl <> "" && $Security->CanDelete() && $this->ShowOptionLink('delete'));
 
 		// Set up action default
 		$option = &$options["action"];
@@ -652,6 +668,7 @@ class cgastos_mantenimientos_view extends cgastos_mantenimientos {
 			$this->id_tipo_gasto->VirtualValue = ""; // Clear value
 		}
 		$this->id_hoja_mantenimeinto->setDbValue($rs->fields('id_hoja_mantenimeinto'));
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Load DbValue from recordset
@@ -663,6 +680,7 @@ class cgastos_mantenimientos_view extends cgastos_mantenimientos {
 		$this->fecha->DbValue = $row['fecha'];
 		$this->id_tipo_gasto->DbValue = $row['id_tipo_gasto'];
 		$this->id_hoja_mantenimeinto->DbValue = $row['id_hoja_mantenimeinto'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Render row values based on field settings
@@ -687,6 +705,7 @@ class cgastos_mantenimientos_view extends cgastos_mantenimientos {
 		// fecha
 		// id_tipo_gasto
 		// id_hoja_mantenimeinto
+		// id_usuario
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -740,6 +759,10 @@ class cgastos_mantenimientos_view extends cgastos_mantenimientos {
 			$this->id_hoja_mantenimeinto->ViewValue = $this->id_hoja_mantenimeinto->CurrentValue;
 			$this->id_hoja_mantenimeinto->ViewCustomAttributes = "";
 
+			// id_usuario
+			$this->id_usuario->ViewValue = $this->id_usuario->CurrentValue;
+			$this->id_usuario->ViewCustomAttributes = "";
+
 			// codigo
 			$this->codigo->LinkCustomAttributes = "";
 			$this->codigo->HrefValue = "";
@@ -764,6 +787,11 @@ class cgastos_mantenimientos_view extends cgastos_mantenimientos {
 			$this->id_hoja_mantenimeinto->LinkCustomAttributes = "";
 			$this->id_hoja_mantenimeinto->HrefValue = "";
 			$this->id_hoja_mantenimeinto->TooltipValue = "";
+
+			// id_usuario
+			$this->id_usuario->LinkCustomAttributes = "";
+			$this->id_usuario->HrefValue = "";
+			$this->id_usuario->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -906,6 +934,14 @@ class cgastos_mantenimientos_view extends cgastos_mantenimientos {
 
 		// Output data
 		$Doc->Export();
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->id_usuario->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up master/detail based on QueryString
@@ -1221,6 +1257,17 @@ $gastos_mantenimientos_view->ShowMessage();
 <span id="el_gastos_mantenimientos_id_hoja_mantenimeinto">
 <span<?php echo $gastos_mantenimientos->id_hoja_mantenimeinto->ViewAttributes() ?>>
 <?php echo $gastos_mantenimientos->id_hoja_mantenimeinto->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
+<?php if ($gastos_mantenimientos->id_usuario->Visible) { // id_usuario ?>
+	<tr id="r_id_usuario">
+		<td><span id="elh_gastos_mantenimientos_id_usuario"><?php echo $gastos_mantenimientos->id_usuario->FldCaption() ?></span></td>
+		<td<?php echo $gastos_mantenimientos->id_usuario->CellAttributes() ?>>
+<span id="el_gastos_mantenimientos_id_usuario">
+<span<?php echo $gastos_mantenimientos->id_usuario->ViewAttributes() ?>>
+<?php echo $gastos_mantenimientos->id_usuario->ViewValue ?></span>
 </span>
 </td>
 	</tr>

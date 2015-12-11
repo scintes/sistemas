@@ -1,4 +1,5 @@
 <?php include_once "gastosinfo.php" ?>
+<?php include_once "hoja_rutasinfo.php" ?>
 <?php include_once "usuariosinfo.php" ?>
 <?php
 
@@ -209,6 +210,9 @@ class cgastos_grid extends cgastos {
 
 		}
 
+		// Table object (hoja_rutas)
+		if (!isset($GLOBALS['hoja_rutas'])) $GLOBALS['hoja_rutas'] = new choja_rutas();
+
 		// Table object (usuarios)
 		if (!isset($GLOBALS['usuarios'])) $GLOBALS['usuarios'] = new cusuarios();
 
@@ -255,6 +259,22 @@ class cgastos_grid extends cgastos {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanList()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("index.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("gastoslist.php"));
+		}
 
 		// Get grid add count
 		$gridaddcnt = @$_GET[EW_TABLE_GRID_ADD_ROW_COUNT];
@@ -439,6 +459,14 @@ class cgastos_grid extends cgastos {
 		// Restore master/detail filter
 		$this->DbMasterFilter = $this->GetMasterFilter(); // Restore master filter
 		$this->DbDetailFilter = $this->GetDetailFilter(); // Restore detail filter
+
+		// Add master User ID filter
+		if ($Security->CurrentUserID() <> "" && !$Security->IsAdmin()) { // Non system admin
+			if ($this->getCurrentMasterTable() == "hoja_rutas")
+				$this->DbMasterFilter = $this->AddMasterUserIDFilter($this->DbMasterFilter, "hoja_rutas"); // Add master User ID filter
+			if ($this->getCurrentMasterTable() == "tipo_gastos")
+				$this->DbMasterFilter = $this->AddMasterUserIDFilter($this->DbMasterFilter, "tipo_gastos"); // Add master User ID filter
+		}
 		ew_AddFilter($sFilter, $this->DbDetailFilter);
 		ew_AddFilter($sFilter, $this->SearchWhere);
 
@@ -1146,6 +1174,7 @@ class cgastos_grid extends cgastos {
 		} else {
 			$this->id_hoja_ruta->VirtualValue = ""; // Clear value
 		}
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Load DbValue from recordset
@@ -1158,6 +1187,7 @@ class cgastos_grid extends cgastos {
 		$this->Importe->DbValue = $row['Importe'];
 		$this->id_tipo_gasto->DbValue = $row['id_tipo_gasto'];
 		$this->id_hoja_ruta->DbValue = $row['id_hoja_ruta'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Load old record
@@ -1209,7 +1239,9 @@ class cgastos_grid extends cgastos {
 		// Importe
 		// id_tipo_gasto
 		// id_hoja_ruta
+		// id_usuario
 
+		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
 			// codigo
@@ -1864,6 +1896,48 @@ class cgastos_grid extends cgastos {
 	function AddRow($rsold = NULL) {
 		global $conn, $Language, $Security;
 
+		// Check if valid key values for master user
+		if ($Security->CurrentUserID() <> "" && !$Security->IsAdmin()) { // Non system admin
+			$sMasterFilter = $this->SqlMasterFilter_hoja_rutas();
+			if (strval($this->id_hoja_ruta->CurrentValue) <> "" &&
+				$this->getCurrentMasterTable() == "hoja_rutas") {
+				$sMasterFilter = str_replace("@codigo@", ew_AdjustSql($this->id_hoja_ruta->CurrentValue), $sMasterFilter);
+			} else {
+				$sMasterFilter = "";
+			}
+			if ($sMasterFilter <> "") {
+				$rsmaster = $GLOBALS["hoja_rutas"]->LoadRs($sMasterFilter);
+				$this->MasterRecordExists = ($rsmaster && !$rsmaster->EOF);
+				if (!$this->MasterRecordExists) {
+					$sMasterUserIdMsg = str_replace("%c", CurrentUserID(), $Language->Phrase("UnAuthorizedMasterUserID"));
+					$sMasterUserIdMsg = str_replace("%f", $sMasterFilter, $sMasterUserIdMsg);
+					$this->setFailureMessage($sMasterUserIdMsg);
+					return FALSE;
+				} else {
+					$rsmaster->Close();
+				}
+			}
+			$sMasterFilter = $this->SqlMasterFilter_tipo_gastos();
+			if (strval($this->id_tipo_gasto->CurrentValue) <> "" &&
+				$this->getCurrentMasterTable() == "tipo_gastos") {
+				$sMasterFilter = str_replace("@codigo@", ew_AdjustSql($this->id_tipo_gasto->CurrentValue), $sMasterFilter);
+			} else {
+				$sMasterFilter = "";
+			}
+			if ($sMasterFilter <> "") {
+				$rsmaster = $GLOBALS["tipo_gastos"]->LoadRs($sMasterFilter);
+				$this->MasterRecordExists = ($rsmaster && !$rsmaster->EOF);
+				if (!$this->MasterRecordExists) {
+					$sMasterUserIdMsg = str_replace("%c", CurrentUserID(), $Language->Phrase("UnAuthorizedMasterUserID"));
+					$sMasterUserIdMsg = str_replace("%f", $sMasterFilter, $sMasterUserIdMsg);
+					$this->setFailureMessage($sMasterUserIdMsg);
+					return FALSE;
+				} else {
+					$rsmaster->Close();
+				}
+			}
+		}
+
 		// Set up foreign key field value from Session
 			if ($this->getCurrentMasterTable() == "hoja_rutas") {
 				$this->id_hoja_ruta->CurrentValue = $this->id_hoja_ruta->getSessionValue();
@@ -1931,6 +2005,11 @@ class cgastos_grid extends cgastos {
 		// id_hoja_ruta
 		$this->id_hoja_ruta->SetDbValueDef($rsnew, $this->id_hoja_ruta->CurrentValue, NULL, FALSE);
 
+		// id_usuario
+		if (!$Security->IsAdmin() && $Security->IsLoggedIn()) { // Non system admin
+			$rsnew['id_usuario'] = CurrentUserID();
+		}
+
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
 		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
@@ -1965,6 +2044,14 @@ class cgastos_grid extends cgastos {
 			$this->Row_Inserted($rs, $rsnew);
 		}
 		return $AddRow;
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->id_usuario->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up master/detail based on QueryString

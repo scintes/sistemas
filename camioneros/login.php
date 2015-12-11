@@ -285,6 +285,7 @@ class clogin extends cusuarios {
 		} else {
 			if (!$Security->IsLoggedIn())
 				$Security->AutoLogin();
+			$Security->LoadUserLevel(); // Load user level
 			$this->Username = ""; // Initialize
 			if (@$_POST["username"] <> "") {
 
@@ -572,6 +573,8 @@ $login->ShowMessage();
 	</div>
 </form>
 <br>
+<a class="ewLink ewLinkSeparator" href="forgotpwd.php"><?php echo $Language->Phrase("ForgotPwd") ?></a>
+<a class="ewLink ewLinkSeparator" href="register.php"><?php echo $Language->Phrase("Register") ?></a>
 <script type="text/javascript">
 flogin.Init();
 </script>

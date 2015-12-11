@@ -1,3 +1,4 @@
+<?php include_once "hoja_rutasinfo.php" ?>
 <?php include_once "usuariosinfo.php" ?>
 <?php
 
@@ -565,6 +566,7 @@ if (@$emptywrk) $gastos->id_tipo_gasto->OldValue = "";
 <?php
  $sSqlWrk = "SELECT `codigo`, `codigo` AS `DispFld`, `fecha_ini` AS `Disp2Fld`, `Origen` AS `Disp3Fld` FROM `hoja_rutas`";
  $sWhereWrk = "`codigo` LIKE '{query_value}%' OR CONCAT(`codigo`,'" . ew_ValueSeparator(1, $Page->id_hoja_ruta) . "',DATE_FORMAT(`fecha_ini`, '%d/%m/%Y'),'" . ew_ValueSeparator(2, $Page->id_hoja_ruta) . "',`Origen`) LIKE '{query_value}%'";
+ if (!$GLOBALS["gastos"]->UserIDAllow("grid")) $sWhereWrk = $GLOBALS["hoja_rutas"]->AddUserIDFilter($sWhereWrk);
 
  // Call Lookup selecting
  $gastos->Lookup_Selecting($gastos->id_hoja_ruta, $sWhereWrk);
@@ -601,6 +603,7 @@ fgastosgrid.CreateAutoSuggest("x<?php echo $gastos_grid->RowIndex ?>_id_hoja_rut
 <?php
  $sSqlWrk = "SELECT `codigo`, `codigo` AS `DispFld`, `fecha_ini` AS `Disp2Fld`, `Origen` AS `Disp3Fld` FROM `hoja_rutas`";
  $sWhereWrk = "`codigo` LIKE '{query_value}%' OR CONCAT(`codigo`,'" . ew_ValueSeparator(1, $Page->id_hoja_ruta) . "',DATE_FORMAT(`fecha_ini`, '%d/%m/%Y'),'" . ew_ValueSeparator(2, $Page->id_hoja_ruta) . "',`Origen`) LIKE '{query_value}%'";
+ if (!$GLOBALS["gastos"]->UserIDAllow("grid")) $sWhereWrk = $GLOBALS["hoja_rutas"]->AddUserIDFilter($sWhereWrk);
 
  // Call Lookup selecting
  $gastos->Lookup_Selecting($gastos->id_hoja_ruta, $sWhereWrk);
@@ -813,6 +816,7 @@ if (@$emptywrk) $gastos->id_tipo_gasto->OldValue = "";
 <?php
  $sSqlWrk = "SELECT `codigo`, `codigo` AS `DispFld`, `fecha_ini` AS `Disp2Fld`, `Origen` AS `Disp3Fld` FROM `hoja_rutas`";
  $sWhereWrk = "`codigo` LIKE '{query_value}%' OR CONCAT(`codigo`,'" . ew_ValueSeparator(1, $Page->id_hoja_ruta) . "',DATE_FORMAT(`fecha_ini`, '%d/%m/%Y'),'" . ew_ValueSeparator(2, $Page->id_hoja_ruta) . "',`Origen`) LIKE '{query_value}%'";
+ if (!$GLOBALS["gastos"]->UserIDAllow("grid")) $sWhereWrk = $GLOBALS["hoja_rutas"]->AddUserIDFilter($sWhereWrk);
 
  // Call Lookup selecting
  $gastos->Lookup_Selecting($gastos->id_hoja_ruta, $sWhereWrk);

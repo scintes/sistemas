@@ -246,6 +246,22 @@ class cgastos_mantenimientos_add extends cgastos_mantenimientos {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanAdd()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("gastos_mantenimientoslist.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("gastos_mantenimientoslist.php"));
+		}
 
 		// Create form object
 		$objForm = new cFormObj();
@@ -478,6 +494,15 @@ class cgastos_mantenimientos_add extends cgastos_mantenimientos {
 			$this->LoadRowValues($rs); // Load row values
 			$rs->Close();
 		}
+
+		// Check if valid user id
+		if ($res) {
+			$res = $this->ShowOptionLink('add');
+			if (!$res) {
+				$sUserIdMsg = $Language->Phrase("NoPermission");
+				$this->setFailureMessage($sUserIdMsg);
+			}
+		}
 		return $res;
 	}
 
@@ -499,6 +524,7 @@ class cgastos_mantenimientos_add extends cgastos_mantenimientos {
 			$this->id_tipo_gasto->VirtualValue = ""; // Clear value
 		}
 		$this->id_hoja_mantenimeinto->setDbValue($rs->fields('id_hoja_mantenimeinto'));
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Load DbValue from recordset
@@ -510,6 +536,7 @@ class cgastos_mantenimientos_add extends cgastos_mantenimientos {
 		$this->fecha->DbValue = $row['fecha'];
 		$this->id_tipo_gasto->DbValue = $row['id_tipo_gasto'];
 		$this->id_hoja_mantenimeinto->DbValue = $row['id_hoja_mantenimeinto'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Load old record
@@ -550,6 +577,7 @@ class cgastos_mantenimientos_add extends cgastos_mantenimientos {
 		// fecha
 		// id_tipo_gasto
 		// id_hoja_mantenimeinto
+		// id_usuario
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -769,6 +797,48 @@ class cgastos_mantenimientos_add extends cgastos_mantenimientos {
 	function AddRow($rsold = NULL) {
 		global $conn, $Language, $Security;
 
+		// Check if valid key values for master user
+		if ($Security->CurrentUserID() <> "" && !$Security->IsAdmin()) { // Non system admin
+			$sMasterFilter = $this->SqlMasterFilter_hoja_mantenimientos();
+			if (strval($this->id_hoja_mantenimeinto->CurrentValue) <> "" &&
+				$this->getCurrentMasterTable() == "hoja_mantenimientos") {
+				$sMasterFilter = str_replace("@codigo@", ew_AdjustSql($this->id_hoja_mantenimeinto->CurrentValue), $sMasterFilter);
+			} else {
+				$sMasterFilter = "";
+			}
+			if ($sMasterFilter <> "") {
+				$rsmaster = $GLOBALS["hoja_mantenimientos"]->LoadRs($sMasterFilter);
+				$this->MasterRecordExists = ($rsmaster && !$rsmaster->EOF);
+				if (!$this->MasterRecordExists) {
+					$sMasterUserIdMsg = str_replace("%c", CurrentUserID(), $Language->Phrase("UnAuthorizedMasterUserID"));
+					$sMasterUserIdMsg = str_replace("%f", $sMasterFilter, $sMasterUserIdMsg);
+					$this->setFailureMessage($sMasterUserIdMsg);
+					return FALSE;
+				} else {
+					$rsmaster->Close();
+				}
+			}
+			$sMasterFilter = $this->SqlMasterFilter_tipo_gastos();
+			if (strval($this->id_tipo_gasto->CurrentValue) <> "" &&
+				$this->getCurrentMasterTable() == "tipo_gastos") {
+				$sMasterFilter = str_replace("@codigo@", ew_AdjustSql($this->id_tipo_gasto->CurrentValue), $sMasterFilter);
+			} else {
+				$sMasterFilter = "";
+			}
+			if ($sMasterFilter <> "") {
+				$rsmaster = $GLOBALS["tipo_gastos"]->LoadRs($sMasterFilter);
+				$this->MasterRecordExists = ($rsmaster && !$rsmaster->EOF);
+				if (!$this->MasterRecordExists) {
+					$sMasterUserIdMsg = str_replace("%c", CurrentUserID(), $Language->Phrase("UnAuthorizedMasterUserID"));
+					$sMasterUserIdMsg = str_replace("%f", $sMasterFilter, $sMasterUserIdMsg);
+					$this->setFailureMessage($sMasterUserIdMsg);
+					return FALSE;
+				} else {
+					$rsmaster->Close();
+				}
+			}
+		}
+
 		// Load db values from rsold
 		if ($rsold) {
 			$this->LoadDbValues($rsold);
@@ -786,6 +856,11 @@ class cgastos_mantenimientos_add extends cgastos_mantenimientos {
 
 		// id_hoja_mantenimeinto
 		$this->id_hoja_mantenimeinto->SetDbValueDef($rsnew, $this->id_hoja_mantenimeinto->CurrentValue, NULL, FALSE);
+
+		// id_usuario
+		if (!$Security->IsAdmin() && $Security->IsLoggedIn()) { // Non system admin
+			$rsnew['id_usuario'] = CurrentUserID();
+		}
 
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
@@ -821,6 +896,14 @@ class cgastos_mantenimientos_add extends cgastos_mantenimientos {
 			$this->Row_Inserted($rs, $rsnew);
 		}
 		return $AddRow;
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->id_usuario->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up master/detail based on QueryString
@@ -1123,7 +1206,9 @@ if (is_array($gastos_mantenimientos->id_tipo_gasto->EditValue)) {
 }
 ?>
 </select>
+<?php if (AllowAdd(CurrentProjectID() . "tipo_gastos")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $gastos_mantenimientos->id_tipo_gasto->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_tipo_gasto',url:'tipo_gastosaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_tipo_gasto"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $gastos_mantenimientos->id_tipo_gasto->FldCaption() ?></span></button>
+<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `tipo_gasto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `tipo_gastos`";
 $sWhereWrk = "";

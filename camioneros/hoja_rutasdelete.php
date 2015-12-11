@@ -238,6 +238,22 @@ class choja_rutas_delete extends choja_rutas {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
+		if (!$Security->IsLoggedIn()) {
+			$Security->SaveLastUrl();
+			$this->Page_Terminate(ew_GetUrl("login.php"));
+		}
+		if (!$Security->CanDelete()) {
+			$Security->SaveLastUrl();
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("hoja_rutaslist.php"));
+		}
+		$Security->UserID_Loading();
+		if ($Security->IsLoggedIn()) $Security->LoadUserID();
+		$Security->UserID_Loaded();
+		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
+			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
+			$this->Page_Terminate(ew_GetUrl("hoja_rutaslist.php"));
+		}
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
 
 		// Global Page Loading event (in userfn*.php)
@@ -351,6 +367,24 @@ class choja_rutas_delete extends choja_rutas {
 
 		$this->CurrentFilter = $sFilter;
 
+		// Check if valid user id
+		$sql = $this->GetSQL($this->CurrentFilter, "");
+		if ($this->Recordset = ew_LoadRecordset($sql)) {
+			$res = TRUE;
+			while (!$this->Recordset->EOF) {
+				$this->LoadRowValues($this->Recordset);
+				if (!$this->ShowOptionLink('delete')) {
+					$sUserIdMsg = $Language->Phrase("NoDeletePermission");
+					$this->setFailureMessage($sUserIdMsg);
+					$res = FALSE;
+					break;
+				}
+				$this->Recordset->MoveNext();
+			}
+			$this->Recordset->Close();
+			if (!$res) $this->Page_Terminate("hoja_rutaslist.php"); // Return to list
+		}
+
 		// Get action
 		if (@$_POST["a_delete"] <> "") {
 			$this->CurrentAction = $_POST["a_delete"];
@@ -452,6 +486,7 @@ class choja_rutas_delete extends choja_rutas {
 		$this->kg_carga->setDbValue($rs->fields('kg_carga'));
 		$this->tarifa->setDbValue($rs->fields('tarifa'));
 		$this->porcentaje->setDbValue($rs->fields('porcentaje'));
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Load DbValue from recordset
@@ -475,6 +510,7 @@ class choja_rutas_delete extends choja_rutas {
 		$this->kg_carga->DbValue = $row['kg_carga'];
 		$this->tarifa->DbValue = $row['tarifa'];
 		$this->porcentaje->DbValue = $row['porcentaje'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Render row values based on field settings
@@ -517,7 +553,9 @@ class choja_rutas_delete extends choja_rutas {
 		// kg_carga
 		// tarifa
 		// porcentaje
+		// id_usuario
 
+		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
 			// fecha_ini
@@ -783,6 +821,14 @@ class choja_rutas_delete extends choja_rutas {
 			}
 		}
 		return $DeleteRows;
+	}
+
+	// Show link optionally based on User ID
+	function ShowOptionLink($id = "") {
+		global $Security;
+		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
+			return $Security->IsValidUserID($this->id_usuario->CurrentValue);
+		return TRUE;
 	}
 
 	// Set up Breadcrumb
