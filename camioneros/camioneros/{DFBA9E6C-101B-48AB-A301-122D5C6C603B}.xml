@@ -1,0 +1,28 @@
+﻿<?xml version="1.0"?>
+<configuration date="2015/12/11" author="e.World Technology Ltd.">
+<project id="{DFBA9E6C-101B-48AB-A301-122D5C6C603B}" file="C:\wamp\www\camioneros\camioneros\camioneros.pmp" name="camioneros" product="PHPMaker" version="11.0" datetime="2015/12/11 08:00:46" languagefolder="phplang" userlevel="0,&quot;Default&quot;,0;1,&quot;Solo Lectura&quot;,104">
+<table id="choferes" name="choferes" caption="ABM - Choferes" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="clientes" name="clientes" caption="ABM - Clientes" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="gastos" name="gastos" caption="ABM - Gastos en Rutas" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="hoja_mantenimientos" name="hoja_mantenimientos" caption="Hoja Mantenimientos" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="hoja_rutas" name="hoja_rutas" caption="Hoja Rutas" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="localidades" name="localidades" caption="ABM - Localidades" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="marcas" name="marcas" caption="ABM - Marcas" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="provincias" name="provincias" caption="ABM - Provincias" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="talleres" name="talleres" caption="ABM - Talleres" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="tipo_cargas" name="tipo_cargas" caption="ABM - Tipo Cargas" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="tipo_gastos" name="tipo_gastos" caption="ABM - Tipo Gastos" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="tipo_mantenimientos" name="tipo_mantenimientos" caption="ABM - Tipo Mantenimientos" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="v_listado_gastos_hoja_ruta" name="v_listado_gastos_hoja_ruta" caption="Listado de Gastos por Hoja de Ruta" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="vehiculos" name="vehiculos" caption="ABM - Vehiculos" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="v_localidad_provincia" name="v_localidad_provincia" caption="Llocalidad Provincia" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="v_hoja_ruta" name="v_hoja_ruta" caption="Hoja de Ruta" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="inicio_php" name="inicio.php" caption="Inicio" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,8" priv="1"/>
+<table id="Listado_Gastos_por_vehiculo" name="Listado Gastos por vehiculo" caption="Listado Gastos por vehiculo y clientes" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,8" priv="1"/>
+<table id="acerca_de_php" name="acerca_de.php" caption="Acerca de" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,8" priv="1"/>
+<table id="v_gastos_hoja_ruta" name="v_gastos_hoja_ruta" caption="Gastos de Hojas de Rutas" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="usuarios" name="usuarios" caption="usuarios" userlevel="0,&quot;Default&quot;,8;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="v_listado_totales_por_hoja_ruta" name="v_listado_totales_por_hoja_ruta" caption="Liistado de Totales por vehiculo y clientes" userlevel="0,&quot;Default&quot;,0;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+<table id="r_listado_totales_por_hoja_ruta" name="r_listado_totales_por_hoja_ruta" caption="Listado de hoja de ruta" userlevel="0,&quot;Default&quot;,0;1,&quot;Solo Lectura&quot;,8" priv="1"/>
+<table id="gastos_mantenimientos" name="gastos_mantenimientos" caption="ABM - Gastos de Mantenimientos" userlevel="0,&quot;Default&quot;,0;1,&quot;Solo Lectura&quot;,104" priv="1"/>
+</project></configuration>
