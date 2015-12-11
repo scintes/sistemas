@@ -1,0 +1,555 @@
+<!-- **************************************************************************
+******   Pagina usada en ADMIN_PASAJES.html                             *******
+******  Esta pagina es llamada en un cuadro de dialogo.                 *******
+****************************************************************************-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        <title>{v_titulo_pagina}</title>        
+        <link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />  
+</head>   
+<!-- Scrip para las pantallas desplegables -->       
+<script type='text/javascript' src='./js/jquery.simplemodal.js'></script>
+<script type="text/javascript" src="./js/jquery.numeric.js"></script>
+
+<!------------------------------------------------------------------------------
+                           Script para la codificacion base64  
+------------------------------------------------------------------------------->
+<script src='./js/jquery.base64.js'>$.base64.utf8encode = true;</script> 
+
+<script type="text/javascript">
+        $(document).ready(function(){                             
+            
+                asociar_calendario("#e_fecha_desde"); 
+                $("#e_importe_pasaje").numeric('.');
+                $("#e_cantidad").numeric();
+                
+                
+                $("#e_tipo_pasaje").change( function() {seleccionar_tipo_pasaje();});
+            
+                //--------------------------------------------------------------
+                //------------  eventos de la Alta de clientes -----------------
+                //--------------------------------------------------------------
+                $("#i_alta_destinatario"   ).click(function(){abrir_ventana('Alta de clientes','./abm/abm_clientes.php',400,600); });
+                $("#i_buscar_destinatario").click(function(){ejecutar_buscador_de_clientes_pasaje_adelantado();});
+                
+                $("#b_buscar"              ).click(function(){realizar_busqueda_clientes();/*buscar_clientes();*/                    });
+                $("#e_buscar"              ).keypress(function(e){ 
+                        if(e.which == 13) {
+                            realizar_busqueda_clientes();
+                            //buscar_clientes(); 
+                        }                        
+                });
+                //--------------------------------------------------------------
+                //            mandos con calculos de precios
+                //--------------------------------------------------------------
+
+                $("#e_tipo_pasaje" ).change(function(){ realizar_calculo_de_precio(); });
+                $("#e_cantidad"    ).change(function(){ realizar_calculo_de_precio(); });
+                $("#e_importe_pago").change(function(){ realizar_calculo_de_precio(); });
+
+                //--------------------------------------------------------------
+                //                   botonera de mando final.
+                //--------------------------------------------------------------
+   //             $("#i_aceptar").click(function() {escribir_pasajes_adelantados();   });
+   //             $("#i_cancelar").click(function(){cerrar_ventana();      });    
+
+        });
+        
+//------------------------------------------------------------------------------
+// Obtenemos el precio del pasaje y depositamos en el edit de precio HICE MODIFICACIONES
+//------------------------------------------------------------------------------
+        function seleccionar_tipo_pasaje(){
+                 $("#e_importe_pasaje").attr("disabled",true);
+                 //$("#h_operacion_tipo_pasaje").val();
+                 var cad = $("#e_tipo_pasaje option:selected").html();
+                 var subcad = cad.substring(cad.indexOf(' - $')+5, cad.length);// saca el importe!
+                 var cad2 = $("#e_tipo_pasaje option:selected").attr('value'); //saca el tipo comun especial etc
+                // var subcad2 = cad2.substring(cad2.indexOf('#')+1, cad2.length);
+                 
+                 var aux = parseFloat(subcad);
+                 $("#e_importe_pasaje").val(aux.toFixed(2));                 
+                 
+               //  $("#h_operacion_selec_tipo_pasaje").val(subcad2[1]); // indica si es una impresion doble o no
+              
+                 var aux3 = 0;
+                 // si esta tildada la opcion de coseguro hacer calculo de coseguro
+                 if($("#e_coseguro_pasaje").val()=='S'){
+                    var aux2 = calculo_coseguro();
+                    aux3 = aux + aux2;
+                }else{
+                    aux3 = aux;
+                }
+                 $("#e_importe_pago").val( aux.toFixed(2) );
+              //  $("#e_importe_pago").val( aux3.toFixed(2) ); // se agrega en la sexion de carga de importe de pagos.                                  
+                $("#h_importe_deuda_pasaje").val($("#e_importe_pago").val());
+        }
+                   
+    //-----------------------------------------------------------------------------------------    
+    // realizamos la sumatoria de factores que hacen al calculo de un precio de pasaje a pagar.
+    //-----------------------------------------------------------------------------------------
+        function calculo_precio(){
+            var i_c = 0.00; // importe del coseguro
+            var i_p = 0.00; // importe del pasaje
+            var i_pg = 0.00; // importe del pago acumulado.
+            var res = 0.00; // valor del importe del pasaje + importe del coseguro  - pagos realizados
+            
+            i_c = parseFloat($("#e_importe_coseguro_pasaje").val()).toFixed(2);
+            i_p = parseFloat($("#e_importe_pasaje").val()).toFixed(2);
+            i_pg = parseFloat($("#h_total_pago").val()).toFixed(2);
+            
+            res = i_p + i_c - i_pg;
+            
+            $("#e_importe_pago").val(res);
+        }        
+        
+        //----------------------------------------------------------------------
+        // Escribe la tabla de pasajes adelantados
+        //----------------------------------------------------------------------
+        function escribir_pasajes_adelantados(){
+            
+            if(validar_carga_pasaje()){           
+                var f_d         = $("#e_fecha_desde"        ).val();
+                var id_cli      = $("#h_id_cliente"         ).val();
+                var raz         = $("#e_nombre_pasaje"      ).val();
+                var observ      = $("#e_observaciones"      ).val();
+                var cant        = $("#e_cantidad"           ).val();
+                var importe     = parseFloat($("#e_importe_pasaje"     ).val());
+                var cooseguro   = parseFloat('0.00');
+                var deuda       = importe + cooseguro;
+                var deu         = $("#e_importe_pasaje"     ).val();                         
+                var tipo_pas    = $("#e_tipo_pasaje option:selected").html(); 
+                var id_tipo_pas = $("#e_tipo_pasaje option:selected").val();            
+
+                var d_a = f_d +'|'+cant+'|'+id_tipo_pas+'|'+tipo_pas+'|'+raz+'|'+observ+'|'+id_cli+'|';  
+                
+                var parametros = {llamado_por     : 1,
+                                  d_a             : $.base64.encode(d_a),
+                                  importe_pasaje  : $.base64.encode(importe),
+                                  importe_coseguro: $.base64.encode(cooseguro),
+                                  deuda           : $.base64.encode(deuda)                                  
+                              };
+
+            
+                    dialogo(
+                            'Pagar pasajes Adelantados.',
+                            'capa_pago_pasaje_adelantado', //capa_seleccionar_vehiculos
+                            '815',
+                            '498',
+                            'pagar_pasaje.php',
+                            parametros,
+                            'aceptar_pagos_pagar_pasaje();',
+                            '$(this).dialog("close");',
+                            '',
+                            '',
+                            "¿Segúro de guardar los datos?",
+                            '¿Segúro de cerrar la pantalla?'
+                           );
+                   /*
+                  
+                    $("#capa_pago_pasaje_adelantado").dialog({ 
+                        widthmin:900, width: 900, widthmax:900,                                                
+                        heightmin: 500,height: 500, heightmax: 500,                        
+                        show: "scale", 
+                        hide: "scale",                         
+                        resizable: "false", 
+                        position: "center", 
+                        modal: "true", 
+                        title: "Pagar pasajes Adelantados",   
+                        position: { 
+                            my: "center", 
+                            at: "center", 
+                            of: window 
+                        },
+                        buttons: {
+                            "Aceptar": function() { 
+                               
+                                    var res = $('#h_seleccion').val(); // obtenemos (nro, dni, nombre, direccion, tel, cel )               
+                                    var res1 = res.split("|");                                 
+                                
+                                    $("#h_id_cliente" ).             val(res1[0]); // codigo del cliente 
+                                    buscar_pasajes_adelantado(res1[0]);
+                                    $("#e_nombre_pasaje").           val(res1[2]); // razon social del cliente
+                                
+                                    $( this ).dialog( "close" );
+                            },
+                            "Cancelar": function() {                               
+                                $( this ).dialog( "close" );
+                            }                        
+                        }
+                    }); 
+                    */
+                    
+                    
+                    
+                    
+
+            }
+       }
+        //----------------------------------------------------------------------
+        // obtenemos el precio del tipo de pasaje seleccionado y lo multiplicamos 
+        // por la cantidad de pasaje a comprar por adelantado
+        //----------------------------------------------------------------------
+        function realizar_calculo_de_precio(){     
+            // si no se seleccione el tipo de pasaje
+            if($("#e_tipo_pasaje option:selected").val()!=0){
+             var cad2 = $("#e_tipo_pasaje option:selected").html();
+             var subcad2 = cad2.substring(cad2.indexOf(':')+1, cad2.length);             
+             var aux = parseFloat(subcad2);             
+             var precio_unit = aux.toFixed(2);
+             var cant = 0;
+             cant =  parseInt($("#e_cantidad").val());             
+             var pt = parseFloat(cant * precio_unit).toFixed(2);
+             
+             $("#e_importe_pasaje" ).val(pt);
+            // $("#h_total_acumlado" ).val(pt);
+             $("#e_importe_pago"    ).val(pt);
+         
+           }else{
+             $("#e_importe_pasaje" ).val(0);
+             $("#e_importe_pago"    ).val(0);               
+           }
+        };
+        
+
+        //------------------------------------------------------------------------------------------
+        // realizamos las validaciones correspondientes para guardar los pasajes en la base de datos
+        //------------------------------------------------------------------------------------------
+        function validar_carga_pasaje(){                 
+                 var mensaje = '';
+               /*var fech1 = document.getElementById(e_fecha_desde).value;
+                var fech2 = document.getElementById(e_fecha_hasta).value;*/
+                if($("#e_nombre_pasaje").val()=='')
+                    {
+                        mensaje = "Debe ingresar el apellido y el nombre completo del pasajero...";
+                        mensaje_error('Pasajes adelantados', mensaje);
+                    $("#e_nombre_pasaje").focus();
+                    $("#e_nombre_pasaje").css({ 'background': 'red' });
+                }else{
+                    $("#e_nombre_pasaje").css({ 'background': '#ffffff' });                    
+                }
+                
+                
+                
+                if(Number($("#e_importe_pasaje").val())<=0){
+                    mensaje = "Debe seleccionar el tipo de pasajes..."; 
+                    mensaje_error('Pasajes adelantados', mensaje);
+                    $("#e_tipo_pasaje").focus();
+                    $("#e_tipo_pasaje").css({ 'background': 'red' });
+                }else{
+                    $("#e_tipo_pasaje").css({ 'background': '#ffffff' });                    
+                }
+                
+                  if(($("#e_fecha_desde").val())>($("#e_fecha_hasta").val())){
+                    mensaje = "Debe seleccionar una fecha posterior..."; 
+                    mensaje_error('Pasajes adelantados', mensaje);
+                    $("#e_fecha_hasta").focus();
+                    $("#e_fecha_hasta").css({ 'background': 'red' });
+                }else{
+                    $("#e_fecha_hasta").css({ 'background': '#ffffff' });                    
+                }
+  
+                
+                if (mensaje==''){
+                    return true;
+                }else{
+                   // alert(mensaje);
+                    return false;                    
+                }                        
+        }
+        
+        //----------------------------------------------------------------------
+        // Realiza la busqueda de los pasajes adelantados que posee el clientes 
+	function buscar_pasajes_adelantado(id_cliente) {                       
+                var parametros = {code : id_cliente};                
+                $.ajax({
+                           data: parametros,
+                           url : 'ajax_buscar_pasajes_adelantados.php',
+                           type: 'post',
+                           beforeSend: function () {
+                               $("#t_buscar").html("Procesando, espere por favor...");
+                                                   },
+                           success:  function (resultado) {                               
+                               var objTabla=$('#t_listado_pasaje_adelantados').parents().get(2);                               
+                               $(objTabla).find('tbody').empty();
+                               $(objTabla).find('tbody').append(resultado);
+                            }
+                });                   
+        };
+
+//******************************************************************************        
+//******************************************************************************
+//******************************************************************************
+//                        Buscador de clientes
+//******************************************************************************
+//******************************************************************************
+//******************************************************************************
+        function ejecutar_buscador_de_clientes_pasaje_adelantado(){
+                    
+                    $("#capa_buscador_clientes").dialog({ 
+                        widthmin:900, width: 900, widthmax:900,                                                
+                        heightmin: 500,height: 500, heightmax: 500,                        
+                        show: "scale", 
+                        hide: "scale",                         
+                        resizable: "false", 
+                        position: "center", 
+                        modal: "true", 
+                        title: "Buscador de clientes",   
+                        position: { 
+                            my: "center", 
+                            at: "center", 
+                            of: window 
+                        },
+                        buttons: {
+                            "Aceptar": function() { 
+                               
+                                    var res = $('#h_seleccion').val(); // obtenemos (nro, dni, nombre, direccion, tel, cel )               
+                                    var res1 = res.split("|");                                 
+                                
+                                    $("#h_id_cliente" ).             val(res1[0]); // codigo del cliente 
+                                    buscar_pasajes_adelantado(res1[0]);
+                                    $("#e_nombre_pasaje").           val(res1[2]); // razon social del cliente
+                                
+                                    $( this ).dialog( "close" );
+                            },
+                            "Cancelar": function() {                               
+                                $( this ).dialog( "close" );
+                            }                        
+                        }
+                    });                             
+        }
+        
+        //----------------------------------------------------------------------
+        // visualiza en el dialogo del buscador... que registro se encuentra 
+        // seleccionado.
+        function completar_registro_seleccionado(reg){
+            $('#h_seleccion').val(reg);
+            var par = reg.split('|');
+            $("#sp_seleccionado_codigo"    ).html(par[0]);
+            $("#sp_seleccionado_nombre"   ).html(par[2]);
+            $("#sp_seleccionado_direccion").html(par[3]);
+        }
+        //----------------------------------------------------------------------
+        // Visualiza lo buscado en el dialogo de busqueda de cliente, segun el 
+        // paginado.
+        function mostrar_paginado(tp, p){
+            debugger;
+                if(tp>=1){
+                    $("#h_indise_pag_a_ver").val(p); 
+                    var indice = (($("#h_indise_pag_a_ver").val()-1) * $("#h_pag_a_ver").val()); 
+                    
+                    var parametros2 = {
+                            code : $("#e_buscar").val(),
+                            det_cant: 'no',
+                            pag_v: $("#h_pag_a_ver").val(), // cantidad de paginas a visualizar
+                            pag_d: indice // Desde que registro se visualiza
+                                      }; 
+                                      
+                    $.ajax({
+                            data: parametros2,
+                            url : 'ajax_buscar_clientes2.php',
+                            type: 'post',
+                            success:  function (resul2) {
+                                $("#tb_cuerpo_listado_clientes").empty();
+                                var reg = resul2.split('@');                                    
+                                var nuevaFila = '';
+                                var i = 0;
+                                var item = 0;
+                                
+                                var param ='';
+                                
+                                while (i < reg.length -1) {
+                                    var subreg = reg[i+1].split('|');                                                                               
+                                    item = i + 1;
+                                    //param = { par1:subreg[0], par2:subreg[1], par3:subreg[2] };
+                                    param = subreg[0]+'|'+subreg[1]+'|'+subreg[2]+'|'+subreg[3]+'|';
+                                    
+                                    // Creamos la fila 
+                                    nuevaFila = nuevaFila +"<tr style='font-size: 13;' onclick='completar_registro_seleccionado("+'"'+param+'"'+");' onmouseover='cambiar_color_over(this);' onmouseout='cambiar_color_out(this);' >";
+                                    nuevaFila = nuevaFila +"   <td align='Center'>       "+item+"</td>";
+                                    nuevaFila = nuevaFila +"   <td align='Center'>       "+subreg[0]+"</td>";
+                                    nuevaFila = nuevaFila +"   <td align='Center'>       "+subreg[1]+"</td>";
+                                    nuevaFila = nuevaFila +"   <td align='Center'>       "+subreg[2]+"</td>";
+                                    nuevaFila = nuevaFila +"   <td align='Center'>       "+subreg[3]+"</td>";
+                                    nuevaFila = nuevaFila +"   <td align='Center'>       "+subreg[4]+"</td>";
+                                    nuevaFila = nuevaFila +"   <td align='Center'>       "+subreg[5]+"</td>";
+                                    nuevaFila = nuevaFila +"</tr>";
+                                    i++;                                        
+                                }                        
+                                 
+                                $("#tb_cuerpo_listado_clientes").append(nuevaFila);                                
+                                $("#sp_paginas").html( $("#h_cadena_de_paginacion").val() );                                                                                            
+                                $("#p"+p).html('['+p+']');
+                            }
+                    });  
+                }
+        }
+        //----------------------------------------------------------------------
+        // Inicio de la busqueda de clientes
+        // visualiza los indices de paginacion para el dialogo de busqueda de 
+        // clientes
+        function realizar_busqueda_clientes(){
+                var cant_reg_total = 0;
+                //--------------------------------------------------------------
+                // Obtenemos la cantidad de registros
+                //--------------------------------------------------------------                
+                var parametros1 = {
+                        code : $("#e_buscar").val(), // datos a buscar
+                        det_cant: 'S' //indicamos que debe devolver solo la cantidad de registro
+                                  };
+                $.ajax({ data: parametros1,
+                         url : 'ajax_buscar_clientes2.php',
+                         type: 'post',
+                         
+                         success:  function (res1) {   // obtenemos la cantidad de registros  
+                            $("#tb_cuerpo_listado_clientes").empty();
+                            cant_reg_total = parseInt(res1);                           
+                            var ind = Math.ceil(cant_reg_total / $("#h_pag_a_ver").val());
+                            var cadena = "Se encontraron: "+cant_reg_total+" y estamos visualizando "+$("#h_indise_pag_a_ver").val()+" ";                                                        
+                            var i = 1;
+                            cadena =  cadena + 'quedando: ';
+                            while (i <= ind) {
+                                cadena =  cadena +"- <sp id='p"+i+"' style='cursor: pointer' onclick='mostrar_paginado("+cant_reg_total+","+i+");'>"+i+"</sp>";
+                                i++;
+                            }                           
+                            $("#sp_paginas").html(cadena); // mostramos la cadena con la pagina actual                            
+                            $("#h_cadena_de_paginacion").val( cadena );// memorizacion de la cadena sin las marcas de paginas actual
+                           
+                            mostrar_paginado( cant_reg_total, 1);                             
+                         }   
+                }); // fin del ajax cantidad de registros                           
+        }
+        //----------------------------------------------------------------------------
+        //----------------------------------------------------------------------------
+        //----------------------------------------------------------------------------
+        //----------------------------------------------------------------------------
+    
+    
+</script>
+    
+<body>
+        
+    <input type="hidden" id="h_detalle_pago_venta" value=''/>               <!--  usado para acumular el detalle de los pagos a pasar para la escritura de las tabla  -->
+    <input type="hidden" id="h_total_acumulado" value="0"/>                 <!--  almacena el total de la venta de todos los pasaje seleccionado -->    
+    <input type="hidden" id="h_id_cliente" value="0"/>                      <!--  Guarda el id del cliente seleccionado para generarles los pasajes adelantados. -->
+    <input type="hidden" id="h_seleccion" value="0"/>                       <!-- Guarda la informacion del cliente buscado con el div de busqueda -->    
+
+        
+    <div align="center">
+        <table border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC" style="width:500">        
+             <thead>
+                <tr>
+                    <td align="center"  style="background:{v_color_cabezera_tabla};  font:Arial; size:5;"  colspan="2">               
+                        Pasajes por Adelantados
+                    </td>                
+                </tr>
+            </thead>
+            
+            <tbody>
+                <tr>
+                    <td>Razón Social:</td><td>
+                        <input id="e_nombre_pasaje" disabled=false value="{v_nombre}"/>
+                            <input type="image" src="./imagenes/busqueda.png" border="0" name="i_buscar_destinatario" id="i_buscar_destinatario" />
+                            <input type="image" src="./imagenes/agregar.png"  border="0" name="i_alta_destinatario" id="i_alta_destinatario" />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" align='center'>
+                        <br>
+                            <table id='t_listado_pasaje_adelantados'  style="font-size: 12px;" border="1" align="center" cellspacing="0">
+                            <thead>
+                                <tr align="center"  style="background:{v_color_cabezera_columna};  font:Arial; size:5;">
+                                    <td> Ultima Fecha </td>
+                                    <td> Tipo Pasaje  </td>
+                                    <td> Cantidad     </td>                                    
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+                            </tbody>
+                        </table>
+                        <br>
+                    </td>                
+                </tr>
+                
+               <tr>
+                    <td>Fecha desde:</td><td>
+                    <input type="text" size="10" name='e_fecha_desde' id="e_fecha_desde" value="{v_fecha_desde}"/>                     
+                    </td>
+                </tr>
+                
+                
+                <tr><td>Tipo Pasaje:        </td><td><b> <select id="e_tipo_pasaje">{v_listado_tipo_pasaje}> </select> </b></td></tr>
+
+                <tr><td>Cantidad:</td><td><input id="e_cantidad" type="number" value="{v_cantidad}"/> </td></tr>
+                <tr><td>Total:</td><td><input    id="e_importe_pasaje"    value="{v_total}"   /> </td></tr>
+                <tr><td>Observaciones:</td><td><textarea id="e_observaciones"  type="text"  value="{v_observaciones}" > </textarea> </td></tr>
+                
+            </tbody>
+
+        </table>
+        </div>
+            
+<!-- ---------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Sextor de POPUP de busqueda de clientes
+--------------------------------------------------------------------------------
+---------------------------------------------------------------------------- -->
+    <div id="capa_buscador_clientes" style="display: none" class="css_propio_ventana">
+        <!-- paginacion del buscador de clientes -->
+        <input type="hidden" id="h_pag_a_ver" value='{v_pag_a_ver}'               /><!-- Pagina actual en la paginacion para busqueda de clientes -->
+        <input type="hidden" id="h_indise_pag_a_ver" value='{v_indise_pag_a_ver}' /><!--  -->
+        <input id="h_cadena_de_paginacion"    type="hidden" value=" "             /><!-- Guarda la cadena de paginas sin las marcas de pagina actual -->
+        
+        <!-- <h2>Buscar</h2>-->
+        Buscar
+        <input name="e_buscar" type="text"  id="e_buscar" size="50" />
+        <input name="b_buscar" type="image" src="./imagenes/busqueda.png" id="b_buscar"  /><br>
+            
+            <div style="width:100%; height:40px; overflow: scroll;">
+                <span id="sp_paginas"> Se encontraron:{v_cantidad_registro_total} y estamos visualizando {v_cantidad_registros} </span>
+           </div>
+            
+        <div style="width:100%; height:200px; overflow: scroll;">
+        <table  border="1"  align="center" cellspacing="0" style='font-size: 13; width:100%' id="listado_clientes">
+            <thead id="tb_cabezera_listado_clientes" class=".css_propio_tablas">
+                <tr align="center">
+                    <td>Item</td>
+                    <td>Codigo</td>
+                    <td>DNI</td>
+                    <td>Nombre</td>
+                    <td>Dirección</td>
+                    <td>Tel</td>
+                    <td>Cel</td>                                                       
+                </tr>
+            </thead>
+                            
+            <tbody id="tb_cuerpo_listado_clientes">
+                                            
+            </tbody>
+            <!--
+            <tfoot id="tb_pie_listado_clientes">
+                <tr align="center">
+                    <td colspan="7"><!--
+                        <span id="sp_paginas"> Se encontraron:{v_cantidad_registro_total} y estamos visualizando {v_cantidad_registros} </span>
+                                    -- >
+                    </td>
+                </tr>
+            </tfoot>
+            -->
+        </table>
+        </div>
+        <div style="position: absolute; width: 90%; bottom: 0px; width: 90%; ">
+            Codigo:   <span id="sp_seleccionado_codigo"   ></span><br>
+            Nombre:   <span id="sp_seleccionado_nombre"   ></span><br>
+            Dirección:<span id="sp_seleccionado_direccion"></span>   
+        </div>
+            
+    </div>            
+        
+<div id="capa_pago_pasaje_adelantado" style="display: none;" class='css_propio_ventana'>
+    
+</div>    
+        
+</body>
+</html>

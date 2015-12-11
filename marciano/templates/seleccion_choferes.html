@@ -1,0 +1,315 @@
+<!-- **************************************************************************
+******                  Pagina usada en ADMIN_PASAJES.html              *******
+******  Esta pagina es llamada en un cuadro de dialogo.                 *******
+****************************************************************************-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Selección de vehiculos</title>      
+    </head>   
+   
+    <script type="text/javascript">
+   
+        $(document).ready(function(){              
+             $("#i_seleccionar"       ).click(function(){ seleccionar_chofer() });
+             $("#i_deseleccionar"     ).click(function(){ deseleccionar_chofer() });
+             $("#i_seleccionar"       ).click(function(){ seleccionar_guarda() });
+             $("#i_deseleccionar"     ).click(function(){ deseleccionar_guarda() });             
+             
+ //            $("#i_aceptar"           ).click(function(){ aceptar_choferes(); });
+//             $('#i_cancelar'          ).click(function(){ cancelar_choferes(); });
+             
+             $('#e_seleccion_chofer').change(function(){ mostrar_chofer(); });
+             $('#e_seleccion_guarda').change(function(){ mostrar_guarda(); });
+        });
+        
+        // Guarda el id del chofer para agregarlo en el viaje
+        function seleccionar_chofer(){
+           $('#sp_id_chofer_sel').          html($('#sp_id_chofer').html());
+           $('#sp_dni_chofer_sel').          html($('#sp_dni_chofer').html());
+           $('#sp_nombre_chofer_sel').       html($('#sp_nombre_chofer').html());
+           $('#sp_apellido_chofer_sel').     html($('#sp_apellido_chofer').html());
+           $('#sp_fecha_tecnica_chofer_sel').html($('#sp_fecha_tecnica_chofer').html());                                                        
+        }        
+        // 
+        function deseleccionar_chofer(){
+           $('#sp_id_chofer_sel').          html('');
+           $('#sp_dni_chofer_sel').          html('');
+           $('#sp_nombre_chofer_sel').       html('');
+           $('#sp_apellido_chofer_sel').     html('');
+           $('#sp_fecha_tecnica_chofer_sel').html('');                                                        
+        }
+        // Guarda el id del guardia para agregarlo en el viaje
+        function seleccionar_guarda(){
+           $('#sp_id_guarda_sel').           html($('#sp_id_guarda').html());
+           $('#sp_dni_guarda_sel').          html($('#sp_dni_guarda').html());
+           $('#sp_nombre_guarda_sel').       html($('#sp_nombre_guarda').html());
+           $('#sp_apellido_guarda_sel').     html($('#sp_apellido_guarda').html());
+           $('#sp_fecha_tecnica_guarda_sel').html($('#sp_fecha_tecnica_guarda').html());                                                        
+        }        
+        // 
+        function deseleccionar_guarda(){
+           $('#sp_id_guarda_sel').          html('');
+           $('#sp_dni_guarda_sel').          html('');
+           $('#sp_nombre_guarda_sel').       html('');
+           $('#sp_apellido_guarda_sel').     html('');
+           $('#sp_fecha_tecnica_guarda_sel').html('');                                                        
+        }        
+        
+        
+        // muestra los datos del chofer mostrado en el combobox
+        function mostrar_chofer(){
+            debugger;
+            var d = $("#h_datos_chofer").val();               
+            var chofer_sel = $("#e_seleccion_chofer").val();
+            // si el vehicuolo es -1 significa que no selecciono un chofer
+            if (chofer_sel!=-1){
+
+                var d2 = d.split('@');
+                
+                for(i=1;i<=d2.length;i++){
+                    var d3 = d2[i].split('|');
+                    if(d3[0]==chofer_sel){
+                       $('#sp_id_chofer').           html(d3[0]);
+                       $('#sp_dni_chofer').          html(d3[4]);
+                       $('#sp_nombre_chofer').       html(d3[2]);
+                       $('#sp_apellido_chofer').     html(d3[3]);
+                       $('#sp_fecha_tecnica_chofer').html(d3[5]);                                            
+                       break;
+                    } 
+                } 
+            }else{
+                // Se selecciono la opcion de no chofer.
+                $('#sp_id_chofer').          html('');
+                $('#sp_dni_chofer').          html('');
+                $('#sp_nombre_chofer').       html('');
+                $('#sp_apellido_chofer').     html('');
+                $('#sp_fecha_tecnica_chofer').html('');                
+            }
+        }
+        // muestra los datos del guarda mostrado en el combobox
+        function mostrar_guarda(){
+            debugger;
+            var d = $("#h_datos_guarda").val();               
+            var guarda_sel = $("#e_seleccion_guarda").val();
+            // si el vehicuolo es -1 significa que no selecciono un guarda
+            if (guarda_sel!=-1){
+
+                var d2 = d.split('@');
+                
+                for(i=1;i<=d2.length;i++){
+                    var d3 = d2[i].split('|');
+                    if(d3[0]==guarda_sel){
+                       $('#sp_id_guarda').           html(d3[0]);
+                       $('#sp_dni_guarda').          html(d3[4]);
+                       $('#sp_nombre_guarda').       html(d3[2]);
+                       $('#sp_apellido_guarda').     html(d3[3]);
+                       $('#sp_fecha_tecnica_guarda').html(d3[5]);                                            
+                       break;
+                    } 
+                } 
+            }else{
+                // Se selecciono la opcion de no chofer.
+                $('#sp_id_guarda').           html('');
+                $('#sp_dni_guarda').          html('');
+                $('#sp_nombre_guarda').       html('');
+                $('#sp_apellido_guarda').     html('');
+                $('#sp_fecha_tecnica_guarda').html('');                
+            }
+        }
+
+    
+        //-----------------------------------------------------------------------
+        // Acepta, y guarda las vinculaciones del chofer y el guarda con el viaje. 
+        //-----------------------------------------------------------------------
+        function aceptar_choferes(){
+                                 
+            var patente_sel = $("#v_id_chofer_sel").html();
+            // si el chofer es "" significa que no selecciono un chofer
+            if (patente_sel!=''){
+             
+                    var parametros = {
+                           code : $('#sp_id_chofer_sel').html(),
+                           code2 : $('#sp_id_guarda_sel').html(),
+                           nro_v: $('#h_id_viaje').val()
+                                     };                                                   
+                    $.ajax({
+                           data: parametros,
+                           url : 'ajax_seleccionar_choferes.php',
+                           type: 'post',
+                           
+                           beforeSend: function () {
+                               //$("#t_buscar").html("Procesando, espere por favor...");
+                                                   },
+                                                  
+                           error: function (resultado){
+                               alert('Error en el procesamiento de la rutina ajax_seleccionar_vehiculo');
+                                                      },                                                                           
+                                                       
+                           success: function (resultado){
+                               if ($.trim(resultado)=="OK"){
+                                    alert("Se asocio correctamente a los choferes...");  
+                                    
+                                    $("#capa_seleccionar_chofer" ).dialog( "close" );
+                                    buscar_salidas(); 
+                                }                               
+                               
+                                   // alert("Se asocio correctamente el vehiculo...");
+                                   //   window.close();
+                                                        }                           
+                    });  
+                }else{
+                    alert("Debe seleccionar un chofer...");
+                }
+             
+        }
+        function cancelar_choferes(){
+           window.close();
+        }    
+    
+    
+    </script>
+    
+    <body>
+        <!-- -->
+        <input  type="hidden" id="h_datos_chofer" value="{v_datos_chofer}"/> 
+        <input  type="hidden" id="h_datos_guarda" value="{v_datos_guarda}"/> 
+        <input  type="hidden" id="h_id_viaje"     value="{v_id_viaje}"/> 
+        
+        <div align="center">
+            <table id='selelccion_vehiculo' style="width: 600px" border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC">
+            <tr>
+                <td colspan="5" align='center' bgcolor="{v_color_cabezera_tabla}">Selección de vehículo para el viaje :<b>{v_id_viaje}</b> con destino a:<b>{v_destino}</b> en la fecha:<b>{v_fecha_viaje}</b> con hora de salida:<b>{v_hora_viaje}</b>.</td>
+            </tr>
+                
+                
+            <tr>
+                <td align='center'>Datos de choferes</td>
+                <td colspan="2" align='center'>Chofer Seleccinodo</td>
+            </tr>
+                
+                
+            <tr>
+                <td align="rigth" valign="center">                    
+                    <table>
+                        <tr style="background-color:{v_color_cabezera_columna}">
+                            <td colspan="2" align="center">
+                                Chofer
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <select size="1" id="e_seleccion_chofer"> 
+                                {v_chofer} 
+                                </select>                                    
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>ID:      </td><td> <span id='sp_id_chofer' style="color: blue">{v_id_chofer}</span> </td>
+                        </tr><tr>                            
+                            <td>DNI:      </td><td> <span id='sp_dni_chofer' style="color: blue">{v_dni_chofer}</span> </td>
+                        </tr><tr>                            
+                            <td>Nombre:       </td><td> <span id='sp_nombre_chofer' style="color: blue">{v_nombre_chofer}</span></td>                                
+                        </tr><tr>                            
+                            <td>Apellido:      </td><td> <span id='sp_apellido_chofer' style="color: blue">{v_apellido_chofer}</span></td>                                
+                        </tr><tr>                            
+                            <td>Fecha Tecnica:</td><td> <span id='sp_fecha_tecnica_chofer' style="color: blue">{v_fecha_tecnica_chofer}</span></td>                                
+                        </tr>
+                        <tr>
+                            <td style="height: 10">
+                                
+                            </td>
+                        </tr>
+                        <tr style="background-color:{v_color_cabezera_columna}">
+                            <td align="center" colspan="2">
+                               Guarda
+                            </td>    
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                               <select size="1" id="e_seleccion_guarda"> 
+                               {v_guarda} 
+                               </select>                                    
+                            </td>    
+                        </tr>
+                        <tr>
+                            <td>ID:      </td><td> <span id='sp_id_guarda' style="color: red">{v_id_guarda}</span> </td>
+                        </tr><tr>                            
+                            <td>DNI:      </td><td> <span id='sp_dni_guarda' style="color: red">{v_dni_guarda}</span> </td>
+                        </tr><tr>                            
+                            <td>Nombre:       </td><td> <span id='sp_nombre_guarda' style="color: red">{v_nombre_guarda}</span></td>                                
+                        </tr><tr>                            
+                            <td>Apellido:      </td><td> <span id='sp_apellido_guarda' style="color: red">{v_apellido_guarda}</span></td>                                
+                        </tr><tr>                            
+                            <td>Fecha Tecnica:</td><td> <span id='sp_fecha_tecnica_guarda' style="color: red">{v_fecha_tecnica_guarda}</span></td>                                
+                        </tr>
+                    </table>
+                    
+                </td>
+                <td align="center" valign="center">
+                    <!--  [ SELECCIONAR ] -->
+                    <input type="image" id='i_seleccionar' src='./imagenes/seleccion_izq.jpg'/><br>
+                    <!--  [ DESELECCIONAR ] -->
+                    <input type="image" id='i_deseleccionar' src='./imagenes/seleccion_der.jpg'/>                    
+                </td>
+                <td valign="top">
+                    <table  border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC">
+                        <tr>
+                            <td colspan="2" style="background-color:{v_color_cabezera_columna}" align="center">
+                                chofer
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>ID:      </td><td> <span id='sp_id_chofer_sel'>{v_id_chofer_sel}</span> </td>
+                        </tr><tr>                            
+                            <td>DNI:      </td><td> <span id='sp_dni_chofer_sel'>{v_dni_chofer_sel}</span> </td>
+                        </tr><tr>                            
+                            <td>Nombre:       </td><td> <span id='sp_nombre_chofer_sel'>{v_nombre_chofer_sel}</span></td>                                
+                        </tr><tr>                            
+                            <td>Apellido:      </td><td> <span id='sp_apellido_chofer_sel'>{v_apellido_chofer_sel}</span></td>                                
+                        </tr><tr>                            
+                            <td>Fecha Tecnica:</td><td> <span id='sp_fecha_tecnica_chofer_sel'>{v_fecha_tecnica_chofer_sel}</span></td>                                
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="background-color:{v_color_cabezera_columna}" align="center">
+                               Guarda
+                            </td>    
+                        </tr>
+                        <tr>
+                            <td>ID:       </td><td> <span id='sp_id_guarda_sel'>{v_id_guarda_sel}</span> </td>
+                        </tr><tr>                            
+                            <td>DNI:      </td><td> <span id='sp_dni_guarda_sel'>{v_dni_guarda_sel}</span> </td>
+                        </tr><tr>                            
+                            <td>Nombre:       </td><td> <span id='sp_nombre_guarda_sel'>{v_nombre_guarda_sel}</span></td>                                
+                        </tr><tr>                            
+                            <td>Apellido:      </td><td> <span id='sp_apellido_guarda_sel'>{v_apellido_guarda_sel}</span></td>                                
+                        </tr><tr>                            
+                            <td>Fecha Tecnica:</td><td> <span id='sp_fecha_tecnica_guarda_sel'>{v_fecha_tecnica_guarda_sel}</span></td>                                
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+<!--            <tr>
+                <td colspan="3" align='center'>
+                    
+                    <div style="float: center; width: 150px;">
+                        < !--  [ ACEPTAR ] -- >      
+                        <div style="float: left;font-size: 11;margin: 2;border: 1px solid #cccccc;background-color: #ffffff; width: 50; height: 30;">
+                            <input type="image" id='i_aceptar' src='./imagenes/ok.png'>
+                                <br>Aceptar
+                        </div>
+                        
+                        < !--  [ CANCELAR ] -- >
+                        <div style="float: left;font-size: 11;margin: 2;border: 1px solid #cccccc;background-color: #ffffff; width: 50; height: 30;">
+                            <input type="image" id='i_cancelar' src='./imagenes/cancelar.gif'>
+                                <br>Cancelar
+                        </div>
+                    </div>
+                    
+                </td>                
+            </tr> -->
+        </table>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>{v_titulo_proyecto}</title>
+        <link rel="shortcut icon" type="image/x-icon" href="{v_icono_sistema}" />            
+        <!-- ------------------------------------------------------------------
+         Estilos para el pie de pagina
+        --------------------------------------------------------------------- -->
+        <style type="text/css">
+        body,html{
+            height:100%; /*Siempre es necesario cuando trabajamos con alturas*/
+        }
+        #inferior{
+            color: #FFF;
+            background: #000;
+         //   position:relative; /*El div será ubicado con relación a la pantalla*/
+            left:10px; /*A la derecha deje un espacio de 0px*/
+            right:10px; /*A la izquierda deje un espacio de 0px*/
+         //   bottom:0px; /*Abajo deje un espacio de 0px*/
+            height:35px; /*alto del div*/
+           // z-index:0;   
+            //align: right;
+            font-size: 0.875em;
+            position:fixed; bottom:0; z-index:999999; 
+        }
+        
+        #logo{
+            //top: 148%;
+            margin-top: 3px; /* este valor corresponde a la mitad de su height */
+            margin-left: 10px;
+            position: relative;
+            height: 30px;
+            width: 81px;
+        }
+        #texto_acerca_de{
+            left:1px; /*A la derecha deje un espacio de 0px*/
+            margin-top: 5px; /* este valor corresponde a la mitad de su height */
+            margin-left: 110px; /* este valor corresponde a la mitad de su height */
+            position: relative;            
+//            height: 30px;
+//            width: 150px;            
+        }
+        div#botonera{
+            left:1px; /*A la derecha deje un espacio de 0px*/
+//            right:1px; /* A la izquierda deje un espacio de 0px  */   
+            margin-top: -21px; /* este valor corresponde a la mitad de su height */
+            margin-right: 10px; /* este valor corresponde a la mitad de su height */
+            margin-left: 10px; /* este valor corresponde a la mitad de su height */
+            position: relative;            
+            height: 29px;
+            width: 300px;
+            
+            text-align: center; 
+            font-variant-position: normal;
+            
+            background:#ffffff;
+            //margin:0 auto;
+            padding:0;
+            //width:80px;
+            border-radius:10px;
+            -moz-border-radius: 10px; 
+            -webkit-border-radius : 10px;
+        }
+       
+        
+                
+        </style>   
+        <!-- -------------------------------------------------------------------        
+         Fin Estilos para el pie de pagina
+        -------------------------------------------------------------------- -->        
+  
+</head>
+<body>
+    <div align="right" id="inferior">
+        
+        <div> 
+            <a href="{v_sis_pagina}">
+                <img id="logo" align="left" src="imagenes/logo_opt.jpg" alt="img_logo">
+            </a>
+        </div>
+        
+        <div align="left" id="texto_acerca_de"> <!-- style="width: 500px;" -->
+            Versión del sistema:{v_sis_version}<br>
+            Fecha de la última modificación:{v_fecha_actualizacion_sistema}.                                      
+        </div>
+
+        <div id="botonera" style="display:{v_mostrar_botonera};">
+            <img id="i_usuario" src="imagenes/{v_imagen_tipo_usu}"  style="float: left;height:23px; width: 23px;  margin-left: 10px; margin-top:5px" />
+            <input type="text"  style="width: 60px; float: left;margin-top:5px" id="e_usuario"  value="{v_usuario}" readonly />                      
+            
+            
+            <img id="i_sucursal" style="float: left;margin-left: 10px; margin-top:4px" src="imagenes/barra_sucursal.jpg" />:            
+            <input type="text"  style="width: 90px; float: left;margin-top:5px"  id="e_sucursal"  value="{v_sucursal}" readonly />                      
+            <a href="logout.php">
+                <img id="i_salir_sistema" 
+                    style="float: right;margin-right: 10px; margin-top:1px" 
+                    src="imagenes/login_out.jpg" 
+                />        
+            </a>
+        </div>
+    
+    </div>
+</body>
+</html>
+
+

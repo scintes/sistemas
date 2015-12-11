@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />            
+
+<title>{titulo_proyecto}</title>
+<style type="text/css">
+<!--
+.style1 {color: #0000CC}
+.style2 {
+	color: #FF0000;
+	font-size: 14px;
+}
+.style3 {font-size: 24px}
+.style4 {font-size: 14px}
+-->
+</style>
+</head>
+<body>
+<p>&nbsp;</p>
+<table width="100%" border="1" align="center" cellspacing="0">
+<!-- BEGIN FilaStock -->
+  <tr bgcolor="#FF9900">
+      <th height="23" colspan="3" bgcolor="#FFFFFF" scope="col"><div align="center"></div>        
+    <div align="center" class="style3">{v_titulo}</div></th>
+  </tr>
+  <tr>
+    <th width="143" scope="col"><img src="{v_foto_izq}" alt="foto2" width="110" height="110" /></th>
+    <td width="467" rowspan="2" bgcolor="#FFFFFF" scope="col"><span class="style4">{v_cuerpo}</span></td>
+    <th width="161" bordercolor="#666666" scope="col"><img src="{v_foto_der}" alt="foto3" width="110" height="110" /></th>
+  </tr>
+  <tr>
+    <th height="23" scope="row"><span class="style4">{v_precio1}<span class="style1"></span></span></th>
+    <td bordercolor="#666666"><div align="center"><span class="style2">{v_precio1}</span></div></td>
+  </tr>
+<!-- END FilaStock -->  
+</table>
+<p>&nbsp;</p>
+</body>
+</html>
+

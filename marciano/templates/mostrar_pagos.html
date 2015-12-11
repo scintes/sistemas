@@ -1,0 +1,127 @@
+<!-- -------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Objetivo: Mostrar el pago confeccionada y poder imprimirla. 
+Funcionalidad: Esta pantalla tiene como dato de entrada los datos cargados en las siguientes tablas.
+    Tablas: Pago -> Contiene los datos del pago. 
+            clientes -> Referencia a los clientes para evitar escribir todos los datos.
+
+Salida de la pantalla
+           Impresion de Guia -> Imprime el recibo de pago dando los datos.
+
+--------------------------------------------------------------------------------
+---------------------------------------------------------------------------- -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link rel="stylesheet" type="text/css" href="./css/estilo_propio.css"></link>  
+        <link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />            
+        
+            <title>Visualizando pagos</title>
+    </head>
+
+
+    <script type="text/javascript">
+// cierra la pantalla
+        function cerrar_ventana()
+        {
+            window.close();
+        }
+        
+        //imprime la pantalla 
+        function imprimir(numero) {
+            document.getElementById("mandos").style.display = 'none';
+            document.getElementById("mandos").style.display = 'none';
+
+            if (confirm("¡Desea imprimir este pago " + numero + "?")) {
+                window.print();
+            }
+            
+            document.getElementById("mandos").style.display = 'inline';
+            window.close();
+        }
+
+    </script>
+    <style>
+    .test {
+        border: 1px solid;
+        margin: 10px ! important;
+        padding: 10px ! important; 
+    }        
+        
+    </style>
+    <body>
+        
+        <table border="1" border="1" style="border-collapse:collapse">
+            <tr>
+                <!-- -----------------------------------------------------------
+                 **********************   Cabezera  ****************************
+                ------------------------------------------------------------- -->
+                <td bgcolor="#FFFFFF" align="left" style="width: 500">
+                    <table border="0" Style="border-color: white">
+                        <tr>
+                            <td>
+                                <img type="image"  src="{v_path_logo}" id="logo" width="60" height="60" />                                   
+                            </td>
+                            <td style="width: 500;">
+                                <span><FONT SIZE=6><b>{v_razon_social}</b></FONT></span><br>
+                                <span><FONT SIZE=2><b>{v_direc_razon_social}</b></FONT></span><br>
+                                <span><FONT SIZE=2><b>{v_tel_razon_social}</b></FONT></span>
+                            </td>
+                        </tr>
+                    </table> 
+                </td>                    
+                <td align="center" style="width: 500">
+                    <font  face="Arial" size="5">
+                        <a style="width: 200; color: red">Recibo de pago</a>                            
+                    </font><br>
+                    <font  face="Arial" size="2">
+                        <a style="width: 200; color: black">Nro:{v_nro_pago}</a>                            
+                    </font>    
+                </td>
+            </tr>    
+            <tr>
+                <td colspan="2">
+                    Recibi de {v_nombre_cliente}, los siguientes pagos segun se detalla a continuación:  
+                </td>
+            </tr>
+            <tr>
+                <!-- -----------------------------------------------------------
+                 *******************   Detalle de los pagos ********************
+                --------------------------------------------------------------->
+                 <td colspan="2">
+                     <table border="1" style="border-collapse:collapse" align="Center">
+                         <tr style="background: red">
+                            
+                             <td  align="center">Nro Operación</td>
+                             <td  align="center">Tipo de pago</td>
+                            <td style="width: 250" align="center">Detalle del pago</td>
+                            <td align="center">Importe</td>
+                         </tr>
+                         <!-- BEGIN listado_pago -->
+                        <tr>
+                            <td>{v_nro_operacion}</td>
+                            <td>{v_tipo_de_pago}</td>
+                            <td>{v_detalle_del_pago}</td>
+                            <td>$ {v_importe}</td>
+                        </tr>                             
+                        <!-- END listado_pago -->
+                        <tr>
+                            <td colspan="3" align="right">                                
+                            Total pagado:
+                            </td>
+                            <td>
+                            $ {v_total_pago}
+                            </td>
+                        </tr>
+                     </table>    
+                 </td> 
+            </tr>
+            <tr>
+                <td colspan="2" style="height: 100">
+                    Firma:____________________  Aclaración:__________________ Sello:_______________
+                </td>
+            </tr>
+        </table>
+                
+    </body>
+</html>

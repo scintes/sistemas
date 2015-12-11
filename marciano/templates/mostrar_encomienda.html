@@ -1,0 +1,248 @@
+<!-- -------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Objetivo: Mostrar la encomienda confeccionada y poder imprimirla. 
+Funcionalidad: Esta pantalla tiene como dato de entrada los datos cargados en las siguientes tablas.
+    Tablas: Tipo_encomienda -> junto con la de usuario determinan el porecio de una encomienda. 
+            usuario -> Junto a tipo de encomienda se determina el precio de cada encomienda.
+                       Esta hace referencia solo al registro de COMISIONISTA -> Siendo el tipo nro 3  
+            Localidad -> Referencia a esta tabla para saber las localidades de origen y de llegada.
+            clientes -> Referencia a los clientes para evitar escribir todos los datos de remitente y destinatario.
+
+Salida de la pantalla
+           Impresion de Guia -> Imprime la hoja de guia dando los datos de origen, destino y el detalle de las encomienda.
+
+--------------------------------------------------------------------------------
+---------------------------------------------------------------------------- -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link rel="stylesheet" type="text/css" href="./css/estilo_propio.css"></link> 
+        <link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />            
+        
+            <title>Visualizando encomienda</title>
+    </head>
+
+
+    <script type="text/javascript">
+// cierra la pantalla
+        function cerrar_ventana()
+        {
+            window.close();
+        }
+        
+        //imprime la pantalla 
+        function imprimir(numero) {
+            document.getElementById("mandos").style.display = 'none';
+            document.getElementById("mandos").style.display = 'none';
+
+            if (confirm("¡Desea imprimir esta encomienda " + numero + "?")) {
+                window.print();
+            }
+            
+            document.getElementById("mandos").style.display = 'inline';
+            window.close();
+        }
+
+    </script>
+    <style>
+    .test {
+        border: 1px solid;
+        margin: 10px ! important;
+        padding: 10px ! important; 
+    }        
+        
+    </style>
+    <body>
+
+        <div align="center">
+            <table id="t_detalle_encomienda" border="1" style="border-collapse:collapse">
+
+                <thead>
+                    <tr>
+                        <td colspan="8" bgcolor="#FFFFFF" align="left">
+
+
+
+                            <table border="0" Style="border-color: white">
+                                <tr>
+                                    <td>
+                                        <img type="image"  src="{v_path_logo}" id="logo" width="60" height="60" />                                   
+                                    </td>
+                                    <td>
+                                        <span><FONT SIZE=6><b>{v_razon_social}</b></FONT></span><br>
+                                        <span><FONT SIZE=2><b>{v_direc_razon_social}</b></FONT></span><br>
+                                        <span><FONT SIZE=2><b>{v_tel_razon_social}</b></FONT></span>                                    
+                                    </td>
+                                </tr>
+                            </table> 
+                        </td>
+                        <td colspan="2">                            
+                            <br>
+                                
+                            <barcode type="C39" value="{v_nro_guia}" style="width:30mm; height:10mm"></barcode>      
+<!--                            <qrcode value="{v_nro_guia}" ec="L" style="width: 30mm;"></qrcode> -->
+
+                        </td>
+
+                    </tr>
+               </thead>
+
+               <tbody>                    
+                    <tr>
+                        <td colspan="2" width="89" align="center">Nro Guia:</td>
+                        <td align="center"><b>{v_nro_guia}</b></td>
+                        <td colspan="2" align="center">Fecha:<b>&nbsp;{v_fecha}</b></td>
+                        <td>Usuario:<b>&nbsp;{v_usuario}</b></td>
+                        <td colspan="2" align="center">Nro Factura:<b>&nbsp;{v_nro_factura}</b></td>
+                        <td align="center">Estado:<b>&nbsp;{v_estado}</b></td>                        
+                    </tr>
+
+                    <tr>
+                        <td colspan="5" align="center"><FONT SIZE=2>Entregar durante:</FONT></td>
+                        <td rowspan="2" align="right">Prioridad:<br>Tipo Pago</td>
+                        <td rowspan="2" colspan="3"><b>{v_combobox_prioridad}<br>{v_tipo_pago}</b></td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" align="center">
+                            Fecha:<b>{v_fecha_entrega}</b>&nbsp;&nbsp;
+                            Desde:<b>{v_hora_entrega_desde}</b>&nbsp;&nbsp;
+                            Hasta:<b>{v_hora_entrega_hasta}</b>
+                        </td>
+                   </tr>
+                   <tr>
+                        <td align="right" bgcolor="#FFFF00">DNI:</td>
+                        <td colspan="4" bgcolor="#FFFF00"><b>{v_dni_remitente}</b></td>
+                        <td align="right" bgcolor="#C4FCC2">DNI</td>
+                        <td colspan="3" bgcolor="#C4FCC2"><b>{v_dni_destinatario}</b></td>
+                  </tr>
+                  <tr>
+                        <td align="right" bgcolor="#FFFF00">Remitente</td>
+                        <td colspan="4" bgcolor="#FFFF00"><b>{v_remitente}</b></td>
+                        <td align="right" bgcolor="#C4FCC2">Destinatario</td>
+                        <td colspan="3" bgcolor="#C4FCC2"><b>{v_destinatario}</b></td>
+                 </tr>
+                 <tr>
+                        <td align="right" bgcolor="#FFFF00">Direccion</td>
+                        <td colspan="4" bgcolor="#FFFF00"><b>{v_dir_remitente}</b></td>
+                        <td align="right" bgcolor="#C4FCC2">Direccion</td>
+                        <td colspan="3" bgcolor="#C4FCC2"><b>{v_dir_destinatario}</b></td>
+                 </tr>
+                 
+                 <tr>
+                        <td align="right" bgcolor="#FFFF00">Provincia</td>
+                        <td colspan="2" align="left" bgcolor="#FFFF00"><b>{v_combobox_prov_origen}</b></td>
+                        <td align="right" bgcolor="#FFFF00">Localidad</td>
+                        <td bgcolor="#FFFF00"><b>{v_combobox_loc_remitente}</b></td>
+                        <td align="right" bgcolor="#C4FCC2">Provincia</td>
+                        <td bgcolor="#C4FCC2"><b>{v_combobox_prov_destino}</b>&nbsp;&nbsp;</td>
+                        <td align="right" bgcolor="#C4FCC2">Localidad</td>
+                        <td bgcolor="#C4FCC2"><b>{v_combobox_loc_destinatario}</b>&nbsp;&nbsp;</td>
+                 </tr>
+                 <tr>
+                        <td align="right" bgcolor="#FFFF00">Tel:</td>
+                        <td colspan="4" bgcolor="#FFFF00"><b>{v_tel_remitente}</b></td>
+                        <td align="right" bgcolor="#C4FCC2">Tel:</td>
+                        <td colspan="3" bgcolor="#C4FCC2"><b>{v_tel_destinatario}</b></td>
+                 </tr>
+
+                 <tr>
+                        <td colspan="12" align="center">
+<!--                             <div id="divContenedorTabla" align="center"> -->
+                                <table id="t_detalle_encomienda" border="1" align="center" cellspacing="0">
+                                    <thead>                               
+                                    <!-- ---------------------------------------------------
+                                        DETALLE DE CARGA de la tabla de DETALLE de ENCOMIENDAS 
+                                    ----------------------------------------------------- -->
+                                        <tr  bgcolor="aaaaff" align="center">
+                                            <td width="0"></td>                                                                                
+                                            <td>Comisionista</td>                                       
+                                            <td bgcolor="">Cantidad</td>
+                                            <td>Tipo encomienda</td>
+                                            <td colspan="3">Precio</td>
+                                        </tr>
+
+                                        </thead>
+                                            <tbody id="cuerpo_detalle_encomienda">
+                                                <!-- BEGIN detalleencomienda -->
+                                                <tr align="center">                                                                             
+                                                    <td><FONT SIZE=2>{v_item}</FONT></td>                                                                                
+                                                    <td><FONT SIZE=2>{v_comis}</FONT></td>                                       
+                                                    <td><FONT SIZE=2>{v_cantidad}</FONT></td>
+                                                    <td><FONT SIZE=2>{v_tipo}</FONT></td>
+                                                    <td><FONT SIZE=2>$ {v_precio}</FONT></td>                                                                            
+                                                </tr>
+                                                <!-- END detalleencomienda -->
+                                           </tbody>
+                                </table>
+<!--                            </div>                            -->
+                        </td>
+                 </tr>
+                                                    
+                 <tr>
+                     <td colspan="5">
+                         <FONT SIZE=1>La empresa no se responsabiliza <br>de lo transportado en las encomiendas.</FONT>                                                                                                                   
+                     </td>
+                     <td align="right" valign="middle" colspan="4">
+                         Asegurar por: $      
+                         <input name="e_importe_a_asegurar" type="text" id="e_importe_a_asegurar" disabled="true" width="90"  value="{v_importe_a_asegurar}" size="5" />
+                         <span id="sp_porcentaje_seguro">{v_porcentaje_para_asegurar}</span> % :
+                         <input name="e_importe_seguro" type="text" id="e_importe_seguro" disabled="true" width="90" value="{v_importe_seguro}" size="10" />
+                     </td>
+                 </tr>
+                 <tr>
+                     <td height="39" colspan="5">
+                         <FONT SIZE=2>Observaciones:</FONT><br>{v_observaciones}                                                            
+                     </td>
+                     <td colspan="2" >
+                         <table border="0">
+                             <tr>
+                                 <td>Asegurada:</td>
+                                 <td align="right"><b>{v_encomienda_asegurada}</b></td>
+                             </tr>
+                             <tr>
+                                 <td>Debe tener frio:</td>
+                                 <td align="right"><b>{v_debe_tener_frio}</b></td>
+                             </tr>                                                                
+                             <tr>
+                                 <td>Con aviso de retorno:</td>
+                                 <td align="right"><b>{v_con_aviso_de_retorno}</b></td>                                                                       
+                             </tr>                                                              
+                         </table>
+                     </td>
+                     <td colspan="3" align="right" valign="middle" >    	  
+                         SubTotal:<input name="e_subtotal" type="text" id="e_subtotal" value="{v_subtotal}" width="90" /><br>
+                         IVA % <span id="sp_iva">{v_porcentaje_iva}</span>:<input name="e_iva" type="text" id="e_iva" value="{v_iva}" width="90" /><br>
+                         TOTAL:<input name="e_precio" type="text" id="e_precio" value="{v_precio_total}" width="90" />                           
+                     </td>
+                 </tr>
+               </tbody>
+            </table>
+        </div>
+        <!-- 
+        --------------------------------------------------------------------------------
+        -------------   Botonera de mando ----------------------------------------------
+        -------------------------------------------------------------------------------- 
+
+        <div align="center">                     
+            <table id='mandos' width="21%" border="0" align="center" cellspacing="0">
+                <tr align="center" valign="middle">
+                    <td>   
+                        <input TYPE="image" SRC="./imagenes/ok.png" BORDER="0" name="volver" id="volver" value="volver" onclick="cerrar_ventana();"/>
+                        <strong> Aceptar</strong>
+                    </td>
+                    <!-- <td valign="middle">
+                    <input type="image" src="./imagenes/pdf.png" border="0" name="pdf" id="pdf" value="volver" onclick="cerrar_ventana()"/>
+                    <strong>Pdf</strong>
+                    </td> -- >
+                    <td>
+                        <input TYPE="image" SRC="./imagenes/imprimir.png" BORDER="0" name="imprimir" id="imprimir" value="imprimir" onclick="imprimir();"/>
+                        <strong> Imprimir</strong>
+                    </td>
+                </tr>	
+            </table>
+        </div>                
+                -->
+
+    </body>
+    
+</html>

@@ -1,0 +1,177 @@
+<html>
+    <head>
+        <title>{v_titulo_proyecto}</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <link rel="shortcut icon" type="image/x-icon" href="{v_icono_sistema}" />            
+        
+        <script language="JavaScript" type="text/javascript" src="./js/jquery.js" charset="utf-8"></script>
+        
+        <style>
+          .thumb {
+            height: 100px;
+            width: 100;
+            border: 1px solid #000;
+            margin: 10px 5px 0 0;
+          }
+        </style>
+        
+        <script type="text/javascript" language="javascript">
+    
+            $(window).load(function(){    
+                
+                $(function() {        
+                    $('#files').change(function(e) {
+                        addImage(e); 
+                    });
+
+                    function addImage(e){
+                        var file = e.target.files[0],
+                        imageType = '/image/.jpg';
+    
+                        if (!file.type.match(imageType))
+                            return;
+  
+                        var reader = new FileReader();
+                        reader.onload = fileOnload;
+                        reader.readAsDataURL(file);
+                    }
+  
+                    function fileOnload(e) {
+                        var result=e.target.result;
+                        $('#imagen_logo').attr("src",result);
+                    }
+                });
+            });
+        </script>
+        
+    </head>
+    <body>
+        <div align="center">
+            <table border="0">
+                <tr><td colspan="3" align="center" style="background: {v_color}"><b>BASE de Datos</b></td>               </tr>
+                <tr><td rowspan="6" align="center"><image src="./imagenes/conf_base_datos.jpg"/></td>
+                    <td>Host                     </td><td><input id="e_host"     value="{v_host}"/></td></tr>
+                <tr><td>Usuario                  </td><td><input id="e_usuario"     value="{v_usuario}"> </td>      </tr>
+                <tr><td>Contraseña               </td><td><input id="e_contrasenia" value="{v_contrasenia}"></td>      </tr>
+                <tr><td>Base                     </td><td><input id="e_base"        value="{v_base}"></td>      </tr>
+                <tr><td>Puerto                   </td><td><input id="e_puerto"      value="{v_puerto}"></td>      </tr>
+                <tr><td>Tipo Base                </td><td><input id="e_tipo_base"   value="{v_tipo_base}"></td>      </tr>
+                
+                <tr><td colspan="3" style="height: 50; background: {v_color}" ></td>                                 </tr>
+                
+                <tr><td colspan="3" align="center" style="background: {v_color}"><b>Datos de trabajo</b>  </td>               </tr>
+                <tr><td rowspan="12" align="center"><image src="./imagenes/conf_sistema.jpg"/></td>
+                    <td>Cantidad registro por pagina  </td><td><input id="e_cantidad_registro_por_pagina"     value="{v_cantidad_registro_por_pagina}"/></td></tr>
+                <tr><td>Usar eliminacion Virtual      </td><td><input id="e_usar_eliminacion_virtual"     value="{v_usar_eliminacion_virtual}"/></td>                                                                                </tr>
+                <tr><td>Porcentaje seguro encomienda  </td><td><input id="e_porcentaje_seguro_encomienda"     value="{v_porcentaje_seguro_encomienda}"/></td>      </tr>
+                <tr><td>Porsentaje IVA encomienda     </td><td><input id="e_porsentaje_iva_encomienda"     value="{v_porsentaje_iva_encomienda}"/></td>      </tr>
+                <tr><td>Prioridad                     </td><td><input id="e_prioridad"     value="{v_prioridad}"/></td>      </tr>
+                <tr><td>Tipo responsable              </td><td><input id="e_tipo_presponsable"     value="{v_tipo_presponsable}"/></td>      </tr>
+                <tr><td>Trabajar con rango de entrega </td><td><input id="e_trabajar_con_rango_de_entrega"     value="{v_trabajar_con_rango_de_entrega}"/></td>      </tr>
+                <tr><td>Formato de hora               </td><td><input id="e_formato_de_hora"     value="{v_formato_de_hora}"/></td>      </tr>
+                <tr><td>Formato de fecha              </td><td><input id="e_formato_de_fecha"     value="{v_formato_de_fecha}"/></td>      </tr>
+                <tr><td>Factura Primaria              </td><td><input id="e_factura_a"     value="{v_factura_a}"/></td>      </tr>
+                <tr><td>Factura Secundario            </td><td><input id="e_factura_b"     value="{v_factura_b}"/></td>      </tr>
+                <tr><td>Porcentaje cooseguro          </td><td><input id="e_porcentaje_cooseguro"     value="{v_porcentaje_cooseguro}"/></td>      </tr>
+                
+                <tr><td colspan="3" style="height: 50; background: {v_color}" ></td>                                 </tr>
+
+                <tr><td colspan="3" align="center" style="background: {v_color}"><b>Datos del Membrete</b></td>               </tr>
+                <tr><td rowspan="6" align="center"><image border="0" src="./imagenes/conf_memebrete.jpg"/></td>
+                    <td>Logo                    </td>
+                    
+                    <td>
+                        <image id="imagen_logo" class="thumb"   src=""><br />
+                        <input type="file" id="files" />
+                        
+                    </td>      
+                    
+                    
+                </tr>
+                <tr><td>Razon Social            </td><td><input id="e_razon_social"     value="{v_razon_social}"/></td>      </tr>
+                <tr><td>Direccion               </td><td><input id="e_direccion"     value="{v_direccion}"/></td>      </tr>
+                <tr><td>Telefono                </td><td><input id="e_telefono"     value="{v_telefono}"/></td>      </tr>
+                <tr><td>Responsable             </td><td><input id="e_responsable"     value="{v_responsable}"/></td>      </tr>
+                <tr><td>Imagen de fondo        </td><td><input id="e_imagen_de_fondo"     value="{v_imagen_de_fondo}"/></td>      </tr>
+
+                <tr><td colspan="3" style="height: 50; background: {v_color}" ></td>                                 </tr>
+                <tr>
+                    <td colspan="3"> 
+            <table>
+                <tr>
+                    <td VALIGN="top">
+                        <table>
+                            <tr><td colspan="3" align="center" style="background: {v_color}"><b>Colores de Encomienda</b> </td>               </tr>
+                            <tr><td rowspan="7" align="center"><image src="./imagenes/colores.jpg"/></td>
+                                <td>Encomiendas normal</td>                <td><input id="e_color_encomiendas_fila_comun" name="color" type="color" value="{v_color_encomiendas_fila_comun}"/>                              </td></tr>
+                            <tr><td>Encomiendas con pago en destino</td>   <td><input id="e_color_encomiendas_fila_tipo_pago_en_destino" name="color" type="color" value="{v_color_encomiendas_fila_tipo_pago_en_destino}"/></td></tr>
+                            <tr><td>Encomiendas con pago contado</td>      <td><input id="e_color_encomiendas_fila_tipo_pago_contado" name="color" type="color" value="{v_color_encomiendas_fila_tipo_pago_contado}"/>      </td></tr>
+                            <tr><td>Encomiendas con pago en Cta.Cte.</td>  <td><input id="e_color_encomiendas_fila_tipo_pago_ctacte" name="color" type="color" value="{v_color_encomiendas_fila_tipo_pago_ctacte}"/>        </td></tr>
+                            <tr><td>Cabezera de tablas</td>                <td><input id="e_color_encomiendas_cabezera_tabla" name="color" type="color" value="{v_color_encomiendas_cabezera_tabla}"/>                      </td></tr>
+                            <tr><td>Cabezera de clumna</td>                <td><input id="e_color_encomiendas_cabezera_columna" name="color" type="color" value="{v_color_encomiendas_cabezera_columna}"/>                  </td></tr>                
+                            <tr><td>Pie de tabla</td>                      <td><input id="e_color_encomiendas_pie_tabla" name="color" type="color" value="{v_color_encomiendas_pie_tabla}"/>                                </td></tr>                                            
+                            
+                          
+                        </table>
+                    </td>
+                    
+                    
+                    <td VALIGN="top">
+                        <table>
+                            <tr><td colspan="3" align="center" style="background: {v_color}"><b>Colores de Pasajes</b> </td>               </tr>
+                            <tr><td rowspan="8" align="center"></td>
+                                <td>Pasaje comun</td>                       <td><input id="e_color_pasajes_fila_comun" name="color" type="color" value="{v_color_pasajes_fila_comun}"/>                                    </td></tr>                
+                            <tr><td>Pasajes con pago en destino</td>        <td><input id="e_color_pasajes_fila_tipo_pago_en_destino" name="color" type="color" value="{v_color_pasajes_fila_tipo_pago_en_destino}"/>      </td></tr>
+                            <tr><td>Color en foco</td>                      <td><input id="e_color_pasajes_foco" name="color" type="color" value="{v_color_pasajes_foco}"/>                                                </td></tr>
+                            <tr><td>Pasaje seleccionado</td>                <td><input id="e_color_pasajes_seleccionado" name="color" type="color" value="{v_color_pasajes_seleccionado}"/>                                </td></tr>
+                            <tr><td>Viajes diarios</td>                     <td><input id="e_color_viaje_diario_listado" name="color" type="color" value="{v_color_viaje_diario_listado}"/>                                </td></tr>
+                            <tr><td>Viajes especiales</td>                  <td><input id="e_color_viaje_especial_listado" name="color" type="color" value="{v_color_viaje_especial_listado}"/>                            </td></tr>                
+                            <tr><td>Fondo carga de pasaje para origen</td>  <td><input id="e_color_fondo_carga_datos_pasaje_origen" name="color" type="color" value="{v_color_fondo_carga_datos_pasaje_origen}"/>          </td></tr>                                   
+                            <tr><td>Fondo carga de pasaje para destino</td> <td><input id="e_color_fondo_carga_datos_pasaje_destino" name="color" type="color" value="{v_color_fondo_carga_datos_pasaje_destino}"/>        </td></tr>                   
+                
+                                                            </tr>                
+                            
+                        </table>
+                         <tr><td colspan="3" style="height: 50; background: {v_color}" ></td>
+                    </td>
+                </tr>
+                
+            </table>
+                </td>
+                
+        </tr>                
+        </table>
+                            
+        </div>
+        <!--
+        <script>
+              function archivo(evt) {
+                  var files = evt.target.files; // FileList object
+             
+                  // Obtenemos la imagen del campo "file".
+                  for (var i = 0, f; f = files[i]; i++) {
+                    //Solo admitimos imágenes.
+                    if (!f.type.match('image.*')) {
+                        continue;
+                    }
+             
+                    var reader = new FileReader();
+             
+                    reader.onload = (function(theFile) {
+                        return function(e) {
+                          // Insertamos la imagen
+                         document.getElementById("imagen_logo").innerHTML = ['<img class="thumb" src="', e.target.result,'" title="', escape(theFile.name), '"/>'].join('');
+                        };
+                    })(f);
+             
+                    reader.readAsDataURL(f);
+                  }
+              }
+             
+              document.getElementById('files').addEventListener('change', archivo, false);
+      </script>        
+        -->
+    </body>
+</html>

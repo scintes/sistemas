@@ -1,0 +1,1264 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- -------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Objetivo: Pantalla de modificacion de una o varias encomienda. 
+Funcionalidad: Esta pantalla tiene como dato de entrada los datos cargados en las siguientes tablas.
+    Tablas: Tipo_encomienda -> junto con la de usuario determinan el porecio de una encomienda. 
+            usuario -> Junto a tipo de encomienda se determina el precio de cada encomienda.
+                       Esta hace referencia solo al registro de COMISIONISTA -> Siendo el tipo nro 3  
+            Localidad -> Referencia a esta tabla para saber las localidades de origen y de llegada.
+            clientes -> Referencia a los clientes para evitar escribir todos los datos de remitente y destinatario.
+
+Salida de la pantalla
+           Escritura en las tablas:
+            Encomienda -> Registra los totales de cada encomiendas a enviar, como tambien los datos del remitente y destinatario.
+            detelle_encomienda -> Registra la o las encomienda despachadas con la guia.
+           Impresion de Guia -> Imprime la hoja de guia dando los datos de origen, destino y el detalle de las encomienda.
+
+Calculo de precio -> Este esta sujeto a dos parametros TIPO_ENCOMIENDA y COMISIONISTA.
+    Precio  = precio (se encuentra en Tipo encomienda) + comison comisionista + comision sucursal + iva
+
+            
+--------------------------------------------------------------------------------
+---------------------------------------------------------------------------- -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Modificación de Encomienda</title>
+    </head>
+
+
+<!-- Page styles -->
+<link type='text/css' href='css/demo.css' rel='stylesheet' media='screen' />
+<LINK REL="stylesheet" TYPE="text/css" HREF="css/estilos.css" /> <!-- Estilos de la tabla -->
+    
+
+<!-- OSX Style CSS files -->
+<link type='text/css' href='css/osx.css' rel='stylesheet' media='screen' />
+
+
+<link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />            
+
+<LINK href="css/datepicker.css" type=text/css rel=stylesheet>
+<script language="JavaScript" src="./js/datepicker.js">
+</script>        
+        
+        <script type="text/javascript" src="./js/jquery-1.3.2.js" >
+        </script>            
+
+        <script type="text/javascript" src="./js/propias.js" >
+        </script>            
+     
+       <script type="text/javascript">   
+            //------------------------------------------------------------------
+            // Asociamos las funciones a las acciones de los componentes
+            //------------------------------------------------------------------
+            var carg_cliente = true; // true = remitente; false = destinatario
+            $(document).ready(function(){                
+                $("#e_prov_remitente"      ).change(function(){dependencia_localidad_remitente();   });
+                $("#e_prov_destinatario"   ).change(function(){dependencia_localidad_destinatario();});
+                $("#e_tipo_encomienda"     ).change(function(){dependencia_tipo_encomienda();       });
+
+                $("#e_encomienda_asegurada").change(function(){cambiar_estado_de_cargar_seguro();   }); // activa y desactiva el text para ingresar el seguro
+                $("#b_agregar_encomienda"  ).click(function(){agregar_encomienda_al_listado();      });
+
+                $("#b_vaciar_la_tabla"     ).click(function(){vaciar_tabla()                        });
+                $("#b_eliminar_encomienda" ).click(function(){eliminar_encomienda_al_listado()      });
+
+                
+                $("#e_importe_a_asegurar"  ).blur (function(){sumar_seguro();                       });
+                
+                $("#e_importe_a_asegurar").attr("disabled", true); // se desabilita para habilitarlo solo si se tilda e_encomienda_asegurada            
+                $("#e_precio").attr("disabled",             true); // Desabilitados definitibamente 
+                $("#e_iva").attr("disabled",                true); // Desabilitados definitibamente
+                $("#e_subtotal").attr("disabled",           true); // Desabilitados definitibamente
+                
+                //--------------------------------------------------------------------------------------------------
+                // eventos de la busqueda de clientes
+                //--------------------------------------------------------------------------------------------------
+                $("#e_buscar_remitente").mouseover(function(){carg_cliente = false;});
+                $("#e_buscar_destinatario").mouseover(function(){carg_cliente = true;});
+                
+                $("#b_aceptar_clientes"    ).click(function(){seleccionar_cliente_buscado(carg_cliente); });
+                $("#b_buscar"              ).click(function(){buscar_clientes();                    });
+
+                //--------------------------------------------------------------------------------------------------
+                // eventos de la Alta de clientes
+                //--------------------------------------------------------------------------------------------------
+                $("#e_alta_remitente"      ).click(function(){abrir_ventana('Alta de clientes','./abm/abm_clientes.php',400,600); });
+                $("#e_alta_destinatario"   ).click(function(){abrir_ventana('Alta de clientes','./abm/abm_clientes.php',400,600); });
+
+
+                //---------------------------------------------------------------------------------------------------
+                //----------------  botones en forma des pagos  -----------------------------------------------------
+                //---------------------------------------------------------------------------------------------------
+                $("#carga_datos_pagos").css('background-color',"#F5ECCE");
+                $("#e_forma_de_pago_contado" ).change( function() { seleccionar_forma_de_pagos(); });
+                $("#e_forma_de_pago_ctacte"  ).change( function() { seleccionar_forma_de_pagos(); });
+                $("#e_forma_de_pago_cheque"  ).change( function() { seleccionar_forma_de_pagos(); });
+
+                $("#b_agregar_pago"  ).click(function(){agregar_pago_al_listado_de_pago();      });
+                $("#b_vaciar_la_tabla_pago"     ).click(function(){vaciar_tabla_pago()          });
+                $("#b_eliminar_pago" ).click(function(){eliminar_pago_al_listado_pago()         });
+
+
+
+
+
+                //  ---------------- Botones de Mando finales -------------------------------------------------------
+                $("#b_aceptar"             ).click(function(){enviar_ventana();                     });
+                $("#b_cancelar"            ).click(function(){cerrar_ventana();                     });
+                
+            })     
+
+            //------------------------------------------------------------------
+            // Activa o desactiva el TEXT de e_importe_seguro y e_importe_a_asegurar
+            //  segun el estado del componente "e_encomienda_asegurada"
+            //------------------------------------------------------------------           
+            function cambiar_estado_de_cargar_seguro(){
+                var estado = $("#e_encomienda_asegurada").attr("checked")? true : false;
+                //$("#e_importe_seguro").attr("disabled",(!estado)); 
+                $("#e_importe_a_asegurar").attr("disabled",!estado); 
+            }
+            
+
+            //------------------------------------------------------------------
+            // Determina el precio de la encomienda segun dos parametros 
+            // "e_comisionista" y el "e_tipo_encomienda" completando los TEXT 
+            // ocultos para el calculo del precio total.
+            //------------------------------------------------------------------
+            function dependencia_tipo_encomienda(){
+                var id_com = $("#e_comisionista").val();
+                // Si hay seleccionado un comisionista 
+                if (id_com!=0) { 
+                    var code = $("#e_tipo_encomienda").val();
+                    // el ajax devuelve ---> 
+                    //    $porc_comisionista.'|'.$comision_misionista.'|'.$porc_sucursal.'|'.$comision_sucursal.
+                    //    '|'.$sub_total.'|'.$iva.'|'.$Total;                            
+                    $.get("ajax_tipo_encomienda.php", { code: code, id_com: id_com },function(resultado){                   
+                    if (resultado == false){
+                        alert("Error llamando a tipo de encomienda");
+                    }else{
+                        var res1 = resultado.split("|");      
+                        $('#h_com_com').attr("Value",res1[1]); // $ comision del comisionista en pesos			
+                        $('#h_com_suc').attr("Value",res1[3]); // $ comision de la sucursal en Pesos
+                        $('#h_iva').attr("Value",res1[5]); // $ Iva del precio
+                        //--$('#sp_precio').html(res1[6]);	// total con comision comisionista , comision sucursal y el iva	
+                        $('#e_sub_precio').val(res1[6]);	// total con comision comisionista , comision sucursal y el iva	
+                    }});
+                 }else{
+                     alert("Debe seleccionar un comisionista previamente...");
+                     $("#e_tipo_encomienda").val(0);
+                 } 
+            }     
+            //------------------------------------------------------------------
+            // carga el combobox "e_loc_remitente" de localidades segun la 
+            // que provincia este seleccionada en e_prov_remitente
+            //------------------------------------------------------------------
+            function dependencia_localidad_remitente(){
+                var code = $("#e_prov_remitente").val();
+                var es_origen = true;
+                
+                $.get("ajax_localidades.php", {code:code, es_origen:es_origen},function(resultado){
+			if(resultado == false){
+				alert("Error llamando a localidades origen");
+			}else{
+				$("#e_loc_remitente").attr("disabled",false);
+				document.getElementById("e_loc_remitente").options.length=0;
+				$('#e_loc_remitente').append(resultado);			
+			}
+		});
+            }    
+            
+            //------------------------------------------------------------------
+            // carga el combobox "e_loc_destinatario" de localidades segun la 
+            // que provincia este seleccionada en e_prov_destinatario
+            //------------------------------------------------------------------
+            function dependencia_localidad_destinatario(){
+                var code = $("#e_prov_destinatario").val();
+                var es_origen = false;
+                
+                $.get("ajax_localidades.php", { code: code, es_origen:es_origen },function(resultado){
+			if(resultado == false){
+				alert("Error llamando a localidades destino");
+			}else{
+				$("#e_loc_destinatario").attr("disabled",false);
+				document.getElementById("e_loc_destinatario").options.length=0;
+				$('#e_loc_destinatario').append(resultado);			
+			}
+		});
+            }            
+
+            //------------------------------------------------------------------
+            // Verifica que los datos esten cargados correctamente antes de 
+            // escribir la base
+            //------------------------------------------------------------------
+            function validar_carga_de_datos(){
+                //Validacion 1 : Verificamos que halla tipo de encomiendas 
+                //               cargadas
+                if (parseFloat($("#e_precio").attr('value'))<=0){
+                    alert("Aun no seleccionó la/s encomienda/s...");
+                    return false;
+                }
+                //Validacion 2 : Verificamos si esta tildada la opcion de seguro 
+                //               este cargado el monto.
+                if ($("#e_encomienda_asegurada").attr('checked')==true){
+                    if ($("#e_importe_seguro").attr('value')<=0){
+                        alert("Debe cargar el importe del seguro...");
+                        return false
+                    }
+                }
+                // Si el procesamiento llego hasta aca estan correcto los controles
+                return true;
+            }
+            
+            //------------------------------------------
+            // Cierra la ventana 
+            //------------------------------------------
+            function cerrar_ventana(){
+                if (confirm('¿Segúro de cancelar la carga de encomienda?'))
+                    window.close();
+            }
+
+            //------------------------------------------
+            // Envia el contenido del formulario 	
+            //------------------------------------------
+            function enviar_ventana(){
+                // verificamos que al hacer click en aceptar esten todos los 
+                // datos cargados correctamente
+                if (validar_carga_de_datos()==true)
+                    if (confirm("¿Segúro de guardar la encomienda?")) {                  
+               
+                        var tabla = [];
+                        var fila = [];
+                        $('#cuerpo_detalle_encomienda tr').each(function () {
+                        $(this).find('td').each(function () {
+                            if ($(this).length > 0)
+                                fila.push($(this).text());
+                                })
+                            tabla.push(fila);   
+                        });                       
+  
+                        var parametros = {
+                                    "e_estado"             : $("#e_estado").val(),
+                                    "e_fecha"              : $("#e_fecha").val(),
+                                    "e_fecha_entrega"      : $("#e_fecha_entrega").val(),
+                                    "e_hora_entrega_desde" : $("#e_hora_entrega_desde").val(),
+                                    "e_hora_entrega_hasta" : $("#e_hora_entrega_hasta").val(),
+                                    "e_prioridad"          : $("#e_prioridad").val(),
+                                    "e_comisionista"       : $("#e_comisionista").val(),                                    
+                                    "e_dni_destinatario"   : $("#e_dni_destinatario").val(),
+//                                    "e_comisionista"       : $("#e_comisionista").val(),
+                                    "e_usuario"            : $("#e_usuario").val(), 
+                                    "e_prioridad"          : $("#e_prioridad").val(),
+                                    "e_dni_destinatario"   : $("#e_dni_destinatario").val(),
+                                    "e_dni_remitente"      : $("#e_dni_remitente").val(),
+                                    "e_remitente"          : $("#e_remitente").val(),
+                                    "e_destinatario"       : $("#e_destinatario").val(),
+                                    "e_dir_destinatario"   : $("#e_dir_destinatario").val(),
+                                    "e_dir_remitente"      : $("#e_dir_remitente").val(),
+                                    "e_prov_destinatario"  : $("#e_prov_destinatario").val(),
+                                    "e_prov_remitente"     : $("#e_prov_remitente").val(),
+                                    "e_loc_destinatario"   : $("#e_loc_destinatario").val(),
+                                    "e_loc_remitente"      : $("#e_loc_remitente").val(),
+                                    "e_tel_destinatario"   : $("#e_tel_destinatario").val(),
+                                    "e_tel_remitente"      : $("#e_tel_remitente").val(),
+
+                                    "e_debetener_frio"       : $("#e_debetener_frio").val(),
+                                    "e_con_aviso_de_retorno" : $("#e_con_aviso_de_retorno").val(),
+
+                                    "e_comi_comi"          : $("#e_comi_comi").val(),
+                                    "e_comi_suc"           : $("#e_comi_suc").val(),      
+                                    
+                                    "e_encomienda_asegurada" : $("#e_encomienda_asegurada").val(),
+                                    "e_importe_seguro"     : $("#e_importe_a_asegurar").val(),                                    
+                                    "e_porcentaje_seguro"    : $("#sp_porcentaje_seguro").val(),
+//                                    "e_contrareembolso" : $("#e_encomienda_asegurada").val(),
+                                    
+                                    "e_subtotal"             : $("#e_subtotal").val(),
+                                    "e_iva"                  : $("#e_iva").val(),                                    
+                                    
+                                    "e_precio"               : $("#e_precio").val(),                                    
+                                    "e_observaciones"        : $("#e_observaciones").val(),
+                                    "h_subtotal"             : $("#h_subtotal").val(),     
+                                    "e_detalle_encomienda"   : tabla//myTableArray
+                        };
+                        //alert (parametros.e_detalle_encomienda);
+                        $.ajax({
+                          
+                            data:  parametros,
+                            url:   'insertar_encomienda.php',
+                            type:  'post',                            
+                            
+                            beforeSend: function () {                            
+                                $("#resultado").html("Procesando, espere por favor...");
+                            },
+                            
+                            success:  function (response) {
+                                     //$("#resultado").html(response);
+                                        alert(response);
+                                        window.close();
+                            }
+                            
+                        });                        
+                }
+            }
+            
+            //------------------------------------------------------------------
+            // realiza el incremento del subtotal por el importe del seguro
+            //------------------------------------------------------------------
+            function sumar_seguro(){
+                    var subtotal = parseFloat( $('#h_subtotal').val() );
+                    var porcentaje_seguro = parseFloat( $("#sp_porcentaje_seguro").html());
+                    var imp_aseg = parseFloat($("#e_importe_a_asegurar").val());
+                    
+                    imp_aseg = parseFloat( imp_aseg * porcentaje_seguro / 100);
+                   
+                    var porcentaje_iva = parseFloat(($("#sp_iva").html())); 
+                    var precio_iva = subtotal + (subtotal * porcentaje_iva / 100) + imp_aseg;
+                    
+                    $("#e_importe_seguro").val(imp_aseg.toFixed(2));
+                    $('#e_subtotal').attr('value',subtotal.toFixed(2));                       
+                    $('#e_iva').attr("Value",(precio_iva - subtotal).toFixed(2));                        
+                    $('#e_precio').attr("Value",precio_iva.toFixed(2));                            
+            }
+            
+            //------------------------------------------------------------------
+            // Completa el listado de encomienda asociadas a la guia de encomienda.
+            // accion: agrea la cantidad de tipo de encomienda. Incrementando el 
+            //          total de encomienda  y calcula el iva del mismo total.
+            //------------------------------------------------------------------
+            function agregar_encomienda_al_listado(){
+                // Si tengo ya seleccionado el "COMISIONISTA" y el "TIPO DE ENCOMIENDA"
+                if (($("#e_tipo_encomienda").val()!=0)&($("#e_comisionista").val()!=0)) {                    
+                    // obtenemos los datos de cantidad, tipo, precio y el iva 
+                    var cant_reg = $('#e_cantidad_encomienda').val();                   
+                     // obtenemos el texto seleccionado de la encomienda
+                    var tipo_reg = $('#e_tipo_encomienda option:selected').html();
+                    // precio unitario (precio enco + comisiones sucursal y comicionista) con iva
+                    var precio_unit_reg = parseFloat($('#e_sub_precio').val()).toFixed(2);
+                    // valor del iva para el registro cargado
+                    var iva_reg = parseFloat($('#h_iva').val());                                           
+                    // Precio total con IVA 
+                    var precio_total_reg = (cant_reg * precio_unit_reg ).toFixed(2);                    
+                    // precio total sin IVA
+                    var precio_total_sin_iva_reg = cant_reg * (precio_unit_reg - iva_reg );   
+                    
+                    //----------------------------------------------------------
+                    // obtenemos las constantes de porcentajes como el IVA 
+                    var porcentaje_iva = parseFloat( $("#sp_iva").html());
+                    //----------------------------------------------------------
+                    // Obtenemos el total del listado de encomiendas y sumamos 
+                    // el mismo campo, para obtener el total sin iva.
+                    var h_subtotal = parseFloat($('#h_subtotal').val());                                       
+                    h_subtotal += precio_total_sin_iva_reg;
+                    $('#h_subtotal').val(h_subtotal);
+                    
+                    // sumamos el seguro si lo hay
+                    var subtotal = h_subtotal;                                    
+                    // obtenemos el valor en pesos del iva
+                    var precio_iva = subtotal + (subtotal * porcentaje_iva / 100);
+
+                    // obtenemos el nombre y el ID del comicionista 
+                    var comisionista = $("#e_comisionista option:selected").html();
+                    var id_comisionista = $("#e_comisionista").val();
+                                       
+                    if ($("#e_tipo_encomienda").val()==0) {
+                        alert("Debe seleccionar el tipo de encomienda....");
+                    }else{
+                        var strNueva_Fila='<tr bgcolor="aaeeff">'+
+			                     '<td align="center">'+
+                                                '<INPUT type="checkbox" NAME="chk"></input></td>'+                                                
+                                                '<td><input type="hidden" id="h_sub_com_suc" value="'+$("#h_com_suc").val()+'"></input>'+
+                                                '<input type="hidden" id="h_sub_com_com" value="'+$("#h_com_com").val()+'></input>'+                        
+                                                '<input type="hidden" id="h_id_comisionista" value="'+id_comisionista+'></input>'+    
+                                             '</td>'+
+                                             '<td align="center" width="0">'+id_comisionista+'</td>'+
+                                             '<td align="center">'+comisionista+'</td>'+
+                                             '<td align="center">'+cant_reg+'</td>'+
+                                             '<td align="left"  >'+tipo_reg+'</td>'+                       
+                                             '<td  colspan="2"> $ '+precio_total_reg.valueOf()+'</td>'+
+                                             '<td  colspan="2"> $ '+$("#h_com_suc").val()+'</td>'+
+                                             '<td  colspan="2"> $ '+$("#h_com_com").val()+'</td> </tr>';
+                        $('#e_subtotal').attr('value',subtotal);                       
+                        $('#e_iva').attr("Value",(precio_iva - subtotal).toFixed(2));                        
+                        $('#e_precio').attr("Value",precio_iva + parseFloat( $('#e_importe_seguro').val() ));
+                   
+                        var s1 = parseFloat($('#e_comi_sucu').val());
+                        var s2 = parseFloat($('#e_comi_comi').val());
+                        s1 = parseFloat($('#h_com_suc').val() + s1); 
+                        s2 = parseFloat($('#h_com_com').val() + s2); 
+                        $('#e_comi_sucu').html(s1);			
+                        $('#e_comi_comi').html(s2);			
+                                
+                        // inicializamos los valores    
+                        $('#e_cantidad_encomienda').attr('value',1);
+                        $('#e_tipo_encomienda').val(0); // obtenemos el texto seleccionado
+                        //---- $('#sp_precio').html('0'); 
+                        $('#e_sub_precio').val(0); 
+                        $('#h_com_suc').attr('value',0);
+                        $('#h_com_com').attr('value',0);
+                        $('#h_iva').attr('value',0);
+                        
+                        var objTabla=$('#t_detalle_encomienda').parents().get(3);
+                        //agregamos la nueva fila a la tabla
+                        $(objTabla).find('tbody').append(strNueva_Fila);
+				
+                        //si el cuerpo la tabla esta oculto (al agregar una nueva fila) lo mostramos
+                        if(!$(objTabla).find('tbody').is(':visible')){
+                            //le hacemos clic al titulo de la tabla, para mostrar el contenido
+                            $(objTabla).find('caption').click();
+                        }
+                    }
+                }else{
+                    alert("Debe seleccionar un comisionista y un tipo de encomienda...");
+                } 
+                
+            }   
+            
+            //------------------------------------------------------------------
+            //------------------------------------------------------------------
+            function vaciar_tabla(){
+                //evento que se produce al hacer clic en el boton que elimina una tabla completamente
+                //$(document).on('click','.clsEliminarTabla',function(){
+                $("#t_detalle_encomienda > tbody").empty();
+                        
+                // Inicializamos los valores totales de moneda, comision
+                $('#h_subtotal').val(0);
+                $("#sp_porcentaje_seguro").html(0);              
+                
+                $('#e_subtotal').attr('value',0.00);                        
+                $('#e_iva').attr("Value",0.00);
+                $('#e_precio').attr("Value",0.00);                       
+                $('#e_comi_sucu').html(0);			
+                $('#e_comi_comi').html(0);			
+            }
+            //------------------------------------------------------------------
+            // 
+            //------------------------------------------------------------------
+	    
+            //------------------------------------------------------------------
+            //------------------------------------------------------------------
+	    function eliminar_encomienda_al_listado(){
+               try {
+                    var mensaje = "Debe seleccionar la encomienda para eliminarla...";
+                    var table = document.getElementById("cuerpo_detalle_encomienda");
+                    var borrado = false; // determina si se realizo el borrado
+                    var rowCount = table.rows.length; // determina la cantidad de filas
+                    if (rowCount>1){
+                        for(var i=0; i<rowCount; i++) {
+                            var row = table.rows[i];
+                            var chkbox = row.cells[0].childNodes[0];
+                            if((null != chkbox) && (true == chkbox.checked)) {
+                                var aux = $("#e_comi_comi").val();
+                                aux =  aux - $("#h_com_com").val();
+                                $("#e_comi_comi").val(aux);
+                                
+                                var aux2 = $("#e_comi_suc").val();
+                                aux2 =  aux2 - $("#h_com_suc").val();
+                                $("#e_comi_suc").val(aux2);
+                            
+                                table.deleteRow(i);
+                                rowCount--;
+                                i--;
+                                borrado = true;
+                            }                            
+                        }
+                        if(!borrado)
+                            alert(mensaje);
+                        
+                    }else{
+                        var row = table.rows[0];
+                        var chkbox = row.cells[0].childNodes[0];
+                        if((null != chkbox) && (true == chkbox.checked)) {
+                            vaciar_tabla();
+                        }else{
+                            alert(mensaje)
+                        }
+                    }
+               }catch(e) {
+                    alert(e);
+               }                
+            }
+
+        //----------------------------------------------------------------------
+        // Realiza la busqueda de clientes de lo escrito en el edit de busqueda por sql
+	function buscar_clientes() {                       
+                var parametros = {code : $("#e_buscar").val()};
+                
+                $.ajax({
+                           data: parametros,
+                           url : 'ajax_buscar_clientes.php',
+                           type: 'post',
+                           beforeSend: function () {
+                               $("#t_buscar").html("Procesando, espere por favor...");
+                                                   },
+                           success:  function (resultado) {
+                                    tbuscliente = resultado.split('@|@')
+                                   // alert(tbuscliente[0]);
+                                    $("#t_buscar").html(tbuscliente[0]);
+                                                          }
+                            });                   
+        };
+
+        //------------------------------------------------------------------------------
+        // devuelve lo encontrado al precionar el boton aceptar del buscador de clientes
+	function seleccionar_cliente_buscado(carg_cliente){             
+                var res = $('#h_seleccion').val(); // obtenemos (nro, dni, nombre, direccion, id_loc, localidad, id_prov, provincia, tel )               
+                var res1 = res.split("|"); 
+                
+                if (!carg_cliente){                        
+                    $("#e_dni_remitente" ).val( res1[2] );
+                    $("#e_remitente"     ).val( res1[3] );
+                    $("#e_dir_remitente" ).val( res1[4] );
+                    
+                    $("#e_loc_remitente" ).attr('value', res1[5] );
+                    $("#e_loc_remitente" ).val(res1[6]);
+                    
+                    $("#e_prov_remitente").attr('value', res1[7] );
+                    $("#e_prov_remitente").val(res1[8]);
+                    
+                    $("#e_tel_remitente" ).val( res1[9] );                                                                            
+                 }else{
+                    $("#e_dni_destinatario" ).val(res1[2]);
+                    $("#e_destinatario"     ).val(res1[3]);
+                    $("#e_dir_destinatario" ).val(res1[4]);
+                    
+                    $("#e_loc_destinatario" ).attr('value',res1[5]);
+                    $("#e_loc_destinatario" ).val(res1[6]);
+                    
+                    $("#e_prov_destinatario").attr('value',res1[7]);
+                    $("#e_prov_destinatario").val(res1[8]);
+                    
+                    $("#e_tel_destinatario" ).val(res1[9]);                                      
+                }
+        }
+    
+        //----------------------------------------------------------------------------
+        //----------------------------------------------------------------------------
+        //----------------------------------------------------------------------------
+        //----------------------------------------------------------------------------
+        // habilitacion de loas formas de pago posible
+        //----------------------------------------------------------------------------
+        //----------------------------------------------------------------------------
+        //----------------------------------------------------------------------------
+        function seleccionar_forma_de_pagos(){       	
+  			$("#e_importe_pago").attr('disabled',        true);
+  			$("#e_cliente_ctacte").      attr('disabled',true);
+  			$("e_buscar_cliente_ctacte").attr('disabled',true);
+  			$("e_buscar_cliente_ctacte").attr('disabled',true);
+  			$("#e_cheque_fecha_emision").attr('disabled',true);
+  			$("#e_cheque_fecha_cobro").  attr('disabled',true);
+  			$("#e_cheque_nro_cheque").   attr('disabled',true);
+  			$("#e_cheque_banco").        attr('disabled',true);
+  			$("#e_cheque_operacion").    attr('disabled',true);
+  			$("#e_cheque_a_nombre_de").  attr('disabled',true);
+  			$("#e_recibido_de").  attr('disabled',true);
+
+  			$("#div_ctacte").  attr('style',"display: none");
+  			$("#div_cheque").  attr('style',"display: none");
+
+  			$("#div_titulo_ctacte").  attr('style',"display: none");
+  			$("#div_titulo_cheque").  attr('style',"display: none");
+  			$("#div_titulo_contado"). attr('style',"display: none");
+                        
+                        $("#e_importe_pago").val(  parseFloat($("#e_precio").val()).toFixed(2) - parseFloat($("#e_mostrar_pago").html()).toFixed(2));
+
+
+        	// si es de contado
+        	if ($("#e_forma_de_pago_contado").is(":checked")) {
+  					$("#e_importe_pago").attr('disabled',false);
+  					
+  					$("#e_importe_pago").focus();  					
+  					$("#carga_datos_pagos").css('background-color',"#F5ECCE" );
+        	}else{ // si es un cheque
+        		 if ($("#e_forma_de_pago_cheque").is(":checked")) {
+
+  					$("#div_cheque").  attr('style',"display: block");
+
+  					$("#e_importe_pago").attr('disabled',		 false);
+  					$("#e_cheque_fecha_emision").attr('disabled',false);
+  					$("#e_cheque_fecha_cobro").attr('disabled',	 false);
+  					$("#e_cheque_nro_cheque").attr('disabled',	 false);
+  					$("#e_cheque_banco").attr('disabled',		 false);
+  					$("#e_cheque_operacion").attr('disabled',	 false);
+  					$("#e_cheque_a_nombre_de").attr('disabled',	 false);
+  					$("#e_recibido_de").  attr('disabled',false);
+                                        $("#e_cheque_propio1").attr('disabled',	 false);
+                                        $("#e_cheque_propio2").attr('disabled',	 false);
+  					
+  					$("#e_cheque_fecha_emision").focus();
+  					$("#carga_datos_pagos").css('background-color',"#A9D0F5" );
+  					
+        		}else{  // si es una cta. cte.
+  					
+  					$("#div_ctacte").  attr('style',"display: block");
+
+  					//$("#e_importe_pago").        attr('disabled',false);
+  					//$("#e_cliente_ctacte").      attr('disabled',false);
+  					$("e_buscar_cliente_ctacte").attr('disabled',false);
+  					$("e_alta_cliente_ctacte").  attr('disabled',false);
+                                       
+                        //                $("#e_importe_pago").val(  parseFloat($("#e_precio").val()).toFixed(2) - parseFloat($("#e_mostrar_pago").html()).toFixed(2));
+
+                                        
+                                        
+  					$("#e_cliente_ctacte").focus();
+  					$("#carga_datos_pagos").css('background-color',"#F8E0E6" );
+  				}
+   			}       
+        }
+
+//---------------------------------------------------------------------------------
+// Verificamos que se cargen correctamente los cheques 
+//----------------------------------------------------------------------------------
+            function validar_carda_de_cheque(){
+                     var aux = false;
+                     if ( $("#e_cheque_banco").attr('id')==0){                        
+                         alert('Debe completar a que Banco pertenece el cheque.');
+                         $("#e_cheque_banco").focus();
+                     }else{
+                        
+                        if ( $("#e_cheque_nro_cheque").attr('id')==0){                        
+                            alert('Debe completar el nro de cheque.');
+                            $("#e_cheque_nro_cheque").focus();
+                        }else{
+                             aux =  true;
+                        }    
+                     
+                     }    
+                     return aux;
+            }
+//---------------------------------------------------------------------------------
+// Verificamos que se cargen correctamente los cheques 
+//----------------------------------------------------------------------------------
+            function validar_carda_de_ctacte(){
+                     var aux = false;                     
+                     if ($("#e_cliente_ctacte").val()==''){                        
+                         alert('Debe completar al cliente que contiene la cta. cte.');
+                         $("#e_cliente_ctacte").focus();
+                     }else{
+                         aux = true;
+                     }
+                     return aux;
+            }
+        
+//-----------------------------------------------------------------------------------
+// Completa el listado de pagos asociadas a la guia de encomienda.
+// accion: registra el pago, contado, o cta. cte., o cheques. Incrementando el 
+//          total de pagos.
+//-----------------------------------------------------------------------------------
+            function agregar_pago_al_listado_de_pago(){
+                
+                if ($("#e_precio").val()>0){
+                
+                // Si el importe a agregar es mayor que cero
+                var importe = $("#e_importe_pago").val();
+                
+                if (importe>0) {                    
+                    var dato_pago = '';
+                    var a0 = parseInt( $("#h_cantidad_pago").val() ) + 1;
+                    var a1 = 0.00;
+                    var a2 = 0.00;
+                    var a3 = 0.00;
+                    var detalle_pago = '';
+                    
+                    var carga_correcta_cheque = 'S';
+                    var carga_correcta_ctacte = 'S';
+                    
+                    //---------------------------------------------------------------------------------------------------------------------
+                    // juntamos los datos para guardarlo en el objeto h_detalle_pago
+                    // si es de contado y ctacte se competaran los espacios con ' '.                    
+                    //---------------------------------------------------------------------------------------------------------------------
+                    if ($("#e_forma_de_pago_contado").is(":checked")) {
+                        detalle_pago = 'Efectivo';
+                         dato_pago = '1|'+importe+'| | | | | | | | '; // completamos los espacios
+                    }else{
+        		 if ($("#e_forma_de_pago_cheque").is(":checked")) {
+                             
+                            //-----------------------------------------------------
+                            // validamos los datos correctos para la carga de cheques
+                            if (validar_carda_de_cheque()){
+                               
+                                detalle_pago = 'Cheque Nro: '+$("#e_cheque_nro_cheque").val();    
+                                dato_pago = '2|'+importe+'|'+$("#e_cheque_fecha_emision").val()+'|'+$("#e_cheque_fecha_cobro").val()+'|'+
+                                    $("#e_cheque_nro_cheque").val()+'|'+$("#e_cheque_operacion").val()+'|'+
+                                    $("#e_cheque_a_nombre_de").val()+'|'+$("#e_recibido_de").val()+'|'+$("#e_cheque_banco").val()+'|'+$("input:radio[name=e_cheque_propio]:checked").val();
+                            
+                                carga_correcta_cheque = 'S';
+                            }else{
+                                carga_correcta_cheque = 'N';
+                            }
+                            
+                            
+                         }else{
+                             if (validar_carda_de_ctacte()){
+                                detalle_pago = 'Cta. Cte.: '+$("#e_cliente_ctacte").val();
+                                dato_pago = '3|'+importe+'|'+$("#h_id_cliente_ctacte").val()+'| | | | | | | '; // completamos los espacios
+                                carga_correcta_ctacte = 'S';
+                             }else{
+                                carga_correcta_ctacte = 'N';
+                             }
+                         }
+                    }
+                    
+                    //------------------------------------------------------------------------------------------------------
+                    // verificamos que las variables de control de ingreso de dato para el pago correspondiente esten en 'S'
+                    //------------------------------------------------------------------------------------------------------
+                    if ((carga_correcta_ctacte=='S')&&(carga_correcta_cheque=='S')){
+                       
+                        //---------------------------------------------------------------------------------------------------------------------                   
+                        var strNueva_Fila='<tr bgcolor="aaeeff">'+
+			             '   <td align="left"><INPUT type="checkbox" NAME="chk2"></input></td>'+                                                
+                                     '   <td align="center">'+detalle_pago+'</td>'+
+                                     '   <td align="center">$'+$("#e_importe_pago").val()+'</td>'+
+                                     '   <td style="display:none" id="id0">'+dato_pago+'</td></tr>';                        
+                             
+                        var objTabla=$('#t_detalle_pagos').parents().get(2);
+                   
+                        a1 = parseFloat($("#e_importe_pago").val()).toFixed(2);   
+                        a2 = parseFloat($("#h_total_pago").val()).toFixed(2);
+                        a3 = parseFloat(a1) + parseFloat(a2);
+                    
+                        //agregamos la nueva fila a la tabla
+                        $(objTabla).find('tbody').append(strNueva_Fila);
+                        $("#h_cantidad_pago").val(a0);                  
+                        $("#h_detalle_pago").val();                  
+                        $("#h_total_pago"  ).val(a3);
+                        $("#e_mostrar_pago").html(a3);   
+                   
+                        //si el cuerpo la tabla esta oculto (al agregar una nueva fila) lo mostramos
+                        if (!$(objTabla).find('tbody').is(':visible')){
+                             //le hacemos clic al titulo de la tabla, para mostrar el contenido
+                             $(objTabla).find('caption').click();
+                        } 
+                    
+                        $("#e_importe_pago").val("");
+                        
+                    }// Finalizando la verificacion de ingreso de datos
+                    
+                }else{
+                    alert("El importe del pago debe ser superior a 0.00...");
+                }                 
+            }else{
+               alert("No se puede registrar pago si no existe deuda...");
+            }                
+        }   
+            
+            //------------------------------------------------------------------
+            //------------------------------------------------------------------
+            function vaciar_tabla_pago(){
+                //evento que se produce al hacer clic en el boton que elimina una tabla completamente
+                //$(document).on('click','.clsEliminarTabla',function(){
+                $("#t_detalle_pagos > tbody").empty();
+                $("#h_cantidad_pago").val(0);
+                $("#h_total_pago").val(0.00);                
+                $("#e_mostrar_pago").html("0.00");
+            }
+            //------------------------------------------------------------------
+            // 
+            //------------------------------------------------------------------
+	    
+            //------------------------------------------------------------------
+            //------------------------------------------------------------------
+	    function eliminar_pago_al_listado_pago(){
+               try {
+                    var mensaje = "Debe seleccionar un pago para eliminarlo...";
+                    var table = document.getElementById("cuerpo_detalle_pagos");
+                    var borrado = false; // determina si se realizo el borrado
+                    var rowCount = table.rows.length; // determina la cantidad de filas
+                    if (rowCount>1){
+                        for(var i=0; i<rowCount; i++) {
+                            
+                            var row = table.rows[i];
+                            var chkbox  = row.cells[0].childNodes[0];
+                            var importe = row.cells[2].childNodes[0].nodeValue;
+                            importe = importe.substring(1);
+
+                            if((null != chkbox) && (true == chkbox.checked)) {
+                                table.deleteRow(i);
+                                rowCount--;
+                                i--;
+                                borrado = true;
+                                // restamos de los totales
+                                $("#h_cantidad_pago").val(   parseInt($("#h_cantidad_pago").val()) - 1);
+                               
+                                $("#h_total_pago").val( parseFloat( parseFloat($("#h_total_pago").val()) - importe).toFixed(2));
+                                
+                                $("#e_mostrar_pago").html( parseFloat($("#h_total_pago").val().toFixed(2)) );   
+                               
+                            }                            
+                        }
+                        if(!borrado)
+                            alert(mensaje);
+                    }else{
+                        var row = table.rows[0];
+                        var chkbox = row.cells[0].childNodes[0];
+                        if((null != chkbox) && (true == chkbox.checked)) {
+                            vaciar_tabla_pago();
+                        }else{
+                            alert(mensaje)
+                        }
+                    }
+               }catch(e) {
+                    alert(e);
+               }                
+            }
+        
+    
+    
+    
+       </script>
+    
+ <!-- Scrip para las pantallas desplegables -->       
+<script type='text/javascript' src='./js/jquery.simplemodal.js'></script>
+<script type='text/javascript' src='./js/osx.js'></script>
+
+<!-- --------------------------------------------------------------------------
+Scrip para el calendario de seleccion de fecha 
+---------------------------------------------------------------------------- -->       
+<link  href="./css/calendario.css"   type="text/css" rel="stylesheet">
+<script src="./js/calendar.js"       type="text/javascript"></script> 
+<script src="./js/calendar-es.js"    type="text/javascript"></script> 
+<script src="./js/calendar-setup.js" type="text/javascript"></script> 
+<!-- ----------------------------------------------------------------------- -->
+
+        <body>
+            
+            <span id="resultado">
+            <input name="e_usuario" type="hidden" value="{v_usuario}"></input>
+                
+            </span>
+            <div align="center">
+                <table border="1" align="center" cellspacing="0">
+                    <tr>
+                        <td align="center" colspan="9" bgcolor="#FFCC33">Modificar Encomienda</td>
+                    </tr>
+                    
+                    <tr>
+                        <td colspan="2" width="89" height="23" align="center">Nro Guia:<b>{v_nro_guia}</b></td>
+                        <td></td>
+                        <td colspan="2" align="center">Fecha:
+                                <input name="e_fecha" type="text" id="e_fecha" value="{v_fecha}" size="10" />
+                                <input name="calendario_desde" TYPE="image" src="./imagenes/calendario.png" BORDER="0" id="calendario_desde" onclick="displayDatePicker('e_fecha_desde', false, 'dmy', '/'); return false" >
+                        </td>
+                        <td>Usuario:<b>{v_usuario}</b></td>
+                        <td colspan="2" align="center">Nro Factura:<b>{v_nro_factura}</b></td>
+                        <td align="center">Estado:<b>{v_estado}</b><input name="e_estado" id="e_estado" type="hidden" value="{v_estado}"></input></td>                        
+                    </tr>
+                    <tr>
+                        <td colspan="5" align="center" >Entregar durante:</td>
+                        <td rowspan="2" align="right" >
+                            
+                                Prioridad<br>                        
+                             <!--   Comicionista -->
+                            
+                        </td>
+                        <td rowspan="2" colspan="3">
+                            <p>
+                                    <select name="e_prioridad" id="e_prioridad">
+                                        {v_combobox_prioridad}
+                                    </select>
+                             <!--   <br>                                        
+                                    
+                            <select name="e_comisionista" size="1" id="e_comisionista">
+                                {v_comboBox_comisionista}
+                            </select> -->
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" align="center" >Entregada
+                                <input name="e_fecha_entrega" type="text" id="e_fecha_entrega" value="{v_fecha_entrega}" size="7" />
+                                <input type="image" src="./imagenes/calendario.png" border="0" name="calendario_entrega" id="calendario_entrega"  click="displayDatePicker('e_fecha_entrega', false, 'dmy', '/');
+                                       "/>
+                            Desde
+                                <input name="e_hora_entrega_desde" type="text" id="e_hora_entrega_desde" value="{v_hora_entrega_desde}" size="5" />
+                            Hasta
+                                <input name="e_hora_entrega_hasta" type="text" id="e_hora_entrega_hasta" value="{v_hora_entrega_hasta}" size="5" />
+                            </td>
+                    </tr>
+                    <tr>
+                        <td align="right" bgcolor="#FFFF00">DNI:</td>
+                        <td colspan="4" bgcolor="#FFFF00"><label for="e_dni_remitente"></label>
+                            <input name="e_dni_remitente" type="text" id="e_dni_remitente" value="{v_dni_remitente}" size="16" />
+                            
+                            <input TYPE="image" SRC="./imagenes/busqueda.png" BORDER="0" name="e_buscar_remitente" id="e_buscar_remitente" value="Buscar_remitente" class='osx demo' />
+                            <input TYPE="image" SRC="./imagenes/agregar.png" BORDER="0" name="e_alta_remitente" id="e_alta_remitente"  />
+                        </td>
+                        <td align="right" bgcolor="#C4FCC2">DNI</td>
+                        <td colspan="3" bgcolor="#C4FCC2">
+                            <input name="e_dni_destinatario" type="text" id="e_dni_destinatario" value="{v_dni_destinatario}" size="16" />
+                            
+                                <a data-role="button" href="#" data-shadow="false" data-theme="none">
+                                <input type="image" src="./imagenes/busqueda.png" border="0" name="e_buscar_destinatario" id="e_buscar_destinatario" value="Buscar_destinatario" class='osx demo'/>
+                                <input TYPE="image" SRC="./imagenes/agregar.png" BORDER="0" name="e_alta_destinatario" id="e_alta_destinatario" />
+                                </a>
+                            </td>
+                    </tr>
+                    <tr>
+                        
+                        <input type="hidden" id="h_seleccion" value="0"></input>
+                        <input type="hidden" id="h_seleccion_tipo" value="0"></input>
+                        
+                        <td align="right" bgcolor="#FFFF00">Remitente</td>
+                        <td colspan="4" bgcolor="#FFFF00">
+                            <input name="e_remitente" type="text" id="e_remitente" value="{v_remitente}" size="50" /></td>
+                        <td align="right" bgcolor="#C4FCC2">Destinatario</td>
+                        <td colspan="3" bgcolor="#C4FCC2"><input name="e_destinatario" type="text" id="e_destinatario" value="{v_destinatario}" size="50" /></td>
+                        
+                    </tr>
+                    <tr>
+                        <td align="right" bgcolor="#FFFF00">Direccion</td>
+                        <td colspan="4" bgcolor="#FFFF00"><input name="e_dir_remitente" type="text" id="e_dir_remitente" value="{v_dir_remitente}" size="50" /></td>
+                        <td align="right" bgcolor="#C4FCC2">Direccion</td>
+                        <td colspan="3" bgcolor="#C4FCC2"><input name="e_dir_destinatario" type="text" id="e_dir_destinatario" value="{v_dir_destinatario}" size="50" /></td>
+                    </tr>
+                    <tr>
+                        <td align="right" bgcolor="#FFFF00">Provincia</td>
+                        <td colspan="2" align="left" bgcolor="#FFFF00"><label for="l_loc_remitente">
+                                    
+                                    <select name="e_prov_remitente" id="e_prov_remitente">
+
+                                        {v_combobox_prov_origen}
+                                        
+                                    </select>
+                                    
+                                </label></td>
+                        <td align="right" bgcolor="#FFFF00">Localidad</td>
+                        <td bgcolor="#FFFF00">
+                        
+                                    <select name="e_loc_remitente" id="e_loc_remitente">
+
+                                        {v_combobox_loc_remitente}
+
+                                    </select>
+                            
+                        </td>
+                        <td align="right" bgcolor="#C4FCC2">Provincia</td>
+                        <td bgcolor="#C4FCC2">
+                            
+                            <select name="e_prov_destinatario" id="e_prov_destinatario">
+                                   {v_combobox_prov_destino}
+                            </select>
+                            
+                        </td>
+                        <td align="right" bgcolor="#C4FCC2">Localidad</td>
+                        <td bgcolor="#C4FCC2">
+
+                            <select name="e_loc_destinatario" id="e_loc_destinatario">
+                                {v_combobox_loc_destinatario}
+                            </select>
+                            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="right" bgcolor="#FFFF00">Tel:</td>
+                        <td colspan="4" bgcolor="#FFFF00"><input name="e_tel_remitente" type="text" id="e_tel_remitente" value="{v_tel_remitente}" size="16" /></td>
+                        <td align="right" bgcolor="#C4FCC2">Tel:</td>
+                        <td colspan="3" bgcolor="#C4FCC2"><input name="e_tel_destinatario" type="text" id="e_tel_destinatario" value="{v_tel_destinatario}" size="16" /></td>
+                    </tr>
+                    
+                    <tr>
+                        <td colspan="12">
+                            <div id="divContenedorTabla" align="center">
+                                
+                            <table id="t_detalle_encomienda" border="1" align="center" cellspacing="0">
+				
+                                <thead>
+                                    <tr> 
+                                        <!-- --------------------------------------------
+                                        CABEZERA de la tabla de DETALLE de ENCOMIENDAS 
+                                        ---------------------------------------------- -->
+                                        <th colspan="6">                                                       
+                                            Comisionista:
+                                                <select name="e_comisionista" size="1" id="e_comisionista">
+                                                    {v_comboBox_comisionista}
+                                                </select>
+                                            
+                                            Cantidad:
+                                                <input name="e_cantidad_encomienda" type="text" id="e_cantidad_encomienda" value="1" size="1" />
+                                            Tipo encomienda:                                    
+                                                <select name="e_tipo_encomienda" id="e_tipo_encomienda">
+                                                    {v_comboBox_tipo_encomienda}
+                                                </select>
+                                            Precio:
+                                                <!--<span id="sp_precio">                                            
+                                                    $ 0.00
+                                                </span>-->
+                                                <input type="text" id="e_sub_precio" value="0.00" disabled="true" size="10"></input>
+                                            
+                                                <input type="hidden" id="h_subtotal" value="0"></input>
+                                                <input type="hidden" id="h_com_suc" value="0"></input>
+                                                <input type="hidden" id="h_com_com" value="0"></input>
+                                                <input type="hidden" id="h_iva" value="0"></input>
+
+                                                <input TYPE="image" SRC="./imagenes/agregar2.png" 
+                                                   BORDER="0" name="b_agregar_encomienda" 
+                                                   id="b_agregar_encomienda" 
+                                                   value="Agregar" />                                                                                    
+                                                <input TYPE="image" SRC="./imagenes/eliminar.png" 
+                                                   BORDER="0" name="b_eliminar_encomienda" id="b_eliminar_encomienda" value="-" />
+                                                <input type="image" src="./imagenes/vaciar_tabla.png" value="Vaciar la tabla" id="b_vaciar_la_tabla">
+                                        </th>
+                                    </tr>                                   
+                                    <!-- ---------------------------------------------------
+                                    DETALLE DE CARGA de la tabla de DETALLE de ENCOMIENDAS 
+                                    ----------------------------------------------------- -->
+
+                                        <tr  bgcolor="aaaaff" align="center">
+                                            <td width="0"></td>                                                                                
+                                            <td>Comisionista</td>                                       
+                                            <td bgcolor="">Cantidad</td>
+                                            <td>Tipo encomienda</td>
+                                            <td colspan="3">Precio</td>
+                                        </tr>
+                                    
+                                </thead>
+                                
+                                    
+                                            <tbody id="cuerpo_detalle_encomienda">
+                                                <!-- BEGIN detalleencomienda -->
+                                                <tr align="center">                                                                             
+                                                    <td><FONT SIZE=2>{v_item}</FONT></td>                                                                                
+                                                    <td><FONT SIZE=2>{v_comis}</FONT></td>                                       
+                                                    <td><FONT SIZE=2>{v_cantidad}</FONT></td>
+                                                    <td><FONT SIZE=2>{v_tipo}</FONT></td>
+                                                    <td><FONT SIZE=2>$ {v_precio}</FONT></td>                                                                            
+                                                </tr>
+                                                <!-- END detalleencomienda -->
+                                           </tbody>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                
+                                <tfoot>
+                                    
+                                </tfoot>
+                            </table>
+                            </div>                            
+                        </td>
+                    </tr>
+
+                    
+                    <tr>
+                        <td align="left" valign="middle">
+                            Comisiones
+                        </td>
+                        <td colspan="3" align="left" valign="middle" >
+                            sucursal: $
+                            <span name="e_comi_suc" id="e_comi_suc"/>{v_comision_sucursal}
+                        </td>
+                        <td colspan="2" align="left" valign="middle">
+                            comisionista: $
+                            <span name="e_comi_comi" id="e_comi_comi" />{v_comision_comisionista}
+                        </td>
+                        
+                        <td colspan="3" align="left" valign="middle">
+                            Asegurar por: $      
+                            <input name="e_importe_a_asegurar" type="text" id="e_importe_a_asegurar" disabled="true" value="{e_importe_a_asegurar}" size="5" />
+                            <span id="sp_porcentaje_seguro">{v_porcentaje_para_asegurar}</span> % :
+                        <input name="e_importe_seguro" type="text" id="e_importe_seguro" disabled="true" value="{v_importe_seguro}" size="10" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td height="39" colspan="7">
+
+                            Asegurada:
+                            <input name="e_encomienda_asegurada"  type="checkbox" id="e_encomienda_asegurada" accesskey="debe_tener_frio" value="{v_encomienda_asegurada}" />
+
+                            Debe tener frio:
+                            <input name="e_debetener_frio" type="checkbox" id="e_debetener_frio" accesskey="debe_tener_frio" value="{v_debe_tener_frio}" />
+
+                            Con aviso de retorno:
+                            <input name="e_con_aviso_de_retorno" type="checkbox" id="e_con_aviso_de_retorno" accesskey="con_aviso_retorno" value="{v_con_aviso_de_retorno}" />
+                            <br>
+                                <textarea name="e_observaciones" id="e_observaciones" rows="2" cols="80" >{v_observaciones}</textarea>                                
+                        </td>
+
+                        
+                        <td colspan="3" align="right" valign="middle" >    	  
+                            SubTotal:<input name="e_subtotal" type="text" id="e_subtotal" value="{v_subtotal}" size="16" /><br>
+                                IVA % <span id="sp_iva">{v_porcentaje_iva}</span>:<input name="e_iva" type="text" id="e_iva" value="{v_iva}" size="16" /><br>
+                            TOTAL:<input name="e_precio" type="text" id="e_precio" value="{v_precio_total}" size="16" />                           
+                        </td>
+                    </tr>
+                    <tr>
+                    <!-- ------------------------------------------------------------------------------------
+						forma de pagos                    	
+                    -------------------------------------------------------------------------------------- -->	
+                        <td>
+                            <b>Forma de pago</br><br>
+                            <input type="radio" id="e_forma_de_pago_contado" checked name="e_forma_de_pago" value="0">Contado</input><br>
+                            <input type="radio" id="e_forma_de_pago_cheque"          name="e_forma_de_pago" value="1">Cheque</input><br>  
+                            <input type="radio" id="e_forma_de_pago_ctacte"          name="e_forma_de_pago" value="2">Cta.Cte.</input><br>                              
+                        </td>
+                        <td height="39" colspan="5" align="right" >
+                        	<!-- --------- Detalle de titulos ------------------------- -->
+                        	<div align="left" id="carga_datos_pagos">
+
+                            <div id="div_ctacte" style="display: none">
+                            	Nombre Cta.Cte.:<input type="text" id="e_cliente_ctacte" size="30" disabled=false/>
+                            	<input type="hidden" id="h_id_cliente_ctacte"/>
+                            	<input  TYPE="image" SRC="./imagenes/busqueda.png" BORDER="0" name="e_buscar_cliente_ctacte" id="e_buscar_cliente_ctacte" value="Buscar_cliente_ctacte" class='osx demo' />
+                            	<input  TYPE="image" SRC="./imagenes/agregar.png" BORDER="0" name="e_alta_cliente_ctacte" id="e_alta_cliente_ctacte"  />                          
+                            </div>                                                                        
+
+                            <br>              
+
+                            <div id="div_cheque" style="display: none">              
+                            	Fecha Emision:<input type="date" id="e_cheque_fecha_emision" disabled/>
+                            	Fecha Cobro:  <input type="date" id="e_cheque_fecha_cobro" disabled /><br>
+                            	Nro. Cheque:  <input type="text" id="e_cheque_nro_cheque" size="10" disabled/>
+                                <input type="hidden" id="h_id_banco"/>
+                            	Banco:<select name="e_cheque_banco" size="1" id="e_cheque_banco" disabled>
+                                     {v_comboBox_banco}
+                                </select>
+                            	<input TYPE="image" SRC="./imagenes/agregar.png" BORDER="0" name="e_alta_banco_ctacte" id="e_alta_banco_ctacte" />                          
+                            	<br>
+                            	Operación:<input type="text" id="e_cheque_operacion" size="50" disabled/><br>
+                            	A nombre de:<input type="text" id="e_cheque_a_nombre_de" size="50" disabled/><br>
+                            	Recibido de:<input type="text" id="e_recibido_de" size="50" disabled/><br>
+                                    Cheque propio:    Si:<input type="radio" name="e_cheque_propio" id="e_cheque_propio1" value="S" checked disabled/>
+                                                      No:<input type="radio" name="e_cheque_propio" id="e_cheque_propio2" value="N" disabled/>
+                            </div>
+                            
+                                Importe:<input type="text" id="e_importe_pago" size="10" /><br>                            
+                            <br>
+                            </div>
+                        </td>
+                        <td>
+                            <input TYPE="image" SRC="./imagenes/agregar2.png" BORDER="0" name="b_agregar_pago" id="b_agregar_pago" value="Agregar" />                                                                                    
+                            <input TYPE="image" SRC="./imagenes/eliminar.png"  BORDER="0" name="b_eliminar_pago" id="b_eliminar_pago" value="-" />
+                            <input type="image" src="./imagenes/vaciar_tabla.png" value="Vaciar la tabla" id="b_vaciar_la_tabla_pago">                            	                                                  
+                        </td>
+                        <td height="39" colspan="3">
+                        	 
+                            <div id="divContenedorTabla_pagos" align="center">                               
+                            <table id="t_detalle_pagos" border="1" align="center" cellspacing="0">
+				
+                                <thead>
+                                    <tr> 
+                                        <th>                                            
+                                        </th>
+                                        <th>                                                       
+                                            Tipo de pago:
+                                        </th>                                            
+                                        <th>
+                                            Importe
+                                            <input type="hidden" id="h_cantidad_pago"value="{v_cantidad_pago}"/>                                            
+                                            <input type="hidden" id="h_detalle_pago" value="{v_detalle_pago}" />
+                                            <input type="hidden" id="h_total_pago"   value="{v_total_pago}"   />                                            
+                                        </th>
+                                    </tr>                                                                      
+                                </thead>
+                                
+                                <tbody id="cuerpo_detalle_pagos">
+                                       <!-- BEGIN detallepago -->
+                                       <tr align="center">                                                                             
+                                            <td> <FONT SIZE=2><INPUT type="checkbox" NAME="chk2"></input></FONT> </td>                                                                                
+                                            <td> <FONT SIZE=2>{v_forma_pago}</FONT>                              </td>
+                                            <td> <FONT SIZE=2>${v_importe_pago}</FONT>                           </td>                                                                            
+                                       </tr>
+                                       <!-- END detallepago -->
+                                </tbody>
+                                
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2">Total pagado:</td>
+                                        <td><span id="e_mostrar_pago">{v_total_pago}</span></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            </div>                            
+                        	
+                        </td>                     
+                    <!-- ------------------------------------------------------------------------------------
+						fin forma de pagos                    	
+                    ---------------------------------------------------------------------------------------->	                        
+                    </tr>
+                </table>
+
+                <!-- 
+                --------------------------------------------------------------------------------
+                -------------   Botonera de mando ----------------------------------------------
+                -------------------------------------------------------------------------------- 
+                -->
+                <div align="center">                     
+                <table id='mandos' width="21%" border="0" align="center" cellspacing="0">
+                    <tr align="center" valign="middle">
+                        <td>                                       
+                            <a data-role="button" href="#" data-shadow="false" data-theme="none">
+                                <input id="b_aceptar" TYPE="image" SRC="./imagenes/ok.png" BORDER="0" name="b_aceptar" value="Aceptar"/>
+                            </a>
+                             Aceptar
+                        </td>
+                        <td valign="middle">&nbsp;</td>
+                        <td>
+                            <a data-role="button" href="#" data-shadow="false" data-theme="none">
+                                <input TYPE="image" SRC="./imagenes/cancelar.gif" BORDER="0" name="b_cancelar" id="b_cancelar" value="cancelar" click="cerrar_ventana();" />
+                            </a>
+                             Cancelar
+                        </td>
+                    </tr>	
+                </Table>
+</div>                    
+                </div>                
+<!--                            </form> -->
+
+
+<!-- ---------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Sextor de POPUP de busqueda de clientes
+--------------------------------------------------------------------------------
+---------------------------------------------------------------------------- -->
+<div id="osx-modal-content">
+    <div id="osx-modal-title">Buscandor de Clientes...</div>
+    <div class="close"><a href="#" class="simplemodal-close">x</a></div>
+    <div id="osx-modal-data">
+	<h2>Buscar</h2>
+        <input name="e_buscar" type="text"  id="e_buscar" size="15" />
+        <input name="b_buscar" type="image" src="./imagenes/busqueda.png" id="b_buscar" />
+        
+        <!-- Sector de grilla -->
+        <span id="t_buscar"></span>
+
+	<p> <!--
+            <button id="b_aceptar_clientes"  class="simplemodal-close" >Aceptar</button> 
+            <button id="b_cancelar_clientes" class="simplemodal-close">Cancelar</button> <span>(Presione ESC para cancelar)</span>
+            -->
+            <input type="image" class="simplemodal-close" src="./imagenes/ok.png"       id="b_aceptar_clientes"  size="15" />Aceptar
+            <input type="image" class="simplemodal-close" src="./imagenes/cancelar.gif" id="b_cancelar_cliente" />Cancelar   <span>(Presione ESC para cancelar)</span>
+
+        </p>
+    </div>
+</div>
+
+<script type="text/javascript"> 
+    Calendar.setup({ 
+        inputField : "e_fecha", // id del campo de texto 
+        ifFormat : "%d/%m/%Y", // formato de la fecha que se escriba en el campo de texto 
+        button : "calendario_desde" // el id del botón que lanzará el calendario 
+}); 
+
+Calendar.setup({ 
+        inputField : "e_fecha_entrega", // id del campo de texto 
+        ifFormat : "%d/%m/%Y", // formato de la fecha que se escriba en el campo de texto 
+        button : "calendario_entrega" // el id del botón que lanzará el calendario 
+}); 
+
+</script>     
+
+
+
+</body>
+</html>
+
+

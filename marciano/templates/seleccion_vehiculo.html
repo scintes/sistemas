@@ -1,0 +1,325 @@
+<!-- **************************************************************************
+******   Pagina usada en ADMIN_PASAJES.html                             *******
+******  Esta pagina es llamada en un cuadro de dialogo.                 *******
+****************************************************************************-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Selección de vehiculos</title>                
+    </head>   
+    
+    
+    <script type="text/javascript">
+   
+        $(document).ready(function(){              
+             $("#i_seleccionar"       ).click(function(){ seleccionar_vehiculo() });
+             $("#i_deseleccionar"     ).click(function(){ deseleccionar_vehiculo() });
+//             $("#i_aceptar"           ).click(function(){ aceptar_vehiculos(); });
+//             $('#i_cancelar'          ).click(function(){ cancelar_vehiculos(); });
+             $('#e_seleccion_vehiculo').change(function(){ mostrar_vehiculo(); });
+        });
+        // Guarda el id del vehiculo para agregarlo en el viaje
+        function seleccionar_vehiculo(){
+           $('#sp_patente_sel').      html($('#sp_patente').html());
+           $('#sp_nombre_sel').       html($('#sp_nombre').html());
+           $('#sp_interno_sel').      html($('#sp_interno').html());
+           $('#sp_modelo_sel').       html($('#sp_modelo').html());
+           $('#sp_nro_asientos_sel').  html($('#sp_nro_asientos').html());
+           $('#sp_fecha_tecnica_sel').html($('#sp_fecha_tecnica').html());                                                        
+        }        
+        // 
+        function deseleccionar_vehiculo(){
+           $('#sp_patente_sel').      html('');
+           $('#sp_nombre_sel').       html('');
+           $('#sp_interno_sel').      html('');
+           $('#sp_modelo_sel').       html('');
+           $('#sp_nro_asientos_sel').  html('');
+           $('#sp_fecha_tecnica_sel').html('');                                                        
+        }
+        //----------------------------------------------------------------------
+        // Acepta. Graba la asociacion de viaje con el vehiculo
+        //----------------------------------------------------------------------
+        function aceptar_vehiculos(){             
+             var aux = '';
+             //var aux2 = "-1";
+             aux = $("#sp_patente_sel").html();
+             
+             // verificamos que halla seleccionado un vehiculo
+                if (aux!=""){
+                    var parametros = {
+                           code : $('#sp_patente_sel').html(),
+                           nro_v: $('#h_id_viaje').val()
+                                     };    
+                    
+                    $.ajax({
+                           data: parametros,
+                           url : 'ajax_seleccionar_vehiculo.php',
+                           type: 'post',
+                           
+                           beforeSend: function () {
+                               //$("#t_buscar").html("Procesando, espere por favor...");
+                                                   },
+                                                  
+                           error: function (resultado){
+                               alert('Error en el procesamiento de la rutina ajax_seleccionar_vehiculo');
+                                                      },                                                                           
+                                                       
+                           success: function (resultado){
+                               if ($.trim(resultado)=="OK"){
+                                    alert("Se asocio correctamente el vehiculo...");  
+                                    
+                                    $("#capa_seleccionar_vehiculos" ).dialog( "close" );
+                                   buscar_salidas(); 
+                                }                               
+                                //aux2 = "OK";
+                                   // alert("Se asocio correctamente el vehiculo...");
+                                  //    window.close();
+                                                        }                           
+                    });                    
+                }else{
+                    alert("Debe seleccionar un vehículo...");
+                }
+             //return aux2; 
+        }
+        
+        
+        
+        function cancelar_vehiculos(){
+           window.close();
+        }
+               
+        // muestra la configuracion del vehiculo mostrado en el combobox
+        function mostrar_vehiculo(){
+            debugger;
+            var d = $("#h_datos_vehiculos").val();               
+            var patente_sel = $("#e_seleccion_vehiculo").val();
+            // si el vehicuolo es -1 significa que no selecciono un vehiculo
+            if (patente_sel!=-1){
+                
+                var cat = parseInt($("#h_nro_asiento_ocupado").val()) + parseInt($("#h_nro_asiento_reservado").val());               
+                var d2 = d.split('@');
+                
+                for(i=1;i<=d2.length;i++){
+                    var d3 = d2[i].split('|');
+                    var ca = parseInt(d3[4]); // cantidad de asiento que posee el vehiculo seleccionado 
+                    if(cat<=ca){
+                        if(d3[0]==patente_sel){
+                            $('#sp_patente').      html(d3[0]);
+                            $('#sp_nombre').       html(d3[1]);
+                            $('#sp_interno').      html(d3[2]);
+                            $('#sp_modelo').       html(d3[3]);
+                            $('#sp_nro_asientos').  html(d3[4]);
+                            $('#sp_fecha_tecnica').html(d3[5]);                                            
+
+                            // asientos en la planta baja
+                            if(d3[6]=='S'){$("#imagen1").attr("src",$("#h_asiento_usado").val());
+                                }else{$("#imagen1").attr("src",$("#h_asiento_no_usado").val());}                    
+                            if(d3[7]=='S'){$("#imagen2").attr("src",$("#h_asiento_usado").val());
+                                }else{$("#imagen2").attr("src",$("#h_asiento_no_usado").val());}                    
+                            if(d3[8]=='S'){$("#imagen3").attr("src",$("#h_asiento_usado").val());
+                                }else{$("#imagen3").attr("src",$("#h_asiento_no_usado").val());}                    
+                            if(d3[9]=='S'){$("#imagen4").attr("src",$("#h_asiento_usado").val());
+                                }else{$("#imagen4").attr("src",$("#h_asiento_no_usado").val());}                    
+                            if(d3[10]=='S'){$("#imagen5").attr("src",$("#h_asiento_usado").val());
+                                }else{$("#imagen5").attr("src",$("#h_asiento_no_usado").val());}
+                            // asientos en la planat alata    
+                            if(d3[11]=='S'){$("#imagen6").attr("src",$("#h_asiento_usado").val());
+                                }else{$("#imagen6").attr("src",$("#h_asiento_no_usado").val());}
+                            if(d3[12]=='S'){$("#imagen7").attr("src",$("#h_asiento_usado").val());
+                                }else{$("#imagen7").attr("src",$("#h_asiento_no_usado").val());}
+                            if(d3[13]=='S'){$("#imagen8").attr("src",$("#h_asiento_usado").val());
+                                }else{$("#imagen8").attr("src",$("#h_asiento_no_usado").val());}
+                            if(d3[14]=='S'){$("#imagen9").attr("src",$("#h_asiento_usado").val());
+                                }else{$("#imagen9").attr("src",$("#h_asiento_no_usado").val());}
+                            if(d3[15]=='S'){$("#imagen10").attr("src",$("#h_asiento_usado").val());
+                                }else{$("#imagen10").attr("src",$("#h_asiento_no_usado").val());}
+                            break;
+                        } 
+                }else{
+                    alert('Debe seleccionar un vehiculos con: '+cat+' o mas asientos...');
+                }
+
+            } 
+        }else{
+            
+            // Se selecciono la opcion de no vehiculo.
+            
+           $('#sp_patente').      html('');
+           $('#sp_nombre').       html('');
+           $('#sp_interno').      html('');
+           $('#sp_modelo').       html('');
+           $('#sp_nro_asientos').  html('');
+           $('#sp_fecha_tecnica').html('');
+           
+           $("#imagen1").attr("src",$("#h_asiento_no_usado").val());
+           $("#imagen2").attr("src",$("#h_asiento_no_usado").val());
+           $("#imagen3").attr("src",$("#h_asiento_no_usado").val());
+           $("#imagen4").attr("src",$("#h_asiento_no_usado").val());
+           $("#imagen5").attr("src",$("#h_asiento_no_usado").val());
+           $("#imagen6").attr("src",$("#h_asiento_no_usado").val());
+           $("#imagen7").attr("src",$("#h_asiento_no_usado").val());
+           $("#imagen8").attr("src",$("#h_asiento_no_usado").val());
+           $("#imagen9").attr("src",$("#h_asiento_no_usado").val());
+           $("#imagen10").attr("src",$("#h_asiento_no_usado").val());
+            
+        }
+    }
+        
+    </script>
+    
+    <body>
+        <!-- -->
+        <input  type="hidden" id="h_datos_vehiculos" value="{v_datos_vehiculos}"/> 
+        <input  type="hidden" id="h_id_viaje" value="{v_id_viaje}"/> 
+        
+        <input  type="hidden" id="h_asiento_usado" value="{v_asiento_usado}"/> 
+        <input  type="hidden" id="h_asiento_no_usado" value="{v_asiento_no_usado}"/> 
+        
+        <input id="h_nro_asiento_ocupado" name="h_nro_asiento_ocupado" type="hidden" value="{v_cant_asientos_ocupados}" />
+        <input id="h_nro_asiento_reservado" name="h_nro_asiento_reservado" type="hidden" value="{v_cant_asientos_reservado}" />
+        
+        
+        <div align="center" id="Contenido">
+            <table id='selelccion_vehiculo' style="width: 600px" border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC">
+            <tr>
+                <td colspan="5" align='center' bgcolor="{v_color_cabezera_tabla}">Selección de vehículo para el viaje :<b>{v_id_viaje}</b> con destino a:<b>{v_destino}</b> en la fecha:<b>{v_fecha_viaje}</b> con hora de salida:<b>{v_hora_viaje}</b>.</td>
+            </tr>
+            <tr>
+                <td align='center' bgcolor="{v_color_cabezera_columna}">Datos del Vehículo</td>
+                <td colspan="2" align='center' bgcolor="{v_color_cabezera_columna}">Vehiculo Seleccionado</td>
+            </tr>
+            <tr>
+                <td align="rigth" valign="center">                    
+                        <table>
+                            <tr>
+                                <td colspan="2">
+                                    Vehículo:<select size="1" id="e_seleccion_vehiculo"> 
+                                    {v_vehiculo} 
+                                    </select>                                    
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Patente:      </td><td> <span id='sp_patente'>{v_patente}</span> </td>
+                            </tr><tr>                            
+                                <td>Nombre:       </td><td> <span id='sp_nombre'>{v_nombre}</span></td>                                
+                            </tr><tr>                            
+                                <td>Interno:      </td><td> <span id='sp_interno'>{v_interno}</span></td>                                
+                            </tr><tr>
+                                <td>Modelo:       </td><td> <span id='sp_modelo'>{v_modelo}</span></td>                                
+                            </tr><tr>                            
+                                <td>Nro. Asiento: </td><td> <span id='sp_nro_asientos'>{v_nro_asientos}</span></td>                                
+                            </tr><tr>                            
+                                <td>Fecha Tecnica:</td><td> <span id='sp_fecha_tecnica'>{v_fecha_tecnica}</span></td>                                
+                            </tr>
+                            
+                        </table>
+                    
+                    <table id='conf_asiento' style="width: 100%"  border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC">
+                        <tr>
+                            <td colspan="7" align="center"  bgcolor="{v_color_cabezera_columna}">
+                                Planta baja
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                -
+                            </td>    
+                            <td align="center">
+                                <image id='imagen1' src="{v_imagen1}"/>
+                            </td>
+                            <td>
+                                <image id='imagen2' src="{v_imagen2}"/>
+                            </td align="center">
+                            <td>
+                                <image id='imagen3' src="{v_imagen3}"/>
+                            </td>
+                            <td align="center">
+                                <image  id='imagen4' src="{v_imagen4}"/>
+                            </td>
+                            <td align="center">
+                                <image id='imagen5' src="{v_imagen5}"/>
+                            </td>
+                            <td>
+                                -
+                            </td>    
+                        </tr>
+                        <tr>
+                            <td colspan="7" align="center" bgcolor="{v_color_cabezera_columna}">
+                                Planta Alta
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                -
+                            </td>    
+                            <td align="center">
+                                <image id='imagen6' src="{v_imagen6}"/>
+                            </td>
+                            <td align="center">
+                                <image id='imagen7' src="{v_imagen7}"/>
+                            </td>
+                            <td align="center">
+                                <image id='imagen8' src="{v_imagen8}"/>
+                            </td>
+                            <td>
+                                <image id='imagen9' src="{v_imagen9}"/>
+                            </td>
+                            <td align="center">
+                                <image id='imagen10'src="{v_imagen10}"/>
+                            </td>
+                            <td>
+                                -
+                            </td>    
+                        </tr>
+                    </table>
+                </td>
+                <td align="center" valign="center">
+                    <!--  [ SELECCIONAR ] -->
+                    <input type="image" id='i_seleccionar' src='./imagenes/seleccion_izq.jpg'/><br>
+                    <!--  [ DESELECCIONAR ] -->
+                    <input type="image" id='i_deseleccionar' src='./imagenes/seleccion_der.jpg'/>                    
+                </td>
+                <td valign="top">
+                    <table  border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC">
+                            <tr>
+                                <td>Patente:      </td><td> <span id='sp_patente_sel'>{v_patente_sel}</span> </td>
+                            </tr><tr>                            
+                                <td>Nombre:       </td><td> <span id='sp_nombre_sel'>{v_nombre_sel}</span></td>                                
+                            </tr><tr>                            
+                                <td>Interno:      </td><td> <span id='sp_interno_sel'>{v_interno_sel}</span></td>                                
+                            </tr><tr>
+                                <td>Modelo:       </td><td> <span id='sp_modelo_sel'>{v_modelo_sel}</span></td>                                
+                            </tr><tr>                            
+                                <td>Nro. Asiento: </td><td> <span id='sp_nro_asientos_sel'>{v_nro_asientos_sel}</span></td>                                
+                            </tr><tr>                            
+                                <td>Fecha Tecnica:</td><td> <span id='sp_fecha_tecnica_sel'>{v_fecha_tecnica_sel}</span></td>                                
+                            </tr>
+                            
+                    </table>
+                </td>
+            </tr>
+                <!--
+            <tr>
+                <td colspan="3" align='center'>
+                    
+                    <div style="float: center; width: 110px;">
+                        < !--  [ ACEPTAR ] -- >      
+                        <div style="float: left;font-size: 11;margin: 2;border: 1px solid #cccccc;background-color: #ffffff; width: 50; height: 30;">
+                            <input type="image" id='i_aceptar' src='./imagenes/ok.png'>
+                                <br>Aceptar
+                        </div>
+                        
+                        < !--  [ CANCELAR ] -- >
+                        <div style="float: left;font-size: 11;margin: 2;border: 1px solid #cccccc;background-color: #ffffff; width: 50; height: 30;">
+                            <input type="image" id='i_cancelar' src='./imagenes/cancelar.gif'>
+                                <br>Cancelar
+                        </div>
+                    </div>
+                    
+                </td>                
+            </tr>
+            -->
+        </table>
+        </div>
+    </body>
+</html>

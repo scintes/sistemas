@@ -1,0 +1,42 @@
+<!-- **************************************************************************
+******                  Pagina usada en ADMIN_PASAJES.html              *******
+******  Esta pagina es llamada en un cuadro de dialogo.                 *******
+****************************************************************************-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Selección de vehiculos</title>    
+        <link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />  
+        
+    </head>   
+    
+    <body>
+        <h2>Buscar</h2>
+        <input name="e_buscar" type="text"  id="e_buscar" size="50" />
+        <input name="b_buscar" type="image" src="./imagenes/busqueda.png" id="b_buscar" />
+        <div style="width:100%; height:250px; overflow: scroll;">
+
+        <table  border="1"  align="center" cellspacing="0" style='font-size: 13; width:100%' id="listado_clientes">
+            <thead id="tb_cabezera_listado_clientes">
+                <tr>
+                    <td>Codigo</td>
+                    <td>Nombre</td>
+                    <td>Dirección</td>
+                    <td>Tel</td>
+                    <td>Cel</td>                                                       
+                </tr>
+            </thead>
+                            
+            <tbody id="tb_cuerpo_listado_clientes">
+                                            
+            </tbody>
+            <tfoot id="tb_pie_listado_clientes">
+                                            
+            </tfoot>
+        </table>
+        </div>
+    <div id="div_resultado">
+            
+    </div>
+    </body>
+</html>

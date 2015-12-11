@@ -1,0 +1,273 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <title>{titulo_proyecto}</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />            
+
+        <LINK REL="stylesheet" TYPE="text/css" HREF="css/estilos.css">
+
+        <!-- --------------------------------------------------------------------------
+        Scrip para el calendario de seleccion de fecha 
+        ---------------------------------------------------------------------------- -->       
+        <link href="css/calendario.css" type="text/css" rel="stylesheet"> 
+        <script src="./js/calendar.js" type="text/javascript"></script> 
+        <script src="./js/calendar-es.js" type="text/javascript"></script> 
+        <script src="./js/calendar-setup.js" type="text/javascript"></script> 
+        <script src="./js/propias.js" type="text/javascript"></script>        
+        <script type="text/javascript" src="./js/jquery-1.3.2.js" ></script>    
+
+
+        <script type="text/javascript">
+            //------------------------------------------------------------------
+            // Asociamos las funciones a las acciones de los componentes
+            //------------------------------------------------------------------
+            $(document).ready(function() {
+                //                $("#e_prov_remitente"      ).change(function(){dependencia_localidad_remitente();   });
+            })
+            
+            //----------------------------------------------------------------------
+            // Tipo: indica si es eliminacion virtual (V) o no().
+            // nro: Numero de guia
+            // remitente y destinatario : solo a modo de referencia
+            function preguntar_por_eliminacion(tipo, nro, remitente, destinatario) {
+                var aux = "¿Segúro de eliminar la encomienda nro: " + nro + " con Remitente: " + remitente + " y Destinatario: " + destinatario + "?";
+                /*aux.concat(nro," con remitente: ",remitente," y destinatario: ",destinatario,"?");*/
+                if (confirm(aux)) {
+                    abrir_ventana('Eliminando encomienda', "borrar_encomienda.php?id=" + nro + "&tipo=" + tipo, 400, 600);
+                    //document.forms.submit("borrar_encomienda.php?id="+nro);                    
+                    window.close();
+                }
+            }
+            ;
+            //----------------------------------------------------------------------
+            // nro: Numero de guia
+            // remitente y destinatario : solo a modo de referencia
+            function preguntar_por_recuperacion(nro, remitente, destinatario) {
+                var aux = "¿Segúro de RECUPERAR la encomienda nro: " + nro + " con Remitente: " + remitente + " y Destinatario: " + destinatario + "?";
+                if (confirm(aux)) {
+                    abrir_ventana('Recuperar encomienda', "recuperar_encomienda.php?id=" + nro, 400, 600);
+                    // document.forms.submit("borrar_encomienda.php?id="+nro);                    
+                    //window.close();
+                }
+            };
+
+            function preguntar_por_modificacion(nro, remitente, destinatario) {
+                var aux = "¿Segúro de modificar la encomienda nro: " + nro + " con remitente: " + remitente + " y destinatario: " + destinatario + "?";
+                if (confirm(aux) == true) {
+                    abrir_ventana('Modificando encomienda', 'modificar_encomienda.php?id=' + nro, 600, 1000);
+                    document.forms.submit();
+                    //window.close();
+
+                }
+            };
+
+            //----------------------------------------------------------------------
+            // nro: Numero de guia  (  NO USADO  )
+            function preguntar_visualizacion(nro) {
+                abrir_ventana('Visualizar Encomienda', 'mostrar_encomienda.php?id=' + nro, 600, 1000);
+            };
+
+            //------------------------------------------------------------------
+            // Convierte una pagina en pdf
+            //------------------------------------------------------------------
+            function preguntar_pdf(nro) {
+                abrir_ventana('Visualizar Encomienda', 'mostrar_encomienda.php?id=' + nro, 600, 1000);
+            }
+            
+
+
+        </script>
+
+
+
+
+
+    </head>
+    <body>
+        <div id="content">
+            <!-- form id="f_encomienda_encontradas" name="f_encomienda_encontradas" method="put" class="formulario" action="buscar_encomiendas.php" -->
+            <table width="100%" border="1" align="center" cellspacing="0" bgcolor="#FFFFFF">
+
+                <tr>
+                    <td  colspan="2" bgcolor="#FFCC33" scope="col">
+                        <div align="center">
+                            Listado de encomiendas</div>
+                    </td>
+
+                    <td width="80"  colspan="5" bgcolor="#FFCC33" scope="col">
+                        <div align="center" class="style7">Sucursal
+                        </div>
+                    </td>  
+                </tr>
+                <tr>    
+                    <td rowspan="6" align="center" valign="middle" nowrap scope="col">
+                        <p class="style13"><img src="./imagenes/encomiendas.jpg" width="230" height="150" alt="encomienda"></p></td>
+                    <td width="731"  rowspan="7" nowrap scope="col">       
+
+                        <form id="f_encomienda_encontradas" name="f_encomienda_encontradas" method="post" class="formulario" action="buscar_encomiendas.php">
+                            <p>
+                                Fecha Desde:
+                                <input name="e_fecha_desde" type="text" id="e_fecha_desde"  value="{v_b_fecha_desde}" size="10">
+                                <input name="fecha_desde" TYPE="image" SRC="./imagenes/calendario.png" BORDER="0"  id="fecha_desde"  value="Desde" >
+                                <!-- onclick="displayDatePicker('e_fecha_desde', false, 'dmy','/'); return false" -->
+
+                                Fecha Hasta:
+                                <input name="e_fecha_hasta" type="text" id="e_fecha_hasta" value="{v_b_fecha_hasta}" size="10">
+
+                                <input name="fecha_hasta" TYPE="image" SRC="./imagenes/calendario.png" BORDER="0"  id="fecha_hasta"  value="Hasta" >  Nro Guia
+                                <input name="e_nro_orden" type="text" id="e_nro_orden"  value="{v_b_nro_orden}" size="10">
+                                <!-- onclick="displayDatePicker('e_fecha_hasta', false, 'dmy','/'); return false" -->    
+                            </p>
+                            <p>
+                                Nombres
+                                <input name="e_nombres" type="text" id="e_nombres"  value="{v_b_nombres}" size="40">
+
+                                Direcci&oacute;n
+                                <input name="e_dedirecciones" type="text" id="e_dedirecciones"  value="{v_b_direcciones}" size="40">
+                            </p>
+                            <p>
+                                DNI Remitente
+                                <input name="e_dni_remitente" type="text" id="e_dni_remitente"  value="{v_b_dni_remitente}" size="15">
+
+                                DNI Destinatario
+                                <input name="e_dni_destinatario" type="text" id="e_dni_destinatario"  value="{v_b_dni_destinatario}" size="15">
+                                <input name="Mostrar" type="submit" id="Mostrar" value="Buscar" onClick="buscar_encomiendas.php"/>
+                            </p>
+                            <p> 
+                                Ver Registros eliminados: <input name="e_ver_eliminados" TYPE="checkbox" checked="{v_ver_eliminado}"><br>          
+                            </p>
+                        </form>
+
+                    </td>    
+                    <td  colspan="5" scope="col">
+                        <div align="center" class="style9">{v_sucursal}</div>
+                    </td>  
+                </tr>  
+
+                <tr>
+                    <td  colspan="5" bgcolor="#FFCC33" scope="col">
+                        <div align="center" class="style7">Vendedor</div>
+                    </td>  
+                </tr>  
+
+                <tr>
+                    <td colspan="5" scope="col">
+                        <div align="center" class="style9">{v_usuario}</div>
+                    </td>  
+                </tr>  
+
+                <tr>
+                    <td  colspan="5" valign="top" bgcolor="#FFCC33" scope="col">
+                        <div align="center" class="style7">Total ($) </div>
+                    </td>  
+                </tr>  
+
+                <tr>
+                    <td  colspan="5" scope="col">
+                        <div align="center" class="style9">{v_total_ctacte}</div>
+                    </td>  
+                </tr>  
+
+                <tr>
+                    <td  colspan="5" bgcolor="#FFCC33" scope="col">
+                        <div align="center" class="style7">Cant Reg . </div></td>  
+                </tr>
+
+                <tr align="center" valign="middle">
+                    <td  nowrap scope="col">
+                        <table width="394" border="0" align="center">
+                            <tr>
+                                <td width="99" >
+                                    <span class="style13">
+                                    <div style="float: left;font-size: 11;margin: 2;border: 1px solid #cccccc;background-color: #ffffff;">
+                                       
+                                        <input name="agregar" 
+                                               TYPE="image" 
+                                               id="id_agregar" 
+                                               value="Agregar" 
+                                               SRC="./imagenes/agregar.png" 
+                                               align="left" 
+                                               BORDER="0" 
+                                               onclick="abrir_ventana('Encomienda', 'agregar_encomienda.php', 650, 980)"  ><br>
+                                        Agregar
+                                    </div>
+                                    </span>
+                                </td>
+                                <td width="183">
+                                    <a href=cierre_encomienda.php>
+                                    <div style="float: left;font-size: 11;margin: 2;border: 1px solid #cccccc;background-color: #ffffff;">
+                                        
+                                    <input name="b_cierre_encomienda" 
+                                           TYPE="image" 
+                                           id="b_cierre_encomienda" 
+                                           value="Cierre_Encomiendas" 
+                                           SRC="./imagenes/cierre_encomienda.png" 
+                                           align="left" 
+                                           BORDER="0" 
+                                           onclick="" ><br>Cierre
+                                    </div>
+                                    </a>
+                                    
+                                </td>
+                                <td width="183">
+                                    <div style="float: left;font-size: 11;margin: 2;border: 1px solid #cccccc;background-color: #ffffff;">
+
+                                    <input name="b_facturar_encomienda" 
+                                           TYPE="image" 
+                                           id="b_cierre_encomienda" 
+                                           value="facturar_encomiendas" 
+                                           SRC="./imagenes/cierre_encomienda.png" 
+                                           align="left" 
+                                           BORDER="0" 
+                                           click= abrir_ventana("Facturación de Encomienda","facturacion_encomienda.php",450,980) ><br>
+                                           Facturar 
+                                    </div>
+                                </td>
+                                <td width="183">
+                                    <a href="principal.php">
+                                    <div style="float: left;font-size: 11;margin: 2;border: 1px solid #cccccc;background-color: #ffffff;">
+                                        <input name="b_facturar_encomienda" 
+                                               TYPE="image" 
+                                               id="b_cierre_encomienda" 
+                                               value="facturar_encomiendas" 
+                                               SRC="./imagenes/volver.jpg" 
+                                               align="left" 
+                                               BORDER="0"
+                                               click="javascript:history.go(-1);"><br>Volver 
+                                    </div>
+                                    </a>
+                                </td>                    
+
+                            </tr> 
+                        </table>
+                    </td>
+                    <td colspan="5" scope="col"><div align="center">
+                            <p><span class="style7">{v_cant_reg}</span></p>
+                        </div>
+                    </td>
+
+                </tr>
+
+
+            </table>
+
+
+            <script type="text/javascript">
+            Calendar.setup({
+                inputField: "e_fecha_desde", // id del campo de texto 
+                ifFormat: "%d/%m/%Y", // formato de la fecha que se escriba en el campo de texto 
+                button: "fecha_desde" // el id del botón que lanzará el calendario 
+            });
+
+            Calendar.setup({
+                inputField: "e_fecha_hasta", // id del campo de texto 
+                ifFormat: "%d/%m/%Y", // formato de la fecha que se escriba en el campo de texto 
+                button: "fecha_hasta" // el id del botón que lanzará el calendario 
+            });
+
+            </script>     
+
+        </div>
+    </body>
+</html>

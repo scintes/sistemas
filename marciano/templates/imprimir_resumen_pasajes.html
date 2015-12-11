@@ -1,0 +1,116 @@
+<!-- ---------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Objetivo: Listar resumen de pasajes 
+Funcionalidad: Esta pantalla tiene como dato de entrada los datos cargados en las siguientes tablas.
+    Tablas: 
+Salida de la pantalla
+            Las salidas de esta pantalla es un listado de los pasajes pagos por imprimir o no.
+--------------------------------------------------------------------------------
+---------------------------------------------------------------------------- -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Listado de resumen de pagos de pasajes...</title>        
+        <link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />            
+            
+    </head>
+    <body>   
+                    <table border="1" width="100%" border="0" align="left" cellspacing="0" bordercolor="#DCDCDC" bgcolor="#FFFFFF">
+                        <tr>
+                            <td>
+                                <img alt="logo" src="{v_path_logo}" id="logo" width="60" height="60" />         
+
+                            </td>
+                            <td align="left">
+                                <span><FONT SIZE=6><b>{v_razon_social}</b></FONT></span><br>
+                                <span><FONT SIZE=2><b>{v_direc_razon_social}</b></FONT></span><br>
+                                <span><FONT SIZE=2><b>{v_tel_razon_social}</b></FONT></span>                                    
+                            </td>
+                        </tr>
+                    </table> 
+
+        
+                    <div id="div_contenedor">
+                        <table id="tabla_pasajes_pagos" width="1000px" border="1" align="center" cellspacing="0" bordercolor="#DCDCDC" bgcolor="#FFFFFF" >
+                            <tr>    
+                                <td align="center" colspan="13" >
+                                    <br><b>resumen de pagos de pasajes</b>
+                                </td>    
+                            </tr>  
+
+                            <tr style="font-size: 10"> <!--  bgcolor="{v_color_cabezera_columna_tabla}" -->
+                                <td align="center" >Nro. Pasaje        </td>
+                                <td align="center" >Fecha pago        </td>
+    <!--                            <td align="center"  >DNI Pasajero      </td>
+                                <td align="center" width="150">Pasajero</td>
+                                <td align="center" width="150">Dir. Destino </td>  -->
+                                <td align="center"  >Cooseguro         </td>
+                                <td align="center"  >Tipo pasaje       </td>
+                                <td align="center"  >Tipo pago         </td>
+                                <td align="center"  >Importe Pago      </td>
+<!--                                <td align="center"  >importe Pasaje    </td>  -->
+                                <td align="center"  >Comisión          </td> 
+                                <td align="center"  >Procesado         </td> 
+                                <td align="center"  >Usuario           </td> 
+                                <td align="center"  >Sucursal          </td> 
+                            </tr>  
+
+                            <!-- BEGIN imprimir_resumenpasajes_pagos -->  
+                            <tr style="font-size: 9">   
+                                <td align="center">{v_nro_pasaje}</td>
+                                <td align="center"> {v_fecha}</td>
+    <!--                            <td align="left"> {v_dni_pas}</td>
+                                <td align="left"> {v_pasajero}</td>
+                                 <td align="left">  {v_dir_d}</td> -->
+                                <td align="right"> {v_pasajero_seg}</td>
+                                <td align="center"> {v_dni_pas_seg}</td>  
+                                <td align="center"> {v_nro_ch}</td>
+    <!--                            <td align="right">  {v_importe_ch}</td> -->
+                                <td align="right">  {v_total}</td>                            
+                                <td align="right">  {v_comision}</td>     
+                                <td align="right">  {v_fecha_procesamiento}</td>
+                                <td align="right">  {v_usuario}</td>
+                                <td align="right">  {v_sucursal}</td>
+                            </tr>
+                            <!-- END imprimir_resumenpasajes_pagos -->        
+                        </table>
+                    </div>
+        <br>
+                    <table style="border: cornflowerblue" align="left" border="1" width="100%" cellspacing="0" >
+                        <tr>
+                           <!-- <td width="150"> Total Pasajes:${v_total_listado}           </td> -->
+                            <td width="150"> Total a rendir</td>
+                            <td width="150"> Total Comisión</td>
+                            <td width="150"> Cantidad total</td>    
+                            
+                            <td align="left" width="100">
+                                Fecha:
+                            </td>
+                            <td align="center" width="100">
+                                Sucursal:
+                            </td>
+                            <td align="right">
+                                Usuario:
+                            </td>                            
+                        </tr>   
+                        <tr>
+                           <!-- <td width="150"> Total Pasajes:${v_total_listado}           </td> -->
+                            <td width="150"> ${v_total_pagos_listado}     </td>
+                            <td width="150"> ${v_total_comision_listado} </td>
+                            <td width="150"> {v_cant_total}              </td>    
+                            
+                            <td align="left" width="100">
+                                <b>{v_fecha}</b>
+                            </td>
+                            <td align="center" width="100">
+                                <b>{v_sucursal}</b>
+                            </td>
+                            <td align="right">
+                                <b>{v_vendedor}</b>
+                            </td>                            
+                        </tr>   
+                        
+                    </table>    
+    
+    </body>
+</html>

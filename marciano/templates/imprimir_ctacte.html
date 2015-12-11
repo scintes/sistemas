@@ -1,0 +1,124 @@
+<!-- -------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Objetivo: Listar las encomiendas que se deben dar como entregadas y las que ya se entregaron
+Funcionalidad: Esta pantalla tiene como dato de entrada los datos cargados en las siguientes tablas.
+    Tablas: encomiendas -> Registro de encomiendas. 
+            detalle_encomiendas -> Esta tabla contiene los detalles de encomiendas como tipo, cantidad, etc.  
+            pagos -> Referencia a esta tabla para saber los pagos realizados a cada encomeindas.
+            tipo de encomiendas -> Referencia a los tipos de encomeindas que maneja la empresa.
+            La funcion de esta pantalla es marcar las encomiendas como entregadas. Para ellos cambiamos dos campos:
+            encomienda->entregada = 'S' y encomienda->estado = 'ENTREGADA'
+Salida de la pantalla
+            Las salidas de esta pantalla es un listado de las encomiendas por imprimir o no.
+--------------------------------------------------------------------------------
+---------------------------------------------------------------------------- -->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+    <title>Listado de Cta. Cte.</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />            
+
+    </head>
+    <body>   
+    <FONT FACE="Arial">
+        <table  border="1" align="center" cellspacing="0" bordercolor="#DCDCDC" >
+            <tr>
+                <td>
+                            <table border="0">
+                                <tr>
+                                    <td>
+                                        <img type="image"  src="{v_path_logo}" id="logo" width="60" height="60" />                                   
+                                    </td>
+                                    <td align="left">
+                                        <span><FONT SIZE=6><b>{v_razon_social}</b></FONT></span><br>
+                                        <span><FONT SIZE=2><b>{v_direc_razon_social}</b></FONT></span><br>
+                                        <span><FONT SIZE=2><b>{v_tel_razon_social}</b></FONT></span>                                    
+                                    </td>
+                                </tr>
+                            </table> 
+                </td>	
+            </tr>
+
+            <tr>
+                <td style="border: cornflowerblue" align="left">
+                    
+                    
+                    <table border="0" width="100%">
+                        <tr>
+                            <td colspan="3">
+                            <!-- -----------------------------------------------
+                                         Bloque de datos de usuarios
+                            ------------------------------------------------- -->                                
+                                Fecha Desde:<b>{v_b_fecha_desde}</b>                    
+                                Fecha Hasta:<b>{v_b_fecha_hasta}</b>
+                                <br>    
+                                Nro. Cliente:<b>{v_nro_cliente}</b>		
+                                Nombre:<b>{v_nombre_cliente}</b>                                
+                            </td>
+                        </tr>
+                        <tr>
+                            <!-- -----------------------------------------------
+                                         Bloque de datos de impresion
+                            ------------------------------------------------- -->                                       
+                            <td align="left"  >
+                                Fecha impresion:<b>{v_fecha}</b>
+                            </td>
+                            <td align="center" >
+                                Sucursal:<b>{v_sucursal}</b>
+                            </td>
+                            <td align="right">
+                                Usuario:<b>{v_vendedor}</b>
+                            </td>
+                        </tr>
+                    </table>   
+                    
+                </td>
+            </tr>
+            <!-- --------------------------------------------------------------------------- -->
+            <tr>   
+                <td colspan="3">        
+                    <!-- 
+                    *******************************************************************************
+                    **   Tablas de listados de ctacte                                            **
+                    **                                                                           **
+                    **                                                                           **
+                    *****************************************************************************-->
+                    <table border="1" width="800px" align="center" cellspacing="0" bordercolor="#DCDCDC" >
+                        <tr align="center" bgcolor="{v_color_cabezera_columna_tabla}">
+                            <td>Nro. Comprobante</td>
+                            <td>Nro. Secuencia</td>
+                            <td>Fecha</td>
+                            <td>Operacion</td>
+                            <td>Importe debe</td>				
+                            <td>Importe Haber</td>                           
+			</tr>
+                        <!-- BEGIN listado_ctacte -->
+                        <tr>
+                            <td align="center">{v_nro_comprobante}</td>
+                            <td align="center">{v_nro_secuencia}</td>
+                            <td align="center">{v_fecha}        </td>
+                            <td               >{v_operacion}    </td>
+                            <td align="right" >{v_importe_debe} </td>				
+                            <td align="right" >{v_importe_haber}</td>				
+                        </tr>
+                        <!-- END listado_ctacte -->
+                        <tr bgcolor="{v_color_pie_tabla}" align="right">
+                            <td colspan="4">Sub. Totales     </td>
+                            <td            >$ {v_total_debe} </td>
+                            <td            >$ {v_total_haber}</td>
+                        </tr>
+                        <tr bgcolor="{v_color_pie_tabla}" align="right">
+                            <td colspan="4">Totales          </td>
+                            <td            >                 </td>
+                            <td            >$ {v_total}</td>
+                        </tr>
+                        
+                    </table>
+                </td>          
+            </tr>
+        </table>
+</FONT>        
+</body>
+</html>

@@ -1,0 +1,1874 @@
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />        
+        <title>{v_titulo_proyecto}</title>                            
+        <!-- <link type='text/css' href='css/demo.css'    rel='stylesheet' media='screen'/>        -->
+        <!-- <link type="text/css" href="css/estilos.css" rel="stylesheet" />  Estilos de la tabla -->                
+        <!-- OSX Style CSS files 
+        <link type='text/css' href='css/osx.css' rel='stylesheet' media='screen'/> -->
+        <link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />            
+    </head>   
+<!-- ----------------------------------------------------------------------------
+                           Script para los mensajes  
+----------------------------------------------------------------------------- -->
+<script src="sweetalert-master/lib/sweet-alert.min.js"></script> 
+<link rel="stylesheet" type="text/css" href="sweetalert-master/lib/sweet-alert.css">
+<!----------------------------------------------------------------------------->
+<!-- ---------------------------------------------------------------------------
+                                  CALENDARIO 
+------------------------------------------------------------------------------->
+ <link rel="stylesheet" type="text/css" href="./css/jquery-ui.css">
+ <script src="./js/jquery.js"></script>
+ <script src="./js/jquery-ui.js"></script>
+<!----------------------------------------------------------------------------->
+<!------------------------------------------------------------------------------
+                           Script para la codificacion base64  
+------------------------------------------------------------------------------->
+<script src='./js/jquery.base64.js'>$.base64.utf8encode = true;</script> 
+<script type="text/javascript" src="./js/propias.js"></script>
+
+<script type="text/javascript">
+    
+    
+$(document).ready(function(){         
+             asociar_calendario("#e_fecha");  // asociamos el calendario con el objeto con id = e_fecha
+        //      $.base64.utf8encode = true;     // habilitamos el utf8 para la codificacion.
+             $("#capa_forma_de_pago_del_pasaje").hide();
+             $("#i_alta_salidas"      ).click(function(){abrir_ventana('Alta de viajes','./abm/abm_viajes.php',400,450); });
+             $("#i_alta_salidas_auto" ).click(function(){crear_salida_diaria_automatica();         });
+             $("#i_buscar"            ).click(function(){buscar_salidas();                         });
+             $('#i_volver_pasaje'     ).click(function(){$(location).attr('href',"principal.php"); });
+             
+             $("#i_agregar_pasaje"    ).click(function(){venta_pasaje_adm_pasajes();               });
+             $("#i_reserva_pasaje"    ).click(function(){reservar_pasaje_abm_pasajes();            });
+             $("#i_utilizar_pasaje"   ).click(function(){utilizar_pasaje_abm_pasajes();            });
+             
+             $("#i_borrar_pasaje"     ).click(function(){borrar_pasaje();                          });
+             $("#i_imprimir_pasaje"   ).click(function(){imprimir_pasaje();                        });
+             $('#i_imprimir_lista_pasajeros').click(function(){imprimir_lista_pasajeros($("#h_id_viaje").val(),2);}); // ordenamos por el nombre
+             $('#i_seleccionar_vehiculo'    ).click(function(){seleccionar_vehiculo_a_vincular();  });
+             $('#i_seleccionar_chofer'      ).click(function(){ seleccionar_chofer_a_vincular();   });
+             $('#i_pagar_pasaje'            ).click(function(){pagar_pasajes();                    });             
+             $('#i_pasaje_adelantado'       ).click(function(){pasaje_adelantado();                });
+             $('#i_cerrar_listado_pasaje'   ).click(function(){cerrar_mostrar_pagos_realizados();  });
+             $('#e_pasajes_vueltas'         ).change(function(){mostrar_informacion_pasaje_vuelta();});
+             
+             // Realizamos las busqeda de las salidad diarias para la fecha pertinente
+             buscar_salidas();   
+             
+             mostrar_datos_pasajes_de_vuelta();
+});
+
+//------------------------------------------------------------------------------
+// Muestra la forma de pago que se realizo al pasaje comprado.
+// Entrada: codigo unico del pasaje.
+//------------------------------------------------------------------------------
+        function Mostrar_pagos_realizados(id_pasaje){
+                    $("#capa_forma_de_pago_del_pasaje").dialog({ // <!--  ------> muestra la ventana  -->
+                        width: 500,  // <!-- -------------> ancho de la ventana -->
+                        widthmin:500,
+                        widthmax:500,                        
+                        height: 300,// <!--  -------------> altura de la ventana -->
+                        heightmin: 300,// <!--  -------------> altura de la ventana -->
+                        heightmax: 300,// <!--  -------------> altura de la ventana -->
+                        show: "scale", // <!-- -----------> animación de la ventana al aparecer -->
+                        hide: "scale", // <!-- -----------> animación al cerrar la ventana -->
+                        resizable: "false", // <!-- ------> fija o redimensionable si ponemos este valor a "true" -->
+                        position: "center", // <!--  ------> posicion de la ventana en la pantalla (left, top, right...) -->
+                        modal: "true", // <!-- ------------> si esta en true bloquea el contenido de la web mientras la ventana esta activa (muy elegante) -->
+                        title: "Pasaje pago con:",
+                        position: { my: "center", at: "center", of: window },
+                        buttons: {
+                            "Aceptar": function() { 
+                                 $( this ).dialog( "close" );
+                            }                            
+                        }
+                    });
+
+                    var parametros = {id : id_pasaje};                                                   
+                    $.ajax({
+                           data: parametros,
+                           url : 'ajax_buscar_pagos_de_pasaje.php',
+                           type: 'post',
+                           
+                           beforeSend: function () {
+                                                   },
+                                                  
+                           error: function (resultado){
+                               mensaje_error("Admin Pasaje",'Error en el procesamiento de la rutina ajax_buscar_pagos_de_pasaje');
+                                                      },                                                                           
+                                                       
+                            success: function (resultado){
+                               // alert(resultado);
+                                    $("#cuerpo_lis_pag_de_pasajes").empty();
+                                    var reg    = resultado.split('@');                                    
+                                    var nuevaFila = '';
+                                    var i = 0;
+                                    var total1 = 0;
+                                    var total2 = 0;
+                                    while (i < reg.length -1) {
+                                        var subreg = reg[i].split('|');                                                                               
+                                        var item = i + 1;
+                                        // Creamos la fila con a insertar en la tabla 
+                                        nuevaFila = nuevaFila +"<tr style='font-size: 13;'>";
+                                        nuevaFila = nuevaFila +"<td align='Center'>       "+item+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='Center'>       "+subreg[ 0]+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='left'>       "+subreg[ 1]+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='right'>$      "+subreg[ 2]+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='right'>$      "+subreg[ 3]+"</td>";
+                                        nuevaFila = nuevaFila +"</tr>";
+                                        i++; 
+                                        total1 = total1 + parseFloat(subreg[3]);
+                                        total2 = total2 + parseFloat(subreg[2]);
+                                    }
+                                    
+                                    $("#cuerpo_lis_pag_de_pasajes").append(nuevaFila);
+                                    
+                                    $("#sp_interes_pagos").html("$ :"+total2.toFixed(2));
+                                    $("#sp_total_pagos").html("$ :"+total1.toFixed(2));
+                            }                           
+                    });          
+        }
+
+
+//------------------------------------------------------------------------------
+// Reserva pasajes para un cliente determinado sin uso.
+//------------------------------------------------------------------------------
+        function pasaje_adelantado(){
+                    //abrir_ventana('Pasajes por adelantado...','pasajes_adelantados.php',737,940);                       
+          /*          dialogo(
+                            'Pasajes por adelantado...',
+                            'capa_seleccionar_vehiculos',
+                            '730',
+                            '400',
+                            'pasajes_adelantados.php',
+                            '',
+                            'escribir_pasajes_adelantados();',
+                            'validar_carga_pasaje();',
+                            '',
+                            '',
+                            "¿Segúro de guardar los datos?",
+                            '¿Segúro de cerrar la pantalla?'
+                           );
+                   */
+                
+                    $("#capa_seleccionar_vehiculos").dialog({ // <!--  ------> muestra la ventana  -->
+                        width: 730,  // <!-- -------------> ancho de la ventana -->
+                        widthmin:730,
+                        widthmax:730,                        
+                        height: 400,// <!--  -------------> altura de la ventana -->
+                        heightmin: 400,// <!--  -------------> altura de la ventana -->
+                        heightmax: 400,// <!--  -------------> altura de la ventana -->
+                        show: "scale", // <!-- -----------> animación de la ventana al aparecer -->
+                        hide: "scale", // <!-- -----------> animación al cerrar la ventana -->
+                        resizable: "false", // <!-- ------> fija o redimensionable si ponemos este valor a "true" -->
+                        position: "center", // <!--  ------> posicion de la ventana en la pantalla (left, top, right...) -->
+                        modal: "true", // <!-- ------------> si esta en true bloquea el contenido de la web mientras la ventana esta activa (muy elegante) -->
+                        title: "Pasaje Adelantados...",
+                        position: { my: "center", at: "center", of: window },                        
+                        buttons: {                            
+                            "Aceptar": function() { 
+                               // if validar_carga_pasaje(){
+                                   escribir_pasajes_adelantados();
+                               // }
+                                $(this).dialog( "close" );                                                  
+                            },                                                  
+                            "Cancelar": function() {                                 
+                                 $(this).dialog( "close" );
+                            }      
+                        }
+                    });
+                    /*
+                    var parametros_a = {
+                                llamado_por: $.base64.encode(llamado_por),
+                                       code: nro_asiento,
+                                       id_v: id_viaje,
+                                              deuda: deuda,
+                                     importe_pasaje: imp_pasaje,
+                                   importe_coseguro: imp_cooseguro,
+                                            destino: $.base64.encode( $('#h_destino').val()     ),
+                                              fecha: $.base64.encode( $('#e_fecha').val()       ),
+                                               hora: $.base64.encode( $('#h_hora_salida').val() ),
+                                         nro_pasaje: $.base64.encode( $('#sp_nro_viaje').html()+"-"+$('#sp_nro_pasaje').html()   )
+                                     };   */
+                    //--------------------------------------------------------------------------                 
+                    $("#capa_seleccionar_vehiculos").load("pasajes_adelantados.php",'', 
+                        function(response, status, xhr) {
+                            
+                            switch (status) {
+                                case 'error': { 
+                                            var msg = "Error!, algo ha sucedido: ";
+                                            $("#capa_seleccionar_vehiculos").html(msg + xhr.status + " " + xhr.statusText);
+                                            break;
+                                              }
+                                case 'success': {
+                                            break;
+                                             }
+                                case 'notmodified':{break;}
+                                case 'timeout':    {break;}
+                                case 'parsererror':{break;}
+                            }
+                        }
+                    );                        
+        };
+
+
+
+//------------------------------------------------------------------------------
+// Realiza el pago de los pasajes que se encuentran reservados
+//------------------------------------------------------------------------------
+        function pagar_pasajes(){
+            // si tenemos un asiento seleccionado y se encuentra en estado reservado 
+            var nro_asiento = $('#sp_nro_asiento').html();
+            var id_viaje    = $('#sp_nro_viaje').html();
+            
+            if((id_viaje>0)&&(nro_asiento>0)){
+                
+                var nro_asiento   = $.base64.encode( $('#sp_nro_asiento').html()        );
+                id_viaje          = $.base64.encode( $('#sp_nro_viaje').html()          );
+                var deuda         = $.base64.encode( $('#h_importe_deuda_pasaje').val() );
+                var imp_pasaje    = $.base64.encode( $('#sp_importe_pasaje').html()     );
+                var imp_cooseguro = $.base64.encode( $('#sp_importe_cooseguro').html()  ); 
+                var nro_pasaje    = $.base64.encode( $("#sp_nro_pasaje").html()         );
+                
+                var llamado_por = 2; // administrador de pasajes = 2
+
+                if($("#h_pasaje_reservado").val()=='R'){
+                    
+                    $("#capa_pagar_pasajes").dialog({ // <!--  ------> muestra la ventana  -->
+                        width: 730,  // <!-- -------------> ancho de la ventana -->
+                        widthmin:730,
+                        widthmax:730,                        
+                        height: 400,// <!--  -------------> altura de la ventana -->
+                        heightmin: 400,// <!--  -------------> altura de la ventana -->
+                        heightmax: 400,// <!--  -------------> altura de la ventana -->
+                        show: "scale", // <!-- -----------> animación de la ventana al aparecer -->
+                        hide: "scale", // <!-- -----------> animación al cerrar la ventana -->
+                        resizable: "false", // <!-- ------> fija o redimensionable si ponemos este valor a "true" -->
+                        position: "center", // <!--  ------> posicion de la ventana en la pantalla (left, top, right...) -->
+                        modal: "true", // <!-- ------------> si esta en true bloquea el contenido de la web mientras la ventana esta activa (muy elegante) -->
+                        title: "Pagar Pasaje...",
+                        position: { my: "center", at: "center", of: window },                        
+                        buttons: {                            
+                            "Aceptar": function() { 
+                                aceptar_pagos_pagar_pasaje();
+  
+                                $(this).dialog( "close" );                                                  
+                            },                                                  
+                            "Cancelar": function() {                                 
+                                 $(this).dialog( "close" );
+                            }      
+                        }
+                    });
+                    
+                    var parametros_a = {
+                                llamado_por: llamado_por,
+                                       code: nro_asiento,
+                                       id_v: id_viaje,
+                                              deuda: deuda,
+                                     importe_pasaje: imp_pasaje,
+                                   importe_coseguro: imp_cooseguro,
+                                            destino: $.base64.encode( $('#h_destino').val()     ),
+                                              fecha: $.base64.encode( $('#e_fecha').val()       ),
+                                               hora: $.base64.encode( $('#h_hora_salida').val() ),
+                                         nro_pasaje: $.base64.encode( $('#sp_nro_viaje').html()+"-"+$('#sp_nro_pasaje').html()   )
+                                     };   
+                    //--------------------------------------------------------------------------                 
+                    $("#capa_pagar_pasajes").load("pagar_pasaje.php",parametros_a, 
+                        function(response, status, xhr) {
+                            
+                            switch (status) {
+                                case 'error': { 
+                                            var msg = "Error!, algo ha sucedido: ";
+                                            $("#capa_pagar_pasajes").html(msg + xhr.status + " " + xhr.statusText);
+                                            break;
+                                              }
+                                case 'success': {
+                                            break;
+                                             }
+                                case 'notmodified':{break;}
+                                case 'timeout':    {break;}
+                                case 'parsererror':{break;}
+                            }
+                        }
+                    );                        
+            
+                }else{
+                    mensaje_error("Admin Pasaje",'El pasaje ya se ecuentra abonado o sin ocupar...');
+                }    
+            }else{
+                mensaje_error("Admin Pasaje",'Debe seleccionar un pasaje reservado...');
+            }
+        };
+       
+
+
+
+//------------------------------------------------------------------------------
+// Agrega un vehiculo al viaje seleccionado
+//------------------------------------------------------------------------------
+          function seleccionar_vehiculo_a_vincular(){
+                if($('#h_id_viaje').val()>0){
+                    $("#capa_seleccionar_vehiculos").dialog({ 
+                        widthmin:730, width: 730, widthmax:730,                                                
+                        heightmin: 480,height: 480, heightmax: 480,                        
+                        show: "scale", 
+                        hide: "scale", 
+                        
+                        resizable: "false", 
+                        position: "center", 
+                        modal: "true", 
+                        title: "Asociar un vehiculo",  
+                        position: { 
+                            my: "center", 
+                            at: "center", 
+                            of: window 
+                        },
+                        
+                        buttons: {
+                            "Aceptar": function() {                                                                 
+                                // La funcion aceptar_vehiculo() esta declarada en el archivo Seleccion_vehiculo.html
+                                var aux3 = aceptar_vehiculos();                                                               
+                            },
+                            
+                            "Cancelar": function() {                               
+                                $( this ).dialog( "close" );
+                            }                        
+                        }
+                    });                             
+                    
+                    var parametros = {
+                                code:   $.base64.encode( $('#h_id_vehiculo').val()),
+                                id_v:   $.base64.encode($('#h_id_viaje').val()),
+                                c_ao:   $.base64.encode($('#h_nro_asiento_ocupado').val()),
+                                c_ar:   $.base64.encode($('#h_nro_asiento_reservado').val()),
+                                destino:$.base64.encode($('#h_destino').val()),
+                                fecha:  $.base64.encode($('#e_fecha').val()),
+                                hora:   $.base64.encode($('#h_hora_salida').val())
+                                     };      
+                    $("#capa_seleccionar_vehiculos").load("seleccion_vehiculo.php",parametros, 
+                        function(response, status, xhr) {
+                            
+                            switch (status) {
+                                case 'error':{ 
+                                            var msg = "Error!, algo ha sucedido: ";
+                                            $("#capa_seleccionar_vehiculos").html(msg + xhr.status + " " + xhr.statusText);
+                                            break;}
+                                case 'success': {break;}
+                                case 'notmodified':{break;}
+                                case 'timeout':    {break;}
+                                case 'parsererror':{break;}
+                            }
+                        }
+                    );                                                                             
+
+                }else{
+                    mensaje_error("Admin Pasaje",'Debe seleccionar un viaje previamente...');
+                }
+          }
+          
+//------------------------------------------------------------------------------
+// Agrega un vehiculo al viaje seleccionado
+//------------------------------------------------------------------------------
+          function seleccionar_chofer_a_vincular(){
+                if($('#h_id_viaje').val()>0){
+                    $("#capa_seleccionar_chofer").dialog({ 
+                        widthmin:730, width: 730, widthmax:730,                                                
+                        heightmin: 500,height: 500, heightmax: 500,                        
+                        show: "scale", 
+                        hide: "scale", 
+                        
+                        resizable: "false", 
+                        position: "center", 
+                        modal: "true", 
+                        title: "Asociar choferes",   
+                        position: { 
+                            my: "center", 
+                            at: "center", 
+                            of: window 
+                        },
+                        
+                        buttons: {
+                            "Aceptar": function() { 
+                                debugger;                                
+                                // La funcion aceptar_vehiculo() esta declarada en el archivo Seleccion_vehiculo.html
+                                aceptar_choferes();
+                                
+                                
+                            },
+                            
+                            "Cancelar": function() {                               
+                                $( this ).dialog( "close" );
+                            }                        
+                        }
+                    });                             
+                    
+                    
+                    
+                    
+                    var parametros = {
+                                code:   $.base64.encode( $('#h_id_chofer').val()),
+                                code2:  $.base64.encode( $('#h_id_guarda').val()),
+                                id_v:   $.base64.encode($('#h_id_viaje').val()),
+                                destino:$.base64.encode($('#h_destino').val()),
+                                fecha:  $.base64.encode($('#e_fecha').val()),
+                                hora:   $.base64.encode($('#h_hora_salida').val())
+                                     };      
+                                     
+                    $("#capa_seleccionar_chofer").load("seleccion_choferes.php",parametros, 
+                        function(response, status, xhr) {
+                            
+                            switch (status) {
+                                case 'error':{ 
+                                            var msg = "Error!, algo ha sucedido: ";
+                                            $("#capa_seleccionar_chofer").html(msg + xhr.status + " " + xhr.statusText);
+                                            break;}
+                                case 'success': {break;}
+                                case 'notmodified':{break;}
+                                case 'timeout':    {break;}
+                                case 'parsererror':{break;}
+                            }
+                        }
+                    );                                        
+                                     
+                }else{
+                    mensaje_error("Admin Pasaje",'Debe seleccionar un viaje previamente...');
+                }
+          }          
+          
+          
+//------------------------------------------------------------------------------
+// Ejecuta un procedimiento almacenado en la base para agregar las salidas 
+// diarias en la tabla viajes.
+// Parametro de entrada: fecha en la que se quiere agregar.
+//------------------------------------------------------------------------------
+           function crear_salida_diaria_automatica(){  
+               if (confirm("No existen salidas para la fecha:"+$("#e_fecha").val()+"... ¿Deséa crear la salida para esta día?")){
+                   
+                    var parametros = {
+                           fecha : $("#e_fecha").val()
+                                     };                                                   
+                    $.ajax({
+                           data: parametros,
+                           url : 'ajax_crear_salidas_diarias_automaticamente.php',
+                           type: 'post',
+                           
+                           beforeSend: function () {
+                               //$("#t_buscar").html("Procesando, espere por favor...");
+                                                   },
+                                                  
+                           error: function (resultado){
+                               mensaje_error("Admin Pasaje",'Error en el procesamiento de la rutina ajax_crear_salidas_diarias_automaticamente');
+                                                      },                                                                           
+                                                       
+                           success: function (resultado){
+                               mensaje_error("Admin Pasaje","Se crearon con exito...");
+                               buscar_salidas();
+                                                        }                           
+                    });                    
+                }
+            }
+
+
+           
+//------------------------------------------------------------------------------
+// abre la carga de pasajes para la venta...
+//------------------------------------------------------------------------------
+           function venta_pasaje_adm_pasajes(){
+               
+               if($("#h_seleccion_asientos").val()!=''){     
+                   
+                    $("#capa_carga_pasaje").dialog({ // <!--  ------> muestra la ventana  -->
+                            width: 800, widthmin:800, widthmax:800,                        
+                            height: 800, heightmin: 800, heightmax: 800,
+                            show: "scale", // <!-- -----------> animación de la ventana al aparecer -->
+                            hide: "scale", // <!-- -----------> animación al cerrar la ventana -->
+                            resizable: "false", // <!-- ------> fija o redimensionable si ponemos este valor a "true" -->
+                            position: "center", // <!--  ------> posicion de la ventana en la pantalla (left, top, right...) -->
+                            modal: "true", // <!-- ------------> si esta en true bloquea el contenido de la web mientras la ventana esta activa (muy elegante) -->
+                            title: "Carga de Pasajes - (Venta)",
+                            position: { 
+                                my: "center", 
+                                at: "center", 
+                                of: window 
+                            },                            
+                            buttons: {
+                                "Aceptar": function() { 
+                                    // La funcion escribir_en_tabla() esta declarada en el archivo escribir_en_tabla.html
+                                    var aux3 = escribir_en_tabla();                                                                
+                                },
+                                "Cancelar": function() {                               
+                                    $( this ).dialog( "close" );
+                                }
+                            }
+
+                    });
+
+                    var id_viaje     = $.base64.encode($("#h_id_viaje").val()); // obtenemos el id_viaje preseleccionado seleccionado.
+                    var lista_pasaje = $.base64.encode($("#h_seleccion_asientos").val());// obtenemos la cadena con los asientos a cargar
+                    var id_ld        = $.base64.encode($("#h_id_loc_origen").val());// cargamos la localidad de origen
+                    var id_lh        = $.base64.encode($("#h_id_loc_destino").val());// cargamos la localidad destino
+                    var fv           = $.base64.encode($("#h_forma_salida").val()); // Determina si es una salida directa o especial
+                   
+                    var parametros = {
+                            t:'V',
+                            id_viaje:id_viaje,
+                            asientos:lista_pasaje,
+                            id_ld:id_ld,
+                            id_lh:id_lh,
+                            fv:fv
+                        };              
+              
+  
+                    $("#capa_carga_pasaje").load("alta_pasajes.php",parametros, 
+                        function(response, status, xhr) {                            
+                            switch (status) {
+                                case 'error':{ 
+                                            var msg = "Error!, algo ha sucedido: ";
+                                            $("#capa_carga_pasaje").html(msg + xhr.status + " " + xhr.statusText);
+                                            break;}
+                                case 'success': {break;}
+                                case 'notmodified':{break;}
+                                case 'timeout':    {break;}
+                                case 'parsererror':{break;}
+                            }
+                        }
+                    );                                        
+            
+               }else{
+                   mensaje_error("Admin Pasaje","Debe seleccionar almenos un asientos para poder realizar la venta...");
+               }
+               
+               
+           }
+//------------------------------------------------------------------------------
+// abre la carga de pasajes para la reserva...
+//------------------------------------------------------------------------------
+           function reservar_pasaje_abm_pasajes(){
+               
+               if($("#h_seleccion_asientos").val()!=''){     
+                   
+                    $("#capa_carga_pasaje").dialog({ // <!--  ------> muestra la ventana  -->
+                            width: 800, widthmin:800, widthmax:800,                        
+                            height: 800, heightmin: 800, heightmax: 800,
+                            show: "scale", // <!-- -----------> animación de la ventana al aparecer -->
+                            hide: "scale", // <!-- -----------> animación al cerrar la ventana -->
+                            resizable: "false", // <!-- ------> fija o redimensionable si ponemos este valor a "true" -->
+                            position: "center", // <!--  ------> posicion de la ventana en la pantalla (left, top, right...) -->
+                            modal: "true", // <!-- ------------> si esta en true bloquea el contenido de la web mientras la ventana esta activa (muy elegante) -->
+                            title: "Carga de Pasajes - (Reserva)",
+                            position: { 
+                                my: "center", 
+                                at: "center", 
+                                of: window 
+                            },                            
+                            buttons: {
+                                "Aceptar": function() { 
+                                    // La funcion escribir_en_tabla() esta declarada en el archivo escribir_en_tabla.html
+                                    var aux3 = escribir_en_tabla();                                                                
+                                },
+                                "Cancelar": function() {                               
+                                    $( this ).dialog( "close" );
+                                }
+                            }
+
+                    });
+
+                    var id_viaje     = $.base64.encode($("#h_id_viaje").val()); // obtenemos el id_viaje preseleccionado seleccionado.
+                    var lista_pasaje = $.base64.encode($("#h_seleccion_asientos").val());// obtenemos la cadena con los asientos a cargar
+                    var id_ld        = $.base64.encode($("#h_id_loc_origen").val());// cargamos la localidad de origen
+                    var id_lh        = $.base64.encode($("#h_id_loc_destino").val());// cargamos la localidad destino
+                    var fv           = $.base64.encode($("#h_forma_salida").val()); // Determina si es una salida directa o especial
+                   
+                    var parametros = {
+                            t:'R',
+                            id_viaje:id_viaje,
+                            asientos:lista_pasaje,
+                            id_ld:id_ld,
+                            id_lh:id_lh,
+                            fv:fv
+                        };              
+              
+  
+                    $("#capa_carga_pasaje").load("alta_pasajes.php",parametros, 
+                        function(response, status, xhr) {                            
+                            switch (status) {
+                                case 'error':{ 
+                                            var msg = "Error!, algo ha sucedido: ";
+                                            $("#capa_carga_pasaje").html(msg + xhr.status + " " + xhr.statusText);
+                                            break;}
+                                case 'success': {break;}
+                                case 'notmodified':{break;}
+                                case 'timeout':    {break;}
+                                case 'parsererror':{break;}
+                            }
+                        }
+                    );                                        
+            
+               }else{
+                   mensaje_error("Admin Pasaje","Debe seleccionar almenos un asientos para poder realizar la reserva...");
+               }
+           }
+           
+           
+           
+            //------------------------------------------------------------------
+            // Muestra la informacion del pasaje de vuelta en pantalla. Segun lo 
+            // seleccionado en el combobox
+            //------------------------------------------------------------------
+            function mostrar_informacion_pasaje_vuelta(){
+                var datos = $("#e_pasajes_vueltas option:selected").val();
+                var dato =  datos.split("#");  
+                
+                $("#sp_pasaje_vuelta_nro_pasaje").html(dato[0]);
+                $("#sp_pasaje_vuelta_nombre"    ).html(dato[1]);
+
+        
+                var fecha = dato[2].split("-");
+                var fecha2 = fecha[2]+'/'+fecha[1]+'/'+fecha[0];                                    
+                $("#sp_pasaje_vuelta_emitido").html(fecha2);
+
+                fecha = dato[3].split("-");
+                fecha2 = fecha[2]+'/'+fecha[1]+'/'+fecha[0];                    
+                $("#sp_pasaje_vuelta_vence"     ).html(fecha2);
+
+                switch (dato[4]) { // Muestra el ESTADO
+                      case "A":{ 
+                        $("#sp_pasaje_vuelta_estado").html("Activo");
+                        break;
+                      }
+                      case "V":{ 
+                        $("#sp_pasaje_vuelta_estado").html("Vencido");
+                        break;
+                      }
+                      case "U":{ 
+                        $("#sp_pasaje_vuelta_estado").html("Utilizado");
+                        break;
+                      }
+                }
+                $("#sp_pasaje_vuelta_dni").html(dato[5]); // muestra el DNI
+            }      
+           
+//------------------------------------------------------------------------------
+// abre la carga de pasajes para la Aceptacion de que se esta por cargar un 
+// pasaje de vuelta.
+//------------------------------------------------------------------------------           
+           function cargar_datos_de_pasaje_de_vuelta(){
+               if($("#h_seleccion_asientos").val()!=''){                        
+                    $("#capa_carga_pasaje").dialog({ // <!--  ------> muestra la ventana  -->
+                            width: 800, widthmin:800, widthmax:800,                        
+                            height: 800, heightmin: 800, heightmax: 800,
+                            show: "scale", // <!-- -----------> animación de la ventana al aparecer -->
+                            hide: "scale", // <!-- -----------> animación al cerrar la ventana -->
+                            resizable: "false", // <!-- ------> fija o redimensionable si ponemos este valor a "true" -->
+                            position: "center", // <!--  ------> posicion de la ventana en la pantalla (left, top, right...) -->
+                            modal: "true", // <!-- ------------> si esta en true bloquea el contenido de la web mientras la ventana esta activa (muy elegante) -->
+                            title: "Carga de Pasajes - (Utilización)",
+                            position: { 
+                                my: "center", 
+                                at: "center", 
+                                of: window 
+                            },                            
+                            buttons: {
+                                "Aceptar": function() { 
+                                    // La funcion escribir_en_tabla() esta declarada en el archivo escribir_en_tabla.html
+                                    var aux3 = escribir_en_tabla();
+                                   // mostrar_datos_pasajes_de_vuelta();
+                                    $( this ).dialog( "close" );
+                                },
+                                "Cancelar": function() {                               
+                                    $( this ).dialog( "close" );
+                                }
+                            }
+
+                    });
+
+                    var id_viaje     = $.base64.encode($("#h_id_viaje").val()); // obtenemos el id_viaje preseleccionado seleccionado.
+                    var lista_pasaje = $.base64.encode($("#h_seleccion_asientos").val());// obtenemos la cadena con los asientos a cargar
+                    var id_ld        = $.base64.encode($("#h_id_loc_origen").val());// cargamos la localidad de origen
+                    var id_lh        = $.base64.encode($("#h_id_loc_destino").val());// cargamos la localidad destino
+                    var fv           = $.base64.encode($("#h_forma_salida").val()); // Determina si es una salida directa o especial
+                    var dato_pi      = $.base64.encode($("#e_pasajes_vueltas option:selected").val());
+
+                    var parametros = {
+                            t:'U',
+                            id_viaje:id_viaje,
+                            asientos:lista_pasaje,
+                            id_ld:id_ld,
+                            id_lh:id_lh,
+                            fv:fv,
+                            datos_pi:dato_pi
+                    };              
+              
+  
+                    $("#capa_carga_pasaje").load("alta_pasajes.php",parametros, 
+                        function(response, status, xhr) {                            
+                            switch (status) {
+                                case 'error':{ 
+                                            var msg = "Error!, algo ha sucedido: ";
+                                            $("#capa_carga_pasaje").html(msg + xhr.status + " " + xhr.statusText);
+                                            break;}
+                                case 'success':{
+                                        //mostrar_datos_pasajes_de_vuelta();
+                                        break;}
+                                case 'notmodified':{break;}
+                                case 'timeout':    {break;}
+                                case 'parsererror':{break;}
+                            }
+                        }
+                    );                                        
+            
+               }else{
+                   mensaje_error("Admin Pasaje","Debe seleccionar un asientos para poder realizar la utilizacion del pasaje...");
+               }
+           }
+//------------------------------------------------------------------------------
+// abre la carga de pasajes para la reserva...
+//------------------------------------------------------------------------------
+           function utilizar_pasaje_abm_pasajes(){
+               if($("#h_seleccion_asientos").val()!=''){     
+                    $("#e_pasajes_vueltas").val(0);
+                    $("#sp_pasaje_vuelta_nro_pasaje").html("");                                             
+                    $("#sp_pasaje_vuelta_dni").html("");                                             
+                    $("#sp_pasaje_vuelta_nombre").html("");                                            
+                    $("#sp_pasaje_vuelta_emitido").html("");                                             
+                    $("#sp_pasaje_vuelta_vence").html("");                                             
+                    $("#sp_pasaje_vuelta_estado").html("");                                            
+                   
+                    $("#capa_utilizar_pasaje").dialog({ // <!--  ------> muestra la ventana  -->
+                            width: 400, widthmin:400, widthmax:400,                        
+                            height: 300, heightmin: 300, heightmax: 300,
+                            show: "scale", // <!-- -----------> animación de la ventana al aparecer -->
+                            hide: "scale", // <!-- -----------> animación al cerrar la ventana -->
+                            resizable: "false", // <!-- ------> fija o redimensionable si ponemos este valor a "true" -->
+                            position: "center", // <!--  ------> posicion de la ventana en la pantalla (left, top, right...) -->
+                            modal: "true", // <!-- ------------> si esta en true bloquea el contenido de la web mientras la ventana esta activa (muy elegante) -->
+                            title: "Utilizar Pasajes - (Promocionales)",
+                            position: { 
+                                my: "center", 
+                                at: "center", 
+                                of: window 
+                            },                            
+                            buttons: {
+                                "Aceptar": function() { 
+                                    $( this ).dialog( "close" );
+                                    cargar_datos_de_pasaje_de_vuelta();                                    
+                                },
+                                "Cancelar": function() {                               
+                                    $( this ).dialog( "close" );
+                                }
+                            }
+
+                    });
+               }else{
+                   mensaje_error("Admin Pasaje","Debe seleccionar un asientos para poder realizar la utilizacion del pasaje...");
+               }
+           }
+           
+                      
+           
+           
+           
+           
+//------------------------------------------------------------------------------
+// funcion que se ejecuta al seleccionar el checkbox de viajes.
+// a: Conf Asient Cent PA 
+// b: Cantidad de  Asientos
+// c: Conf asient PB 
+// d: conf Asient Cent PB
+// e: id_vehiculos
+// f: id_chofer
+// g: id_guarda
+// h: id_viaje
+// i: id_loc_origen
+// j: id_loc_destino
+// k: forma de salida
+// l: Fecha de la salida
+// m: hora de la salida
+// n: cantidad de asientos ocupado que posee el viaje
+// o: cantidad de asiento reservados que posee el viaje
+// p: ID del radiobuton para saber donde se hace click en la grilla. y seleccionar el radiobutton pertinenete al renglon.
+// q: Destino del viaje
+//------------------------------------------------------------------------------
+           function consentrador_de_accion_al_seleccionar_el_viaje(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q){        
+                // alert(a+'-'+b+'-'+c+'-'+d+'-'+e+'-'+f+'-'+g+'-'+h+'-'+i+'-'+j+'-'+k+'-'+l+'-'+m+'-'+n+'-'+o+'-'+p+'-'+q);
+                limpiar_visor_asiento();
+                limpiar_visor_vehiculos();
+                     
+                mostrar_listado_pasajeros(h,1);                
+                mostrar_asientos(a,b,c,d);             
+                mostrar_datos_vehiculos(e,f,g);
+                //debugger;                
+                $("#h_Conf_Asient_Cent_PA").val(a);
+                $("#h_conf_Asient_Cent_PB").val(c);
+                $("#h_Conf_asient_PB").val(d);
+                $("#h_id_vehiculo").val(e);
+                $("#h_id_chofer").val(f);
+                $("#h_id_guarda").val(g);
+
+                $("#h_id_viaje"          ).val(h);
+                $("#h_nro_asiento"       ).val(b);
+                $("#h_id_loc_origen"     ).val(i);
+                $("#h_id_loc_destino"    ).val(j);                
+                $("#h_forma_salida"      ).val(k);
+                $("#h_seleccion_asientos").val('');
+                $("#h_fecha_salida"      ).val(l);
+                $("#h_hora_salida"       ).val(m);
+                                
+                // estos ultimos tres son usados para la seleccion de vehiculos
+                $('#h_nro_asiento_ocupado').val(n);
+                $('#h_nro_asiento_reservado').val(o);
+                // auto seleccionamos el item del radiobutton 
+
+                $('#rb_selector_salidas'+p).attr('checked',true);
+                $('#h_destino').val(q);
+                
+            }
+//------------------------------------------------------------------------------
+// Verifica si hay salidas diarias creadas para la fecha en cuestion si no hay 
+// 
+//------------------------------------------------------------------------------           
+            function verificamos_tipo_usuario(){
+                // verificamos que solo pueda crear una salida automaticamente un usuario de casa central
+                if($("#h_crear_salidas_automaticamente").val()==='1'){
+                    crear_salida_diaria_automatica();
+                    //buscar_salidas();
+                }
+            }
+            
+//------------------------------------------------------------------------------
+// Realiza la busqueda de las salidas de lo escrito en el edit de busqueda por 
+// sql
+//------------------------------------------------------------------------------
+            function buscar_salidas() {    
+                
+                var parametros = {
+                                  fecha : $("#e_fecha").val(),
+                                  salida: $("#cb_destino").val(),
+                                  destino: $("#cb_destino").val()
+                                 };      
+//                                 alert($("#e_fecha").val());
+                $.ajax({
+                           data: parametros,
+                           url : 'ajax_buscar_salidas.php',
+                           type: 'post',
+                           
+                           beforeSend: function () {
+                               $("#t_buscar").html("Procesando, espere por favor...");
+                                                   },
+                                                                                                      
+                           success:  function (resultado) {                               
+                            //------------------------------------------------------------------------------------------------------        
+                            // Devolución de ajax_buscar_salidas.php
+                            //------------------------------------------------------------------------------------------------------        
+                            // (0)tipo salida -(1)destino - (2)fecha - (3)hora                    - 
+                            // (4)vehiculo - (5)chofer - (6)guarda - (7)Cant Asient - (8) Cant Asien Ocu - 
+                            // (9)cant Asien Reser - (10)Conf asient PB - (11)Conf asient PA - (12)onf Asient Cent PB - (13)onf Asient Cent PB -                            
+                            // (14)Conf Asient Cent PA - (15)Tipo Salida  -  (16)id vehiculos      -
+                            // (17)id_chofer - (18)id_guarda, (19)codigo viaje,  (20)id loc origen, (21)id local destino, (22)local origen , (23)loc destino
+                            //------------------------------------------------------------------------------------------------------        
+                            //alert(resultado);
+                                    // Vaciamos la lista
+                                    $("#tabla_salidas > tbody").empty();
+                                    $('#listado_asientos').empty();
+                                                                        
+                                    limpiar_visor_vehiculos();
+                                    limpiar_visor_asiento();
+                                    limpiar_listado_pasajero();
+                                    
+                            // verificamos que existan salidas directas para la fecha.                          
+                                    if(resultado.trim()==""){
+                                        mensaje_error("Admin Pasaje",'No se encontraron viajes para la fecha:'+$("#e_fecha").val()+'...');
+                                        //limpiar_visor_asiento();
+                                        //limpiar_visor_vehiculos();                                          
+                                        verificamos_tipo_usuario();
+                                    }
+                                    
+                                    var reg    = resultado.split('@');                                    
+                                    var nuevaFila = '';
+                                    var i = 0;
+                                    var aux = '';
+                                    var color ='';
+                                    while (i < reg.length -1) {
+                                        var subreg = reg[i].split('|');
+                                        
+                                        if (subreg[15]=='E'){ // si la letra es una "E" o una "D"
+                                            color = $("#sp_color_salida_especial").css("background");
+                                        }else{
+                                            color = $("#sp_color_salida_diario").css("background");
+                                        }
+                                      // debugger;
+                                        aux = " consentrador_de_accion_al_seleccionar_el_viaje("
+                                                    +subreg[14]+", "
+                                                    +subreg[7]+","
+                                                    +'"'+subreg[10]+'"'+", "
+                                                    +'"'+subreg[12]+'"'+", "
+                                                    +'"'+subreg[16]+'"'+", "
+                                                        +subreg[17]+","
+                                                        +subreg[18]+","
+                                                        +subreg[19]+","
+                                                        +subreg[20]+","
+                                                        +subreg[21]+","
+                                                    +'"'+subreg[15]+'"'+", "
+                                                    +'"'+subreg[2]+'"'+", "
+                                                    +'"'+subreg[3]+'"'+", "
+                                                        +subreg[8]+","
+                                                        +subreg[9]+","                                            
+                                                    +'"'+    i    +'"'+", "
+                                                    +'"'+subreg[1]+'"'+");";
+                                        
+            
+                                        // Creamos la fila con a insertar en la tabla 
+                                        nuevaFila = nuevaFila +"<tr style='font-size: 13; background:"+color 
+                                                              +"' onclick='"+aux+"'><td><Input type='Radio' id='rb_selector_salidas"+i+"' name='selector_salidas' onclick='"+aux+"'/></td>";
+                                        nuevaFila = nuevaFila +"<td>                      "+subreg[ 1]+"</td>";
+                                        nuevaFila = nuevaFila +"<td>                      "+subreg[ 2]+"</td>";
+                                        nuevaFila = nuevaFila +"<td>                      "+subreg[ 3]+"</td>";
+                                        nuevaFila = nuevaFila +"<td>                      "+subreg[ 4]+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='Center'>       "+subreg[ 7]+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='Center'>       "+subreg[ 8]+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='Center'>       "+subreg[ 9]+"</td>";
+                                        nuevaFila = nuevaFila +"<td style='display: none'>"+subreg[10]+"</td>";
+                                        nuevaFila = nuevaFila +"<td style='display: none'>"+subreg[11]+"</td>";
+                                        nuevaFila = nuevaFila +"<td style='display: none'>"+subreg[12]+"</td>"; // conf asientos
+                                        nuevaFila = nuevaFila +"<td style='display: none'>"+subreg[13]+"</td>"; // conf asientos
+                                        nuevaFila = nuevaFila +"<td style='display: none'>"+subreg[14]+"</td>"; // conf asientos
+                                        nuevaFila = nuevaFila +"<td>"+subreg[22]+"</td>"; // conf asientos
+                                        nuevaFila = nuevaFila +"<td>"+subreg[23]+"</td>"; // conf asientos
+                                        
+                                        
+                                        nuevaFila = nuevaFila +"</tr>";
+                                        i++;                                        
+                                    }                                    
+                                    $("#tabla_salidas").append(nuevaFila);
+                             }       
+                });                   
+            };
+            
+            
+            
+//------------------------------------------------------------------------------    
+// funcion usada para auto marcar al hacer doble click sobre la imagen de 
+// los asientos.
+//      cod_pas --> Codigo del pasaje.
+//      nro     --> nro del asiento. 
+//------------------------------------------------------------------------------
+            function auto_seleccionar(cod_pas, nro){
+                // Verificamos si esta tildado el check box
+                if( $("#cb"+nro).is(':checked')){
+                    $('#cb'+nro).attr('checked',false);// destildamos           
+                }else{
+                    $('#cb'+nro).attr('checked',true); // tildamos            
+                }
+                //rearmamos la lista de asientos tildados.
+                //  seleccionar_asiento(cod_pas,nro);                     
+                agregar_asiento_al_listado(nro);
+            };
+            
+            
+            
+            
+            
+//*********************************************************************************************************************
+// Construye un asiento 
+// cod_pas : indica el codigo unico del pasaje si se encuentra vendido o reservado.
+// nro :  nro de asiento.(Los nro van de izq a derecha y de arriba hacia abajo
+// estado: Indica la condicion del asiento con el pasaje.
+//       Ventas
+//            vcs: vendido directo (sube en origen y baja destino) simple (una persona).
+//            vps: Vendido parcial (suben o baja a medio camino) simple (una persona).
+//            vcn: vendido directo (sube en origen y baja destino) doble (una persona + seguro de seg. persona).     
+//            vpn: vendido directo (suben o baja a medio camino) doble (una persona + seguro de seg. persona).     
+//       Reservas                        
+//            rcs: reserva directo (sube en origen y baja destino) simple (una persona).
+//            rps: reserva parcial (suben o baja a medio camino) simple (una persona).
+//            rcn: reserva directo (sube en origen y baja destino) doble (una persona + seguro de segunda persona).     
+//            rpn: reserva directo (suben o baja a medio camino) doble (una persona + seguro de segegunda persona).     
+//*********************************************************************************************************************
+            function dibujar_asiento(cod_pas, nro, estado){                   
+                    //  v/r --> Vendido / reservado (asientoV.jpg / asientoR.jpg)                    
+                    //  c/p --> Completo/ parcial   (reseña en el lado derechodel nro de asiento) 
+                    //  s/n --> Simple / con coseguro (reseña en el lado derecho del nro de asiento)
+                    //alert("asiento nro:"+cod_pas+"  estado:"+estado);
+                    var mostrar_checkbox = 'N';
+                    var aux='';
+                    var imagen = '';
+                    var vend_reser = '';
+                    switch (estado) {
+                        case 'VCN':{ vend_reser = 'V';                        imagen = "./imagenes/asientosV.jpg";   break;} // asiento vendido completo a una persona
+                        case 'VPN':{ vend_reser = 'V'; mostrar_checkbox= 'S'; imagen = "./imagenes/asientosV.jpg";   break;} // aisento vendido parcial a una persona
+                        case 'VCS':{ vend_reser = 'V';                        imagen = "./imagenes/asientosV.jpg";   break;} // asiento vendido completo a un persona con coseguro
+                        case 'VPS':{ vend_reser = 'V'; mostrar_checkbox= 'S'; imagen = "./imagenes/asientosV.jpg";   break;} // aisento vendido parcial a una persona con coseguro
+                        case 'RCN':{ vend_reser = 'R';                        imagen = "./imagenes/asientosR.jpg";   break;}
+                        case 'RPN':{ vend_reser = 'R'; mostrar_checkbox= 'S'; imagen = "./imagenes/asientosR.jpg";   break;}
+                        case 'RCS':{ vend_reser = 'R';                        imagen = "./imagenes/asientosR.jpg";   break;}
+                        case 'RPS':{ vend_reser = 'R'; mostrar_checkbox= 'S'; imagen = "./imagenes/asientosR.jpg";   break;}
+                        case '---':{ vend_reser = '-'; mostrar_checkbox= 'S'; imagen = "./imagenes/asientos.jpg" ;   break;} // Asiento vacio                       
+                        default   :{ vend_reser = '' ; imagen = "./imagenes/sinasientos.jpg";                        break;} // sin asientos
+                    }
+                    // Si no es una linea de asiento
+                    if (estado==''){
+                       aux =  "<td id='p"+nro+"' align='center' "+
+                                  " onmousemove='marcar_como_seleccionado("+nro+");'                     "+
+                                  " onmouseout='marcar_como_deseleccionado("+nro+");'                    "+
+                                  " ondblclick='auto_seleccionar("+'"'+cod_pas+'",'+'"'+nro+'"'+");' >   "+                                   
+                              "<br><input type='image' name='"+vend_reser+'-'+nro+"' src='"+imagen+"' value='"+nro+"'  id='i_a"+nro+"' >   "+
+                              "</td>";                    
+                    }else{   
+                       // Si el asiento se encuentra seleccionado 
+                       if (mostrar_checkbox=='S'){ //  <nroasiento> - [estado] / checkbox <imagen>  
+                          aux = "<td id='p"+nro+"' align='center' "+
+                                      " onmousemove='marcar_como_seleccionado("+nro+");'                                      "+
+                                      " onmouseout='marcar_como_deseleccionado("+nro+");'                                     "+
+                                      " ondblclick='auto_seleccionar("+'"'+cod_pas+'",'+'"'+nro+'"'+");' >                    "+                                  
+                                nro+" - <input type=checkbox id='cb"+nro+"' onclick='agregar_asiento_al_listado("+nro+");'>   "+
+                                      "<br><input type='image' src='"+imagen+"' value='"+nro+"' id='i_a"+nro+"'                   "+
+                                              " onclick='seleccionar_asiento("+'"'+cod_pas+'",'+'"'+nro+'"'+");'  >           "+
+                                "</td> ";
+                       }else{
+                          aux = "<td id='p"+nro+"'  align='center'"+
+                                  "  onmousemove='marcar_como_seleccionado("+nro+");'"+
+                                  "  onmouseout='marcar_como_deseleccionado("+nro+");'"+
+                                  "  ondblclick='auto_seleccionar("+'"'+cod_pas+'",'+'"'+nro+'"'+");' >"+                                   
+                                    nro+"-["+estado+"]<br> <input type='image' src='"+imagen+"' value='"+nro+"' id='i_a"+nro+"' "+
+                                    " onclick='seleccionar_asiento("+'"'+cod_pas+'",'+'"'+nro+'"'+");' >"+
+                                "</td> ";
+                       }
+                    }
+                    return  aux;
+            } 
+            
+            //*********************************************************************************************************************
+            // Muestra los asientos segun el estado en que se encuentran.
+            //*********************************************************************************************************************
+            // viaje: Indica el codigo unico del viaje
+            // Nro_asiento: Cantidad de asientos que posee en vehiculos
+            // cp: Configuracion de pasillos cadena de 4 char [S/N|S/N|S/N|S/N]
+            // cc: Configuracion de asiento central [S/N]
+            function mostrar_asientos(viaje, nro_asiento, cp, cc){
+                    //-------------------------------------------------------------------------------------------------------------
+                    // Lo que devuelve ajax_buscar_pasajes.php
+                    //-------------------------------------------------------------------------------------------------------------
+                    //  NRO_ASIENTO|Esado(PAGADO+TIPO_VIAJE+POSEE_SEGURO)|@.....
+                    //-------------------------------------------------------------------------------------------------------------                   
+                    var parametros = {id_viaje : viaje};  
+
+                    $.ajax({data: parametros,
+                           url : 'ajax_buscar_pasajes.php',
+                           type: 'post',
+                           beforeSend: function () {
+                            //  alert("Procesando, espere por favor..."+parametros.id_viaje);
+                                                   },
+                           success:  function (resultado) {
+                            //   debugger;
+                               // Limpiamos la lista de asientos 
+                               $("#listado_asientos").empty();
+                               
+                               var reg = resultado.split('@'); // Obtenemos el codigo unico del pasaje
+                               var asientos_ven = reg[0].split('|');
+                               var asientos_est = reg[1].split('|');
+                               var asientos_cod = reg[2].split('|');
+                               
+                               var nro = 0;                               
+                               var asie = '';
+                               var nuevaFila = '';
+
+                               var f = 0;
+                               var estado = '';
+                               var j = 0;
+                               
+                               // se pone la conf de pasillo en un arreglo
+                               var aux = cp.split('-');
+                               
+                               var c_p = [aux[0],aux[1],'-',aux[2],aux[3]]; // se agrega el pasillo entre los asientos
+                               var cod = '';
+                               
+                               for(nro=0; nro < nro_asiento; nro++) {//recorro el los acientos nro por nro.
+                                    
+                                    // verificamos la configuracion de distribucion de asientos                                                                                                          
+                                    estado = '---'; // estado inicial de asientos
+                                    cod = '';
+                                    
+                                    if(c_p[j]=='S'){                                        
+                                        for(f=0; f <= asientos_ven.length; f++) {
+                                            // verificamos que el asiento esta comprado o vendido    
+                                            if((nro+1)==asientos_ven[f]){ 
+                                                estado = asientos_est[f]; 
+                                                cod = asientos_cod[f];
+                                                break;
+                                            }                                  
+                                        } // Fin del for                                        
+                                    }else{ 
+                                            // si entro aca es porque es un pasillo
+                                            estado = '';
+                                            cod = '';
+                                            nro = nro - 1;                                            
+                                    }
+                                    
+                                    asie = asie + dibujar_asiento(cod, nro+1, estado);// dibuja el asiento ocupado total/parcial vendido/reservado/libre o si no hay asiento
+                                     
+                                    if (j==4){
+                                        nuevaFila = nuevaFila+"<tr style='font-size: 13'>"+asie+"</tr>";
+                                        j = 0; 
+                                        asie ='';
+                                    }else{
+                                        j = j + 1;
+                                        
+                                        if (nro+1==nro_asiento){
+                                            nuevaFila = nuevaFila+"<tr style='font-size: 13'>"+asie+"</tr>";
+                                            asie = '';
+                                        }
+                                    }
+
+                                }                                       
+                                $("#listado_asientos").append(nuevaFila);
+                             }
+                    });
+            }
+            
+            function limpiar_visor_asiento(){
+                $("#sp_nro_asiento").html     ("");
+                $("#sp_dni").html             ("");
+                $("#sp_nombre_pasaje").html   ("");
+                $("#sp_fecha").html           ("");
+
+                $("#sp_localidad_pasaje_o").html("");                           
+                $("#sp_direccion_pasaje_o").html("");   
+                
+                $("#sp_localidad_pasaje_d").html("");                   
+                $("#sp_direccion_pasaje_d").html("");   
+                
+                $("#sp_telefono_pasaje").html ("");
+                $("#sp_celular_pasaje").html  ("");
+                $("#sp_coseguro_pasaje").html ("");
+                $("#sp_nro_pasaje").html      ("");
+                $("#sp_factura_pasaje").html  ("");
+                $("#sp_usuario_pasaje").html  ("");
+                $("#sp_importe_pasaje").html  (""); 
+                //$("#sp_importe_interes").html  (""); 
+                
+                $("#sp_observacion_cliente").html(""); 
+                $("#sp_importe_cooseguro").html("");
+                $('#sp_total_pasaje').html("0.00"); 
+            }
+            // Limpiamos el visor de vehiculos (Solo es de visualizacion)
+            function limpiar_visor_vehiculos(){
+                $("#sp_patente_vehiculo").html     ('');                        
+                $("#sp_nombre_vehiculo").html      ('');
+                $("#sp_modelo").html               ('');                                    
+                $("#sp_cantidad_choferes").html    ('');                                    
+                $("#sp_fecha_rev_tec").html        ('');                        
+                $("#sp_cant_asiento_vehiculo").html('');
+                $("#sp_posee_video_vehiculo").html ('');
+                
+            }
+            
+            // limpiamos el visor de listado de pasajeros (Solo es de visualizacion)
+            function limpiar_listado_pasajero(){                
+                $("#t_mostrar_listado_pasajero_cuerpo").empty();
+                $("#mostrar_cantidad_pasajes").html('0');
+                $("#total_cant_pasajes").      html('0.00');
+            }
+            
+            
+            
+            function marcar_como_seleccionado(nro_asiento){
+                // pintamos por donde pasa el mouse
+                $("#p"+nro_asiento).attr("bgcolor", $("#h_color_foco").val());
+            }
+            
+            function marcar_como_deseleccionado(nro_asiento){
+                if( $("#cb"+nro_asiento).is(':checked')){
+                    $("#p"+nro_asiento).attr("bgcolor",$("#h_color_seleccionado").val());                    
+                }else{
+                    $("#p"+nro_asiento).attr("bgcolor",'#FFFFFF');                    
+                }
+            }
+            
+            
+            //------------------------------------------------------------------
+            // Muestra la informacion del pasaje del asiento ocupado
+            // id_asiento --> codigo unico del pasaje
+            // nro_asiento --> Es el nro de asiento. Es usado solo si seleccionamos 
+            //                 el asiento y aun no se han vendido Solo visualiza el 
+            //                 nro asiento. 
+            //------------------------------------------------------------------
+            function seleccionar_asiento(id_asiento, nro_asiento){
+
+                    if (id_asiento==''){ // Si el id_asiento de null indica que es un asiento no usado.
+                        limpiar_visor_asiento();
+                        $('#sp_total_pasaje').css("background-color","ccc"); // gris
+                        $("#sp_nro_asiento").html(nro_asiento); // mostramos solo el nro de asiento en pantalla
+                    }else{
+                        // Buscamos los datos del pasaje vendidos.
+                        var parametros = {id_pasaje : id_asiento};                                              
+                        $.ajax({data: parametros,
+                               url : 'ajax_buscar_asiento.php',
+                               type: 'post',
+                               beforeSend: function () {
+                                  mensaje_con_tiempo("","Procesando, espere por favor...",1);
+                                                       },
+                               success:  function (resultado) {                                               
+                                    var asi = resultado.split("|");
+                                    
+                                    var fecha = asi[8].split("-");
+                                    var fecha2 = fecha[2]+'/'+fecha[1]+'/'+fecha[0];
+                                   
+                                    $("#sp_nro_asiento").       html(asi[09]); 
+                                    $("#sp_dni").               html( asi[04] ); 
+                                    $("#sp_nombre_pasaje").     html( asi[01] );
+                                    $("#sp_localidad_pasaje_o").html( asi[18] );   
+                                    $("#sp_direccion_pasaje_o").html( asi[02] );   
+                                    $("#sp_localidad_pasaje_d").html( asi[19] );   
+                                    $("#sp_direccion_pasaje_d").html( asi[03] );   
+                                    $("#sp_telefono_pasaje").   html( asi[05] );
+                                    $("#sp_celular_pasaje").    html( asi[11] );
+                                    $("#sp_coseguro_pasaje").   html( asi[13] );
+                                    $("#sp_nro_pasaje").        html( asi[00] );
+                                    $("#sp_factura_pasaje").    html(         );
+                                    $("#sp_usuario_pasaje").    html( asi[25] );
+                                    $("#sp_importe_pasaje").    html( asi[10] );
+//                                    $("#sp_importe_interes").    html(asi[10]);
+                                    $("#sp_fecha_pasaje").      html( fecha2 );
+                                    $("#sp_nro_viaje").         html( $('#h_id_viaje').val() );
+                                    $("#h_plataforma_salida").  val(asi[22]);
+                                    $("#sp_observacion_cliente").html(asi[7]);                                    
+                                    $('#h_pasaje_ida_y_vuelta').val(asi[23][1]);
+                                    $('#sp_importe_cooseguro').html(asi[14]);
+                                    $('#h_pasaje_reservado').val(asi[24]); // Si es pagado (V) o reservado (R)
+
+                                    $('#h_importe_deuda_pasaje').val( parseFloat(asi[14]) + parseFloat(asi[10])  ); // deuda total del pasaje
+                                    $('#sp_total_pasaje').html( parseFloat($('#h_importe_deuda_pasaje').val()).toFixed(2) );
+
+        
+        
+                                    if(asi[24]=='V'){ // si esta vendido
+                                        $('#sp_total_pasaje').css("background-color",'#2EFE2E'); // verde
+                                    }else{
+                                        if(asi[24]=='R'){ // si esta reservado 
+                                            $('#sp_total_pasaje').css("background-color","#F4FA58"); // amarillo
+                                            
+                                        }
+                                    }
+                                    
+                                    
+                               }
+                        });                
+                    }
+            }
+            //------------------------------------------------------------------
+            // Muestra el listado a la izquierda de la pantalla de todos los 
+            // pasajes de la salida seleccionada
+            //------------------------------------------------------------------
+            function mostrar_listado_pasajeros(id_viaje, ord){
+                        var color_con_ord = '#00BFFF';
+                        var color_sin_ord = '#000000';
+                        $("#olp1").css('color',color_sin_ord);
+                        $("#olp2").css('color',color_sin_ord);
+                        $("#olp3").css('color',color_sin_ord);
+                        $("#olp4").css('color',color_sin_ord);
+                        $("#olp5").css('color',color_sin_ord);
+                        
+                        switch (ord) {
+                            case 1:{ 
+                                $("#olp1").css('color',color_con_ord);
+                                break;
+                            }
+                            case 2:{ 
+                                $("#olp2").css('color',color_con_ord);break;
+                            }
+                            case 3:{ 
+                                $("#olp3").css('color',color_con_ord);break;
+                            }
+                            case 4:{ 
+                                $("#olp4").css('color',color_con_ord);break;
+                            }
+                            case 5:{ 
+                                $("#olp5").css('color',color_con_ord);break;
+                            }
+                    }
+                            
+                        
+                        if(id_viaje=='-'){ 
+                            id_viaje = $("#h_id_viaje").val();
+                        }
+                        
+                        var parametros = {
+                                        id_viaje : id_viaje,
+                                        ord : ord
+                                         };
+                        
+                        $("#t_mostrar_listado_pasajero  > tbody").empty();
+                        
+                        $.ajax({data: parametros,
+                               url : 'ajax_buscar_lista_pasajeros.php',
+                               type: 'post',
+                               
+                               success:  function (resultado) {    
+                                   
+                                    var i = 0; // cant de pasaje    
+                                    var t = '';
+                                    var pasajes = resultado.split('@');                                    
+                                    var datos = '';
+                                    var cant = 0;
+                                    var total = 0;                                    
+                                    for(i=0; i < pasajes.length-1; i++) {                                        
+                                        datos = pasajes[i].split("|");                                                                                
+                                        t = t + "<tr onClick='Mostrar_pagos_realizados("+datos[5]+");'  onmouseover='cambiar_color_over(this);' onmouseout='cambiar_color_out(this);' >";
+                                        t = t + "     <td align='Center'>"+datos[0]+"</td>";
+                                        t = t + "     <td>"+datos[1]+"</td>";
+                                        t = t + "     <td>"+datos[2]+"</td>";
+                                        t = t + "     <td>"+datos[3]+"</td>";
+                                        t = t + "     <td align='right'>$ "+datos[4]+"</td>";
+                                        t = t + "</tr>";
+                                        cant ++;
+                                        total = total + parseFloat(datos[4]);                                        
+                                    }
+                                    $("#mostrar_cantidad_pasajes").html(cant);
+                                    $("#total_cant_pasajes").      html(total.toFixed(2));
+                                    
+                                    $("#t_mostrar_listado_pasajero").append(t);    
+                               }
+                        });                
+            
+            }
+            
+            
+            
+            //------------------------------------------------------------------
+            // Muestra la informacion del pasaje del asiento ocupado
+            // id_asiento --> codigo unico del pasaje
+            //------------------------------------------------------------------
+            function mostrar_datos_vehiculos(id_viaje, id_chofer, id_guarda){
+                    if (id_viaje==''){
+                        limpiar_visor_vehiculos()
+                    }else{
+                        var parametros = {
+                                            id_viaje : id_viaje,
+                                            id_chofer: id_chofer,
+                                            id_guarda: id_guarda
+                                          };
+
+                        $.ajax({data: parametros,
+                               url : 'ajax_buscar_datos_vehiculo.php',
+                               type: 'post',
+                               beforeSend: function () {
+                                  //alert("Procesando, espere por favor...");
+                                                       },
+                               success:  function (resultado) {                                               
+                                    // patente | nombre | NRO_ASIENTOS | CANTIDAD_CHOFERES | modelo | FECHA_VENCIMIENTO_TECNICA |  CANTIDAD_CHOFERES|CHOFER|GUARDA
+                                    var asi = resultado.split("|");
+
+                                    $("#sp_patente_vehiculo").html     (asi[0]);
+                                    $("#sp_nombre_vehiculo").html      (asi[1]);
+                                    $("#sp_cant_asiento_vehiculo").html(asi[2]);
+                                    $("#sp_posee_video_vehiculo").html (asi[3]);                                                                                                
+                                    $("#sp_modelo").html               (asi[4]);                                    
+                                    $("#sp_fecha_rev_tec").html        (asi[5]);
+                                    $("#sp_cantidad_choferes").html    (asi[6]);                                    
+                                    $("#sp_choferes").html             (asi[7]); 
+                                    $("#sp_guarda").html               (asi[8]); 
+
+                               }
+
+
+                        });                
+                    }
+            }
+            
+                                                
+            //------------------------------------------------------------------
+            // Muestra la informacion de los pasajes de regreso que se 
+            // encuentran abiertos 
+            //------------------------------------------------------------------
+            function mostrar_datos_pasajes_de_vuelta(){
+                        var parametros = {
+                                          };
+
+                        $.ajax({data: parametros,
+                               url : 'ajax_cargar_pasajes_de_vuelta.php',
+                               type: 'post',
+                               beforeSend: function () {
+                                  //alert("Procesando, espere por favor...");
+                                                       },
+                               success:  function (resultado) {                                               
+                                    $("#e_pasajes_vueltas").empty(); 
+                                    $("#e_pasajes_vueltas").html(resultado); 
+
+                               }
+
+
+                        });                
+            }
+                                                
+//--------------------------------------------------------------------------------
+// concatenamos en el campo oculto la seleccion de asientos
+// ejemplo 4|5|8|9|... Esto se guarda en h_seleccion_asientos
+// Esto es realaizado para el "alta de pasaje"
+//--------------------------------------------------------------------------------
+            function agregar_asiento_al_listado(nro_asiento){
+                var aux ='';
+                var cant_asientos =  $("#h_nro_asiento").val();                
+                var i='';
+                for(i=1;i<=cant_asientos;i++){
+                    if($("#cb"+i).is(':checked'))
+                      aux = aux + i+'|';    
+                }
+                $("#h_seleccion_asientos").val(aux); 
+            }
+            
+            
+            
+//--------------------------------------------------------------------------------
+// Borramos el asiento que se esta visualizando en el visor de asiento
+//--------------------------------------------------------------------------------
+            function borrar_pasaje(){
+               if($("#sp_nombre_pasaje").html()!=''){
+                    if(confirm($("#sp_nro_pasaje").html()+"¿Segúro de eliminar el pasaje del asiento nro: "+$("#sp_nro_asiento").html()+" Perteneciente al pasajero: "+$("#sp_nombre_pasaje").html()+"?")){
+                        var parametros = {
+                                           nro_pasaje: $("#sp_nro_pasaje").html()
+                                          };
+                        
+                        $.ajax({data: parametros,
+                               url : 'ajax_borrar_asiento.php',
+                               type: 'post',
+                               success:  function (resultado) {  
+                                   alert(resultado);
+                                    if(resultado='OK'){
+                                        alert('Eliminación correcta...');
+                                    }else{
+                                        alert("Error en la eliminación...");
+                                    }
+                               }
+                        });                
+                    }            
+                }else{
+                    alert("Debe seleccionar un asiento para ser eliminado...");
+                }   
+            }
+            
+            
+//------------------------------------------------------------------------------
+// Imprime el pasaje seleccionado.
+//------------------------------------------------------------------------------
+            function imprimir_pasaje(){
+                    if($("#sp_dni").html()!=""){
+                    if(confirm("Seguro de imprimir pasaje")){
+                       var parametros = "nro_asiento="+$.base64.encode( $("#sp_nro_asiento").html())+"&"+
+                        "nombre="+$.base64.encode( $("#sp_nombre_pasaje").html())+"&"+
+                        "dni="+$.base64.encode( $("#sp_dni").html())+"&"+
+                        
+                        "loc_o="+$.base64.encode( $("#sp_localidad_pasaje_o").html())+"&"+
+                        "dir_o="+$.base64.encode( $("#sp_direccion_pasaje_o").html())+"&"+
+                        "loc_d="+$.base64.encode( $("#sp_localidad_pasaje_d").html())+"&"+
+                        "dir_d="+$.base64.encode( $("#sp_direccion_pasaje_d").html())+"&"+
+                        
+                        "telefono="+$.base64.encode( $("#sp_telefono_pasaje").html())+"&"+                       
+                        "celular="+$.base64.encode( $("#sp_celular_pasaje").html())+"&"+
+                        "coseguro="+$.base64.encode( $("#sp_coseguro_pasaje").html())+"&"+
+                        "nro_pasaje="+$.base64.encode( $("#sp_nro_pasaje").html())+"&"+
+                        "factura="+$.base64.encode( $("#sp_factura_pasaje").html())+"&"+
+                        "importe="+$.base64.encode( $("#sp_importe_pasaje").html())+"&"+
+                        "fecha_p="+$.base64.encode( $("#sp_fecha_pasaje").html())+"&"+
+                        "fecha="+$.base64.encode( $("#h_fecha_salida").val())+"&"+
+                        "hora="+$.base64.encode( $("#h_hora_salida").val())+"&"+
+                        "nro_viaje="+$.base64.encode( $("#h_id_viaje").val())+"&"+
+                        "plataforma="+$.base64.encode( $("#h_plataforma_salida").val())+"&"+
+                        "ob="+$.base64.encode( $("#sp_observacion_cliente").html())+"&"+
+                        "piv="+$.base64.encode( $("#h_pasaje_ida_y_vuelta").val());  
+                
+                    abrir_ventana('impresión del pasaje',"imprimir_pasajes.php?"+parametros,400,500);                      
+                }
+            }else{
+                mensaje_error("Error","Debe seleccionar un asiento ocupado...");
+            }
+            
+            }         
+            
+            
+            
+            //------------------------------------------------------------------
+            // Imprimimos la lista de pasajeros completa
+            //------------------------------------------------------------------
+            function imprimir_lista_pasajeros(id_viaje, ord){
+                if(confirm("¿Seguro de imprimir el listado de pasajeros?")){
+                  abrir_ventana('Listado de pasajeros',"imprimir_lista_pasajero.php?id="+$.base64.encode( id_viaje)+"&ord="+ord,400,500);  
+                }
+            }                        
+            
+</script>     
+
+
+<body>     
+    <!--
+<div id="D_general">
+    -->
+<span id="resultado">
+    <!-- Identifica el usuario que esta operando el sistema -->
+    <input name="e_usuario" type="hidden" value="{v_usuario}"/>
+   
+    <input id="h_id_vehiculo"         type="hidden" />
+    <input id="h_id_chofer"           type="hidden" />
+    <input id="h_id_guarda"           type="hidden" />
+   
+    <input id="h_id_viaje" name="h_id_viaje" type="hidden" value="{v_id_viaje}" />
+    <input id="h_nro_asiento" name="h_nro_asiento" type="hidden" value="{v_cant_asientos}" />
+    <input id="h_nro_asiento_ocupado" name="h_nro_asiento_ocupado" type="hidden" value="{v_cant_asientos_ocupados}" />
+    <input id="h_nro_asiento_reservado" name="h_nro_asiento_reservado" type="hidden" value="{v_cant_asientos_reservado}" />
+
+    <input id='conf_asiento_pb'    type="hidden"/>
+    <input id='conf_asiento_pa'    type="hidden"/>
+    <input id='conf_asiento_cpb'   type="hidden"/>
+    <input id='conf_asiento_cpa'   type="hidden"/>   
+    <input id="h_Conf_Asient_Cent_PA" type="hidden" />
+    <input id="h_conf_Asient_Cent_PB" type="hidden" />
+    <input id="h_Conf_asient_PB"      type="hidden" />
+    
+    <input id='h_seleccion_asientos' type="hidden"/>   
+    <input id='h_id_loc_origen'   type="hidden"/>   
+    <input id='h_id_loc_destino' type="hidden"/>
+    <input id='h_forma_salida' type="hidden"/>      
+    <input id='h_fecha_salida' type="hidden"/>      
+    <input id='h_hora_salida' type="hidden"/>      
+    <input id='h_plataforma_salida' type="hidden"/>     
+    <input id='h_destino' type="hidden"/>
+    <input id='h_color_foco' type="hidden" value="{v_color_foco}"/>
+    <input id="h_pasaje_ida_y_vuelta" type='hidden' value="N"/>
+    <input id='h_crear_salidas_automaticamente' type="hidden" value="{v_desicion_de_crear_salidas}"/>
+    <input id='h_color_seleccionado' type="hidden" value="{v_color_seleccionado}"/>     
+<!--    <input id="h_importe_coseguro_pasaje" type="hidden" value="{v_importe_coseguro_pasaje}"/>  -->
+    <input id="h_pasaje_reservado" type="hidden" value="{v_pasaje_reservado}"/> 
+    <input id="h_importe_deuda_pasaje" type="hidden" value="{v_importe_deuda_pasaje}"/> 
+    
+</span>
+    
+    
+<div align="center" style="z-index: 0;" id="d_principal">
+<table border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC" style="width:800">
+        <tr>
+            <td align="center" bgcolor="{v_color_cabezera_tabla}" colspan="4">
+                <font face="Arial" size="5">
+                    <b>Administrador de pasajes</b>
+                </font>	
+            </td>
+                                 
+        </tr>
+  
+        
+        <tr>
+            <td style="width: 100" colspan="4" align='center'>
+                <br>
+<!--                <div style="float:left;"> -->
+                <div style="float:left;">
+                    <div style="float:left;">
+                    Fecha:<input type="text" size="10" name='e_fecha' id="e_fecha" value="{v_fecha}"/> 
+                    <!-- <input type="image" name='i_fecha' id="i_fecha" src="imagenes/calendario.png" onclick="displayDatePicker('e_fecha', false, 'dmy', '/'); return false"/>
+                    -->
+                    Destino:<select id="cb_destino">{v_combobox_destino}</select>  
+                    
+                    </div>
+                    
+                    <div style="float: left;font-size: 11;margin: 2;width: 50px;border: 1px solid #cccccc;background-color: #ffffff;">
+                        <input type="image" id="i_buscar" src="imagenes/mostrar.gif"/>
+                        <br>Buscar
+                    </div>                                        
+                    <div style="float: left;font-size: 11;margin: 2;width: 50px;border: 1px solid #cccccc;background-color: #ffffff;">
+                        <input type="image" id="i_alta_salidas_auto" src="imagenes/agregar_auto.png"/>
+                        <br>+ Diarias
+                    </div>
+                    <div style="float: left;font-size: 11;margin: 2;width: 50px;border: 1px solid #cccccc;background-color: #ffffff;">
+                        <input type="image" id="i_alta_salidas" src="imagenes/agregar.png"/>
+                        <br>+ Salidas                            
+                    </div>
+                  </div>
+            	
+                    
+                  <div style="vertical-align: bottom; width: 200px; float:right; font-size: 11">
+                    <span id="sp_color_salida_especial" style="background:{v_color_grilla_viajes_especiales}">__</span>Viaje Especial
+                    <span id="sp_color_salida_diario"   style="background:{v_color_grilla_viajes_diario}">__</span> Viaje Diario
+                 </div>
+<!--                 </div> -->
+            	
+            </td>            
+        </tr>
+        
+        <tr>
+            <!-- ---------------------------------------------------------------
+                          Listado de Salidas por realizar                    	
+            ---------------------------------------------------------------- -->	
+            <td colspan="4" align="center">
+                
+                <div style="float: left;;width: 270px">
+                    
+                    <div style="float: left;font-size: 11;margin: 2;width: 50px;border: 1px solid #cccccc;background-color: #ffffff;">               
+                        <input TYPE="image" SRC="./imagenes/volver.jpg"         BORDER="0" name="b_volver" id="i_volver_pasaje" value="Volver" />
+                        <br>Volver
+                    </div>                                        
+                    <div style="float: left;font-size: 11;margin: 2;width: 50px;border: 1px solid #cccccc;background-color: #ffffff;">
+                        <input type="image"    id="i_seleccionar_chofer" src="imagenes/sel_chofer.jpg" /><br>Chofer
+                    </div>
+                    <div style="float: left;font-size: 11;margin: 2;width: 50px;border: 1px solid #cccccc;background-color: #ffffff;">
+                        <input type="image" id="i_seleccionar_vehiculo" src="imagenes/sel_vehiculo2.png"/><br>Vehiculos
+                    </div>
+                    <div style="float: left;font-size: 11;margin: 2;width: 80px;border: 1px solid #cccccc;background-color: #ffffff;">
+                        <input  type="image" id="i_pasaje_adelantado" src="imagenes/53232.jpg" class="osx demo"/><br>Pas. Adel.
+                    </div>
+                    
+            	</div>
+
+                <br>
+                <table id="tabla_salidas" border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC" style="width:100%">
+                    <thead> 
+                        <tr style="font-size: 13" bgcolor="{v_color_cabezera_columna}">
+                            <td> </td>
+                            <!-- <td align='Center'>Tipo Salida</td> -->
+                            <td align='Center'>Destino    </td>
+                            <td align='Center'>Fecha      </td>
+                            <td align='Center'>Hora       </td>
+                            <td align='Center'>Vehiculo   </td>
+                            <td align='Center'>C.As.      </td>
+                            <td align='Center'>C.As.Oc    </td>
+                            <td align='Center'>C.As.Re    </td>
+                            <td align='Center'>Loc.Origen </td>
+                            <td align='Center'>Loc.Destino</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+			{v_salidas}
+                    </tbody>
+                </table>
+                <br>
+            </td>
+            <!-- ---------------------------------------------------------------
+		         	Fin listado de salidas                   	
+            ------------------------------------------------------------------->
+        </tr>        
+            
+        <tr>        
+            <td align="Center" colspan="4">
+                <div style="alignment-adjust: central; width: 400px">
+                    
+                <div style="float: left;font-size: 11;margin: 2;width: 50px;border: 1px solid #cccccc;background-color: #ffffff;">
+                    <input TYPE="image" SRC="./imagenes/vender_pasajes.jpg" BORDER="0" id="i_agregar_pasaje" value="Agregar" />
+                    <br>Vender
+                </div>
+                    
+                <div style="float: left;font-size: 11;margin: 2;width: 50px;border: 1px solid #cccccc;background-color: #ffffff;">
+                    <input type="image" src="./imagenes/reservar_pasajes.jpg" value="reservar" id="i_reserva_pasaje">
+                    <br>Reservar
+                </div>
+                    
+                <div style="float: left;font-size: 11;margin: 2;width: 50px;border: 1px solid #cccccc;background-color: #ffffff;">
+                    <input type="image" src="./imagenes/utilizar_pasajes.jpg" value="utilizar" id="i_utilizar_pasaje">
+                    <br>Utilizar
+                </div>
+
+                <div style="float: left;font-size: 11;margin: 2;width: 50px;border: 1px solid #cccccc;background-color: #ffffff;">               
+                    <input type="image" align='center' src="./imagenes/pagos.jpg" id="i_pagar_pasaje">
+                    <br>Pagar
+                </div>
+                    
+                    
+                    
+                <div style="float: left;font-size: 11;margin: 2;width: 50px;border: 1px solid #cccccc;background-color: #ffffff;">
+                    <input type="image" src="./imagenes/borrar_pasajes.jpg"   value="borrar"   id="i_borrar_pasaje">
+                    <br>Borrar
+                </div>
+                <div style="float: left;font-size: 11;margin: 2;width: 50px;border: 1px solid #cccccc;background-color: #ffffff;">
+                    <input type="image" src="./imagenes/imprimir_pasajes.jpg" value="imprimir" id="i_imprimir_pasaje">
+                    <br>Pasaje
+                </div>
+                <div style="float: left;font-size: 11;margin: 2;width: 50px;border: 1px solid #cccccc;background-color: #ffffff;">               
+                    <input type="image" align='center' src="./imagenes/imprimir_pasajes.jpg" value="a1" id="i_imprimir_lista_pasajeros">
+                    <br>Lista
+                </div>                   
+                    
+                </div>
+            </td>
+        </tr>
+   
+        <tr>
+            <!-- --------------------------------------------------------------- 
+                             Listado de asientos a mostrar 
+            ---------------------------------------------------------------- -->
+            <td style="width: 10px;">
+                __
+            </td>            
+            <td valign=top>
+                <table id="listado_choferes" border="1" valign="center" align="center"  cellspacing="0" bordercolor="#DCDCDC" style="width:100%" >
+                    <tr>
+                        <td colspan="3" align='center' > Chofer <br>
+                            <input type="image" src="./imagenes/asientos2.jpg" value="a1" id="i_chofer1">
+                        </td>
+                        <td colspan="3" align="center"> Guarda <br>
+                            <input type="image" src="./imagenes/asientos2.jpg" value="a1" id="i_chofer2">
+                        </td>
+                        
+                    </tr>
+                </table>    
+                <table id="listado_asientos" border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC" style="width:100%" >
+                    
+                <!-- -----------------------------------------------------------                
+                ACA se dibujan los acientos segun la configuracion del vehiculo                
+                ---------------------------------------------------------------- -->               
+                </table>
+            </td>
+            
+            <td style="width: 10px;">
+                __
+            </td>
+            
+            <td valign=top>
+                
+                <div id="d_titulo_izquierdo" align="center" style="background:{v_color_cabezera_columna}">
+                    <h4>Detalle del Pasaje seleccionado</h4>
+                </div>
+                
+                <div id="d_mostrar_datos_pasajero">                    
+                    <table border="0"  style="width: 100%; font-size: 12">
+                        <tr                              ><td style="width: 105px; text-align: right;" >Nro Viaje:        </td><td colspan="3" >         <b><span id="sp_nro_viaje">          {v_nro_viaje}              </span> </b></td></tr>
+                        <tr                              ><td style="width: 105px; text-align: right;" >Nro asiento:      </td><td style="width: 200px"> <b><span id="sp_nro_asiento">        {v_nro_asiento}            </span> </b></td><td style="text-align: right; width: 70px;">Usuario :   </td><td><b> <span id="sp_usuario_pasaje" > {v_usuario}  </span> </b></td></tr>
+                        <tr                              ><td style="width: 105px; text-align: right;" >D.N.I.:           </td><td colspan="3">          <b><span id="sp_dni">                {v_dni}                    </span> </b></td></tr>
+                        <tr                              ><td style="width: 105px; text-align: right;" >Nombre:           </td><td colspan="3">          <b><span id="sp_nombre_pasaje">      {v_nombre_pasaje}          </span> </b></td></tr>
+                        <tr                              ><td style="width: 105px; text-align: right;" >Fecha:            </td><td style="width: 200px"> <b><span id="sp_fecha_pasaje">       {v_fecha_pasaje}           </span> </b></td><td style="text-align: right; width: 70px;">Factura :   </td><td><b> <span id="sp_factura_pasaje" > {v_factura_pasaje}  </span> </b></td></tr>                        
+                        <tr                              ><td style="width: 105px; text-align: right;" >Localidad Origen: </td><td style="width: 200px"> <b><span id="sp_localidad_pasaje_o"> {v_localidad_pasaje_o}     </span> </b></td><td style="text-align: right; width: 70px;">Teléfono:   </td><td><b> <span id="sp_telefono_pasaje"> {v_telefono_pasaje} </span> </b></td></tr>                
+                        <tr                              ><td style="width: 105px; text-align: right;" >Dirección Origen: </td><td style="width: 200px"> <b><span id="sp_direccion_pasaje_o"> {v_direccion_pasaje_o}     </span> </b></td><td style="text-align: right; width: 70px;">Celular :   </td><td><b> <span id="sp_celular_pasaje" > {v_celular_pasaje}  </span> </b></td></tr>                
+                        <tr                              ><td style="width: 105px; text-align: right;" >Localidad Destino:</td><td style="width: 200px"> <b><span id="sp_localidad_pasaje_d"> {v_localidad_pasaje_d}     </span> </b></td><td style="text-align: right; width: 70px;">Coseguro:   </td><td><b> <span id="sp_coseguro_pasaje"> {v_coseguro_pasaje} </span> </b></td></tr>                                                                                          
+                        <tr                              ><td style="width: 105px; text-align: right;" >Dirección Destino:</td><td style="width: 200px"> <b><span id="sp_direccion_pasaje_d"> {v_direccion_pasaje_d}     </span> </b></td><td style="text-align: right; width: 70px;">Nro. Pasaje:</td><td><b> <span id="sp_nro_pasaje"     > {v_nro_pasaje}      </span> </b></td></tr>                                      
+                        <tr                              ><td                                          >Observacion:      </td><td colspan="3"         > <b><span id="sp_observacion_cliente">{v_observacion_cliente}    </span> </b></td></tr>           
+                        <tr style="background-color: ccc"><td style="width: 100px; text-align: right;" >Importe:$         </td><td style="width: 200px"> <b><span id="sp_importe_pasaje">     {v_importe_pasaje}         </span> </b></td><td style="text-align: right; width: 70px;"rowspan="2" >Total: $ </td><td rowspan="2" style="text-align: right;" ><b><span id="sp_total_pasaje" style="font-size: 25; text-align: right"> {v_total_pasaje}   </span> </b></td></tr>
+                        <tr style="background-color: ccc"><td style="text-align: right;"               >Imp.Coseguro:$    </td><td style="width: 200px"> <b><span id="sp_importe_cooseguro">  {v_importe_coseguro_pasaje}</span> </b></td></tr>     
+                    </table>
+                    <br>
+                </div>
+                
+                <div id="d_titulo_izquierdo2" align="center" style="background:{v_color_cabezera_columna}">
+                    <h4>Listado de pasajeros</h4>
+                </div>
+                
+                <div id="d_mostrar_listado_pasajero" align="center">                   
+                    <table  border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC" style="width:100%" id="t_mostrar_listado_pasajero" >
+                        
+                        <thead style="background: #fffba6">
+                            <tr align="center" style="font-size: 12">
+                                <th align='Center' onclick="mostrar_listado_pasajeros('-',1);"><sp id="olp1">Nro</sp></th>
+                                <th align='Center' onclick="mostrar_listado_pasajeros('-',2);"><sp id="olp2">Nombre</sp></th>
+                                <th align='Center' onclick="mostrar_listado_pasajeros('-',3);"><sp id="olp3">Dirección</sp></th>
+                                <th align='Center' onclick="mostrar_listado_pasajeros('-',4);"><sp id="olp4">Tel</sp></th>
+                                <th align='Center' onclick="mostrar_listado_pasajeros('-',5);"><sp id="olp5">Importe</sp></th>
+                            </tr>
+                        </thead>
+                        
+                        <tbody style="font-size: 11" id="t_mostrar_listado_pasajero_cuerpo">                            
+                            <tr>
+                                <td>{v_nro_siento_cliente}</td>
+                                <td>{v_nombre_cliente}    </td>
+                                <td>{v_direccion_cliente} </td>
+                                <td>{v_tel_cliente}       </td>
+                                <td>{v_importe_cliente}   </td>                                 
+                            </tr>                       
+                        </tbody>
+                        
+                        <tfoot style="background: #fffba6">                           
+                            <tr>
+                                <td colspan="3" align="right">Cantidad: <b><span id="mostrar_cantidad_pasajes"> {v_cant_cliente}</span></b></td>
+                                <td colspan="2" align='right'>Total:$   <b><span id="total_cant_pasajes">{v_monto_total} </span></b></td>
+                            </tr>                       
+                        </tfoot>
+                        
+                    </table>     
+                    <br>
+                </div>
+                
+                <div id="d_titulo_izquierdo3" align="center" style="background: {v_color_cabezera_columna}">
+                    <h4>Datos del vehiculos</h4>
+                </div>
+                
+                <div>
+                    <table>
+                        <tr><td>Patente:       </td><td><b><span id="sp_patente_vehiculo">{v_patente_vehiculo}</span> </b></td></tr>                        
+                        <tr><td>Fecha Rev.Téc.:</td><td><b><span id="sp_fecha_rev_tec">{v_fecha_rev_tec}</span>   </b></td></tr>                        
+                        <tr><td>Cant. Asiento: </td><td><b><span id="sp_cant_asiento_vehiculo">{v_cant_asiento_vehiculo}</span>    </b></td></tr>
+                        <tr><td>Posee Video:   </td><td><b><span id="sp_posee_video_vehiculo">{v_posee_video_vehiculo}</span> </b></td></tr>
+                        <tr><td>Nombre:        </td><td><b><span id="sp_nombre_vehiculo">{v_nombre_vehiculo}</span> </b></td></tr>
+                        <tr><td>Modelo:        </td><td><b><span id="sp_modelo">{v_modelo}</span> </b></td></tr>
+                        <tr><td>Cant. Choferes:</td><td><b><span id="sp_cantidad_choferes">{v_cantidad_choferes}</span> </b></td></tr>                                       
+                    </table>
+                    <br>                    
+                </div>
+                
+                <div id="d_titulo_izquierdo3" align="center" style="background: {v_color_cabezera_columna}">
+                    <h4>Datos de los choferes</h4>
+                </div>
+                
+                <div>
+                    <table>
+                        <tr><td>Chofer:</td><td><b><span id="sp_chofer">{v_chofer}</span> </b></td></tr>                        
+                        <tr><td>Guarda:</td><td><b><span id="sp_guarda">{v_guarda}</span> </b></td></tr>                        
+                    </table>
+                    <br>                    
+                </div>                
+            </td>            
+        </tr>
+
+</table>
+</div>  
+
+<!-- ---------------------------------------------- -->
+<!-- DIV de mostrado de datos de pagos del pasaje   -->
+<!-- ---------------------------------------------- -->
+<div id="capa_forma_de_pago_del_pasaje" class='css_propio_ventana'>            
+    Pago realizado con el siguiente detalle:
+    <br>                        
+    <table  border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC" style='font-size: 13; width:100%' id="listado_pagos_de_pasajes">
+        <thead>
+            <tr>
+                <td align='Center'>Item     </td>
+                <td align='Center'>Fecha    </td>
+                <td align="left"  >Tipo pago</td>
+                <td align="right" >Interes  </td>
+                <td align="right" >Importe  </td>                                                       
+            </tr>
+        </thead>
+        <tbody id="cuerpo_lis_pag_de_pasajes">
+        </tbody>
+        
+        <tfoot>
+            <tr>
+                <td colspan="3" align="right">Total:                             </td>
+                <td align="right"            ><sp id="sp_interes_pagos">0.00</sp></td>
+                <td align="right"            ><sp id="sp_total_pagos"  >0.00</sp></td>
+            </tr>
+        </tfoot>
+    </table>
+
+</div>
+    
+
+<div id="capa_carga_pasaje"          style="display: none;" class='css_propio_ventana'></div>
+
+<div id="capa_seleccionar_vehiculos" style="display: none;" class='css_propio_ventana'></div>
+
+<div id="capa_seleccionar_chofer"    style="display: none;" class='css_propio_ventana'></div>
+
+<div id="capa_pagar_pasajes"         style="display: none;" class='css_propio_ventana'></div>
+
+
+
+<div id="capa_utilizar_pasaje" style="display: none;" class='css_propio_ventana'>        
+    Pasaje de vuelta:<select name="e_pasajes_vueltas" id="e_pasajes_vueltas">{v_comboBox_pasaje_vuelta}</select>
+    <br><br>
+    <table id="t_pasaje_vuelta"  border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC" style='font-size: 13; width:100%'>
+        <tr><td>Nro de Pasaje:    </td><td><span id="sp_pasaje_vuelta_nro_pasaje"></span></td></tr>                                             
+        <tr><td>D.N.I.:           </td><td><span id="sp_pasaje_vuelta_dni">       </span></td></tr>                                             
+        <tr><td>Apellido y nombre:</td><td><span id="sp_pasaje_vuelta_nombre">    </span></td></tr>                                             
+        <tr><td>Emitido el:       </td><td><span id="sp_pasaje_vuelta_emitido">   </span></td></tr>                                             
+        <tr><td>Vence el:         </td><td><span id="sp_pasaje_vuelta_vence">     </span></td></tr>                                             
+        <tr><td>Estado:           </td><td><span id="sp_pasaje_vuelta_estado">    </span></td></tr>                                             
+    </table>         
+</div>    
+
+
+</body>
+</html>   

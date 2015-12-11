@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+
+<html  xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>{v_titulo_proyecto}</title>
+        
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />        
+        <!-- <link type='text/css' href='css/demo.css'    rel='stylesheet' media='screen'/>        -->
+        <link type="text/css" href="css/estilos.css" rel="stylesheet" /> <!-- Estilos de la tabla -->                
+        <!-- OSX Style CSS files 
+        <link type='text/css' href='css/osx.css' rel='stylesheet' media='screen'/> -->
+        <link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />            
+        
+    </head>
+    
+<!-- ----------------------------------------------------------------------------
+                           Script para los mensajes  
+----------------------------------------------------------------------------- -->
+<script src="sweetalert-master/lib/sweet-alert.min.js"></script> 
+<link rel="stylesheet" type="text/css" href="sweetalert-master/lib/sweet-alert.css">
+<!----------------------------------------------------------------------------->
+<!-- ---------------------------------------------------------------------------
+                                  CALENDARIO 
+------------------------------------------------------------------------------->
+ <link rel="stylesheet" type="text/css" href="./css/jquery-ui.css">
+ <script src="./js/jquery.js"></script>
+ <script src="./js/jquery-ui.js"></script>
+<!----------------------------------------------------------------------------->
+
+
+<script type="text/javascript" src="./js/propias.js"></script>
+
+<script type="text/javascript">    
+    
+$(document).ready(function(){ 
+
+    $("#i_buscar_permisos" ).click(  function() { mostrar_permisos_de_usuario();});
+    $("#i_agregar_permisos").click( function() { agregar_permisos_de_usuario();});    
+    $("#i_agregar_seleccionados_permisos").click( function() { agregar_permisos_seleccionados_de_usuario(); });    
+    
+    $("#i_borrar_permisos" ).click( function()  { borrar_permisos_de_usuario(); });
+    $("#i_volver"          ).click( function()  { $(location).attr('href',"principal.php");  });
+    $("#cb_secciones"      ).change( function() {filtrar_pantallas(); });
+    $('#ch_seleccion_por_procesar').click(function (){tildar_todos_por_procesar();} );
+    $('#ch_seleccion_procesado').click(function () {tildar_todos_procesado();} );
+    
+});
+//----------------------------------------------------------------------
+// Filtramos las pantallas segun la seccion seleccionada.
+//----------------------------------------------------------------------
+        function filtrar_pantallas(){
+
+            var secciones = $("#cb_secciones :selected").val();
+            var parametros = {
+                           secciones: secciones
+                             };
+
+            $.ajax({
+                   data: parametros,
+                   url : 'ajax_cambiar_secciones_permisos_de_usuario.php',
+                   type: 'post',
+
+                   error: function (resultado){
+                       mensaje_error("ABM Permisos",'Error en el procesamiento de la rutina ajax_cambiar_secciones_permisos_de_usuario.php');
+                                              },                                                                           
+
+                    success: function (resultado){
+                        debugger;
+                        $("#cb_pantallas").empty();
+                        $("#cb_pantallas").html(resultado);
+                    }                           
+            });                       
+        }
+
+
+
+//----------------------------------------------------------------------
+// Recorre todos los checkbox de la primera grilla y los marca como  
+// checked = True o false
+//----------------------------------------------------------------------       
+        function tildar_todos_por_procesar() {         
+            var estado = $('#ch_seleccion_por_procesar').prop("checked");
+            $(".por_procesar").prop("checked", estado);
+        }                        
+
+//----------------------------------------------------------------------
+// Recorre todos los checkbox de la primera grilla y los marca como  
+// checked = True o false
+//----------------------------------------------------------------------       
+        function tildar_todos_procesado() {         
+            var estado = $('#ch_seleccion_procesado').prop("checked");
+            $(".procesado").prop("checked", estado);
+        }
+//------------------------------------------------------------------------------
+// BORRAR permisos que aun no posee el usuario.
+// Entrada: codigo unico del usuario, secciones, Pantallas.
+//------------------------------------------------------------------------------
+        function borrar_permisos_de_usuario(){
+                    debugger;
+                    var fila2 = '';
+                    
+                    // recorremos la tabla de cuerpo_listado_permisos para generar un vector con los datos a guaradar en la tabla.
+                    $(".procesado").each(function(){
+                        if ($(this).is(':checked')){
+                            if (fila2==''){
+                                fila2 = $(this).val();                                 
+                            }else{
+                                fila2 = fila2+", "+ $(this).val();                                 
+                            }
+                        }                            
+                    });        
+                                    
+                    var parametros = {
+                                   id       : $("#cb_usuarios :selected").val(),
+                                   // secciones: $("#cb_secciones :selected").val(),
+                                   // pantallas: $("#cb_pantallas :selected").val()
+                                   s_p      : fila2 // contine id_seccion-id_pantalla, id_seccion-id_pantalla, ...
+                                     };        
+                                     
+                    $.ajax({
+                           data: parametros,
+                           url : 'ajax_borrar_permisos_de_usuario.php',
+                           type: 'post',
+                           
+                           beforeSend: function () {
+                                                   },
+                                                  
+                           error: function (resultado){
+                               mensaje_error("ABM Permisos",'Error en el procesamiento de la rutina ajax_insertar_permisos_de_usuario.php');
+                                                      },                                                                           
+                                                       
+                            success: function (resultado){
+                                //debugger;
+                               // alert(resultado);
+                                mensaje('ABM - Permisos', resultado);
+                                mostrar_permisos_de_usuario();                                
+                                
+                            }                           
+                    });          
+        }
+
+
+//------------------------------------------------------------------------------
+// AGREGAR permisos que aun posee el usuario y que estan seleccionados.
+// Entrada: codigo unico del usuario, secciones, Pantallas.
+//------------------------------------------------------------------------------
+      function agregar_permisos_seleccionados_de_usuario(){
+                    var fila2 = '';
+                    // recorremos la tabla de cuerpo_listado_permisos para generar un vector con los datos a guaradar en la tabla.
+                    $(".por_procesar").each(function(){
+                        if ($(this).is(':checked')){
+                            if (fila2==''){
+                                fila2 = $(this).val();                                 
+                            }else{
+                                fila2 = fila2+", "+ $(this).val();                                 
+                            }
+                        }                            
+                    });        
+                                                                                             
+                    var parametros = {
+                                   id    : $("#cb_usuarios :selected").val(),
+                                   datos : fila2  
+                                   
+                                     };
+                                     
+                    $.ajax({
+                           data: parametros,
+                           url : 'ajax_agregar_seleccion_permisos_de_usuario.php',
+                           type: 'post',
+                           
+                           beforeSend: function () {
+                                                   },
+                                                  
+                           error: function (resultado){
+                               mensaje_error("ABM Permisos",'Error en el procesamiento de la rutina ajax_agregar_permisos_de_usuario.php');
+                                                      },                                                                           
+                                                       
+                            success: function (resultado){
+                                //alert(resultado);
+                                mostrar_permisos_de_usuario();                                
+                                mensaje('ABM - Permisos', resultado);
+                            }                           
+                    });          
+        }
+
+
+
+
+//------------------------------------------------------------------------------
+// AGREGAR permisos que aun posee el usuario.
+// Entrada: codigo unico del usuario, secciones, Pantallas.
+//------------------------------------------------------------------------------
+      function agregar_permisos_de_usuario(){
+
+
+/*                    var fila2 = '';
+                    // recorremos la tabla de cuerpo_listado_permisos para generar un vector con los datos a guaradar en la tabla.
+                    $('#cuerpo_listado_permisos_a_asignar tr').each(function(){ //filas con clase 'dato', especifica una clase, asi no tomas el nombre de las columnas
+                            fila2 = fila2+", "+ $(this).find('td').eq(2).html();  //numero de la celda 3
+                            //pagos.push(fila2);   
+                    });
+  */                  
+                    debugger;    
+                    
+                    var parametros = {
+                                   id       : $("#cb_usuarios :selected").val(),
+                                   secciones: $("#cb_secciones :selected").val(),
+                                   pantallas: $("#cb_pantallas :selected").val(),
+                                   l_s: $("#h_listado_secciones").val(),
+                                   l_p: $("#h_listado_pantallas").val()
+                                   
+                                     };
+                                     
+                    $.ajax({
+                           data: parametros,
+                           url : 'ajax_agregar_permisos_de_usuario.php',
+                           type: 'post',
+                           
+                           beforeSend: function () {
+                                                   },
+                                                  
+                           error: function (resultado){
+                               mensaje_error("ABM Permisos",'Error en el procesamiento de la rutina ajax_agregar_permisos_de_usuario.php');
+                                                      },                                                                           
+                                                       
+                            success: function (resultado){
+                                //alert(resultado);
+                                mostrar_permisos_de_usuario();                                
+                                mensaje('ABM - Permisos', resultado);
+                            }                           
+                    });          
+        }
+
+
+//------------------------------------------------------------------------------
+// Muestra listado de permisos que posee un usuario.
+// Entrada: codigo unico del usuario.
+//------------------------------------------------------------------------------
+        function mostrar_permisos_de_usuario(){
+            if($("#cb_usuarios :selected").val()>-1){
+                debugger;
+                    var parametros = {
+                                   id : $("#cb_usuarios :selected").val()
+                                     };                                                   
+                                     
+                    $.ajax({
+                           data: parametros,
+                           url : 'ajax_buscar_permisos_a_asignar.php',
+                           type: 'post',                           
+                           error: function (resultado){
+                               mensaje_error("ABM Permisos",'Error en el procesamiento de la rutina ajax_buscar_permisos_de_usuario.php');
+                                                      },                                                                                                                                  
+                            success: function (resultado){
+                                debugger; // 2
+                               // resultado = Icono | Codigo | Etiquet | Hint | Seccion @
+                                    $("#cuerpo_listado_permisos_a_asignar").empty();
+                                    var reg    = resultado.split('@');                                    
+                                    var nuevaFila = '';
+                                    var i = 0;
+                                    while (i < reg.length -1) {
+                                        var subreg = reg[i].split('|');                                                                               
+                                        var item = i + 1;
+                                        // Creamos la fila con a insertar en la tabla 
+                                        nuevaFila = nuevaFila +"<tr style='font-size: 13;' onmouseover='cambiar_color_over(this);' onmouseout='cambiar_color_out(this);'    >";
+                                        nuevaFila = nuevaFila +"<td align='Center'>       "+item+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='Center'><img src='"+subreg[0]+"' width='24px' height='24px' id='"+item+"' />       </td>";
+                                        nuevaFila = nuevaFila +"<td align='left'>"+subreg[ 5]+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='left'>"+subreg[ 4]+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='left'>"+subreg[ 2]+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='left'>"+subreg[ 3]+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='center'><input id='"+subreg[ 5]+"' value='"+subreg[ 5]+"' class='por_procesar'  type='checkbox' name='check2'></td>";
+                                        nuevaFila = nuevaFila +"</tr>";
+                                        i++; 
+                                    }                                    
+                                    $("#cantidad_a_procesar").html(i);
+                                    $("#cuerpo_listado_permisos_a_asignar").append(nuevaFila);
+                            }                           
+                    });             
+            
+            
+                    //----------------------------------------------------------
+                    
+                    //----------------------------------------------------------                   
+                    $.ajax({
+                           data: parametros,
+                           url : 'ajax_buscar_permisos_de_usuario.php',
+                           type: 'post',                                                  
+                           error: function (resultado){
+                               mensaje_error("ABM Permisos",'Error en el procesamiento de la rutina ajax_buscar_permisos_de_usuario.php');
+                                                      },                                                                                                                                 
+                            success: function (resultado){
+                                debugger;
+                               // resultado = Icono | Codigo | Etiquet | Hint | Seccion @
+                                    $("#cuerpo_listado_permisos").empty();
+                                    var reg    = resultado.split('@');                                    
+                                    var nuevaFila = '';
+                                    var i = 0;
+                                    while (i < reg.length -1) {
+                                        var subreg = reg[i].split('|');                                                                               
+                                        var item = i + 1;
+                                        // Creamos la fila con a insertar en la tabla 
+                                        nuevaFila = nuevaFila +"<tr style='font-size: 13;'  onmouseover='cambiar_color_over(this);' onmouseout='cambiar_color_out(this);'  >";
+                                        nuevaFila = nuevaFila +"<td align='Center'>       "+item+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='Center'><img src='"+subreg[0]+"' width='24px' height='24px' id='"+item+"' />       </td>";
+                                        nuevaFila = nuevaFila +"<td align='left'>"+subreg[ 5]+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='left'>"+subreg[ 4]+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='left'>"+subreg[ 2]+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='left'>"+subreg[ 3]+"</td>";
+                                        nuevaFila = nuevaFila +"<td align='center'><input id='"+subreg[ 5]+"' value='"+subreg[ 5]+"' class='procesado'  type='checkbox' name='check1'></td>";
+                                        nuevaFila = nuevaFila +"</tr>";
+                                        i++; 
+                                    }                                    
+                                    $("#cantidad_procesado").html(i);
+                                    $("#cuerpo_listado_permisos").append(nuevaFila);
+                            }                           
+                    });                             
+                    
+            }else{
+                alert("Debe seleccionar un usuario...");
+            }            
+        }
+
+</script>      
+    
+    
+    
+    <body background="{v_imagen_fondo}">
+        
+        <input type="hidden" id="h_listado_secciones" value="{v_listado_secciones}"> <!-- Listado completo de los codigos de las secciones ej: 1,2,3,4,..-->
+        <input type="hidden" id="h_listado_pantallas" value="{v_listado_pantallas}"> <!-- Listado completo de los codigos de las pantallas ej: 1,2,3,4,..-->
+        <input type="hidden" id="h_seleccion_item" value="">                         <!-- cadena de id_seccion-id_pantalla, que se han tildado..-->
+        
+        <div align="center">
+
+            <table border="0">
+                <tr><td colspan="3" align="center" style=" width: 100%;  background: {v_color}"><b>Filtros</b></td></tr>
+                <tr>
+                    <td rowspan="6" align="center">
+                        <image  width="178" height="145" src="./imagenes/configuracion_permisos.jpg"/>            
+                    </td>                    
+                    <td>Usuario:   </td><td><select id="cb_usuarios"    >{v_combobox_usuarios}  </select>   </td> </tr>
+                    <td>Selección: </td><td><select id="cb_secciones" >{v_combobox_secciones} </select>   </td> </tr>
+                    <td>Pantalla:   </td><td><select id="cb_pantallas"   >{v_combobox_pantallas} </select>   </td> </tr>
+                
+                <tr><td colspan="3" style="height: 50; background: {v_color}" ></td>                               </tr>
+                <tr>
+                    <td colspan="4" style="alignment-adjust: central">
+<!-- ---------------------------------------------------------------------------                        
+---- BOTONERA de MANDO ---------------------------------------------------------
+---------------------------------------------------------------------------- -->
+                        <div align="center" style="width: 400px; alignment-adjust: central; alignment-baseline: central;">
+                            
+                            <div style="float: left;font-size: 10;margin: 0 auto;width: 50px; height: 50px; border: 1px solid #cccccc;background-color: #ffffff;">
+                                <input style="alignment-adjust: central" width="24" height="24" type="image" src="./imagenes/volver.jpg" value="volver" id="i_volver">
+                                <br>Volver
+                            </div>
+
+                            <div style="float: left;font-size: 10;margin: 0 auto;width: 50px; height: 50px; border: 1px solid #cccccc;background-color: #ffffff;">
+                                <input TYPE="image" SRC="./imagenes/busqueda.png" width="24" height="24"  BORDER="0" id="i_buscar_permisos" value="Buscar" />
+                                <br>Buscar
+                            </div>
+
+                            <div style="float: left;font-size: 10;margin: 0 auto;width: 50px; height: 50px; alignment-adjust: central; border: 1px solid #cccccc;background-color: #ffffff;">
+                                <input type="image" src="./imagenes/agregar.png" width="24" height="24" value="agregar" id="i_agregar_permisos">
+                                <br>Agregar Todos
+                            </div>
+                            
+                            <div style="float: left;font-size: 10;margin: 0 auto;width: 50px; height: 50px; alignment-adjust: central; border: 1px solid #cccccc;background-color: #ffffff;">
+                                <input type="image" src="./imagenes/agregar_encomienda2.png" width="24" height="24" value="agregar" id="i_agregar_seleccionados_permisos">
+                                <br>Agregar selec.
+                            </div>
+                            
+                            <div style="float: left;font-size: 10;margin: 0 auto;width: 50px; height: 50px; alignment-adjust: central; border: 1px solid #cccccc;background-color: #ffffff;">
+                                <input type="image" width="24" height="24" src="./imagenes/eliminar.png" value="borrar" id="i_borrar_permisos">
+                                <br>Borrar
+                            </div>
+                            
+                        </div>
+<!-- fin de la botonera -------------------------------------------------------
+---------------------------------------------------------------------------- -->
+                    </td>
+                </tr>
+                
+            </table>                            
+            <div id="d_permisos_sin_asignados" align="center" style="width:100%; height:300px; overflow: scroll;">
+                <table id="permisos_a_otorgar"   border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC" style='font-size: 10; width:100%'>
+                    <thead1>       
+                        <tr>
+                            <td colspan="2">Cantidad:<span id="cantidad_a_procesar">0</span></td>
+                            <td colspan="5" align="center" style="background: {v_color}"><b>Permisos a Asignar</b></td>
+                        </tr>                    
+
+                        <tr>
+                            <td                             >Item    </td>
+                            <td                             >icono   </td>
+                            <td                             >Codigo  </td>
+                            <td                             >Sección </td>
+                            <td                             >Pantalla</td>
+                            <td                             >Detalles</td>
+                            <td align="center" bgcolor='red'><input type="checkbox" class="por_procesar"  id="ch_seleccion_por_procesar" value="-1" /></td>
+                        </tr>
+                    </thead>
+
+                    <tbody id="cuerpo_listado_permisos_a_asignar"   border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC" style='font-size: 10; width:100%'>
+                        <tr>
+                            <td>{v_item} </td>
+                            <td><img src="{v_icono}" width="24px" height="24px" id="{v_seccion}-{v_pantalla}" /> </td>
+                            <td>{v_Sección} </td>
+                            <td>{v_Pantalla}</td>
+                            <td>{v_Detalles}</td>
+                            <td></td>
+                        </tr>
+                    </tbody>                            
+                </table>
+            </div>
+            <div id="d_permisos_asignados" align="center" style="width:100%; height:300px; overflow: scroll;">
+                <table id="permisos_otorgados"   border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC" style='font-size: 10; width:100%'>
+                    <thead1>       
+                        <tr>
+                            <td colspan="2">Cantidad:<span id="cantidad_procesado">0</span></td>                            
+                            <td colspan="5" align="center" style="background: {v_color}"><b>Permisos Asignados</b></td>
+                        </tr>                    
+
+                        <tr>
+                            <td                             >Item    </td>
+                            <td                             >icono   </td>
+                            <td                             >Codigo  </td>
+                            <td                             >Sección </td>
+                            <td                             >Pantalla</td>
+                            <td                             >Detalles</td>
+                            <td align="center" bgcolor='red'><input type="checkbox" class="procesado"  id="ch_seleccion_procesado" value="-1" /></td>
+                        </tr>
+                    </thead>
+
+                    <tbody id="cuerpo_listado_permisos"   border="1"  align="center" cellspacing="0" bordercolor="#DCDCDC" style='font-size: 10; width:100%'>
+                        <tr>
+                            <td>{v_item} </td>
+                            <td><img src="{v_icono}" width="24px" height="24px" id="{v_seccion}-{v_pantalla}" /> </td>
+                            <td>{v_Sección} </td>
+                            <td>{v_Pantalla}</td>
+                            <td>{v_Detalles}</td>
+                            <td></td>
+                        </tr>
+                    </tbody>                            
+                </table>
+            </div>
+        </div>
+    </body>
+</html>

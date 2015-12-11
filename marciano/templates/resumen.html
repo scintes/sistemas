@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Resumen de encomienda</title>
+</head>
+
+<LINK rel="stylesheet" type="text/css" href="css/estilos.css" /> <!-- Estilos de la tabla -->	
+<link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />            
+
+<script type="text/javascript" src="./js/jquery-1.3.2.js">
+</script>
+<script type="text/javascript">   
+		//------------------------------------------------------------------
+		//
+		// Asociamos las funciones a las acciones de los componentes
+		//
+		//------------------------------------------------------------------
+		$(document).ready(function(){    
+    		$("#e_ejecutar").click(function(){
+    				buscar_clientes();
+    		});
+    		            
+		});
+    	//-----------------------------------------------------------------------------
+    	// Realiza la busqueda de clientes de lo escrito en el edit de busqueda por sql	
+		function buscar_clientes(){                       
+				             
+			/*	var parametros = {fd:$("#e_fecha_desde").val(),
+                				  fh:$("#e_fecha_hasta").val(),
+                				  comi:$("#e_comisionista").val()};
+                					                
+				$.post("buscar_resumen_encomienda.php", parametros ,function(resultado) {
+  						//alert( resultado );
+  						$("#e_resumen_titulo").html('hola esto es un ejemplo');
+  						$("#e_resumen_tabla").html(resultado);
+					})
+  				.done(function() {
+    					alert( "second success" );
+  					})
+  				.fail(function() {
+    					alert( "error" );
+  					})
+  				.always(function() {
+    					alert( "finished" );
+					});                					                
+              */  					                
+        //         window.location = "buscar_resumen_encomienda.php?&fd="+$("#e_fecha_desde").val()+"&fh="+$("#e_fecha_hasta").val()+"&comi="+$("#e_comisionista").val();					                
+				 //jQuery.post(“buscar_resumen_encomienda.php”, parametros, function(respuesta){ $("#e_resumen_tabla").html(respuesta); });
+				 
+				 document.buscador_informes.submit();  
+				 
+        };
+      
+
+                
+</script>
+   	
+	
+
+
+<body>
+<form name="buscador_informes" action="buscar_resumen_encomienda.php" method="post">
+<table border="1" align="center" cellspacing="0">
+    <tr>
+		<td height="20" colspan="2" scope="col">
+			<div align="center">
+				Resumenes de encomiendas
+			</div>
+		</td>
+	
+		<td width="80" height="20" colspan="5"  scope="col">
+            <div align="center" class="style7">Sucursal</div>
+		</td>  
+ 
+ 
+    </tr>
+    <tr>
+    	<td rowspan="6" align="center" valign="middle"  scope="col">
+			<p class="style13"><img src="./imagenes/tildar2.jpg" width="142" height="88" alt="encomienda"></p>
+        </td>
+ 
+		<td width="731" height="20" rowspan=6 scope="col">
+                    Fecha Desde:
+                    <input name="fd" type="text" id="e_fecha_desde"  value="{v_b_fecha_desde}" size="10">
+                    <input name="fecha_desde" type="image" src="./imagenes/calendario.png" border="0"  id="fecha_desde"  value="Desde" onclick="displayDatePicker('e_fecha_desde', false, 'dmy','/'); return false">
+                    Hasta:          	
+                    <input name="fh" type="text" id="e_fecha_hasta" value="{v_b_fecha_hasta}" size="10">
+                    <input name="fecha_hasta" type="image" src="./imagenes/calendario.png" border="0"  id="fecha_hasta"  value="Hasta" onclick="displayDatePicker('e_fecha_hasta', false, 'dmy','/'); return false">  
+                    Tipo resumen:
+                    <!-- <input name="e_comicionista" type="text" id="e_comicionista"  value="{v_b_comicionista}" size="30"> -->
+                    <select name="comi" id="e_comisionista">
+                            {v_comboBox_comisionista}
+                    </select>
+                    <input type="image" src="./imagenes/ejecutar.jpg" name="e_ejecutar" id="e_ejecutar" />
+                   
+        </td>    
+	
+		<td height="20" colspan="5" scope="col">
+			<div align="center" class="style9">{v_sucursal}</div>
+		</td>  
+    </tr>  
+    <tr>
+        <td height="3" colspan="5"  scope="col">
+            <div align="center" class="style7">Vendedor</div>
+		</td>  
+    </tr>  
+    <tr>
+        <td height="1" colspan="5" scope="col">
+            <div align="center" class="style9">{v_vendedor}</div>
+        </td>  
+    </tr>  
+    <tr>
+        <td height="0" colspan="5" valign="top"  scope="col">
+		<div align="center" class="style7">Total ($) </div>
+		</td>  
+    </tr>  
+    <tr>
+        <td height="1" colspan="5" scope="col">
+            <div align="center" class="style9">{v_total_ctacte}</div>
+		</td>  
+    </tr>  
+    <tr>
+        <td height="11" colspan="5" scope="col">
+            <div align="center" class="style7">Cant Reg.:{v_cant_reg} </div>
+        </td>
+        
+    </tr>
+<!--	<tr>
+  		<td height="28" colspan="6" scope="col">
+  			<div align="center" id="resultados">
+  			
+  			<table id="e_detalle">
+  				<tr>
+  					<td><span id="e_resumen_titulo"> </span></td>
+  				</tr>
+  				<tr>
+  					<td><span id="e_resumen_tabla">{v_resumen_tabla}</td>
+  				</tr>	
+  			</table>
+  			
+  			</div>
+  		</td> 
+	</tr>-->
+</table>
+</form>
+</body>
+</html>
+

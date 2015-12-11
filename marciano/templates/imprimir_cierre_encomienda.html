@@ -1,0 +1,398 @@
+<!-- -------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Objetivo: Listar las encomiendas que se deben dar como entregadas y las que ya se entregaron
+Funcionalidad: Esta pantalla tiene como dato de entrada los datos cargados en las siguientes tablas.
+    Tablas: encomiendas -> Registro de encomiendas. 
+            detalle_encomiendas -> Esta tabla contiene los detalles de encomiendas como tipo, cantidad, etc.  
+            pagos -> Referencia a esta tabla para saber los pagos realizados a cada encomeindas.
+            tipo de encomiendas -> Referencia a los tipos de encomeindas que maneja la empresa.
+            La funcion de esta pantalla es marcar las encomiendas como entregadas. Para ellos cambiamos dos campos:
+            encomienda->entregada = 'S' y encomienda->estado = 'ENTREGADA'
+Salida de la pantalla
+            Las salidas de esta pantalla es un listado de las encomiendas por imprimir o no.
+--------------------------------------------------------------------------------
+---------------------------------------------------------------------------- -->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+    <title>Listado de Encomiendas...</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />            
+
+    </head>
+    <body>   
+    <FONT FACE="Arial">
+        <table  border="0" align="center" cellspacing="0" bordercolor="#DCDCDC" >
+            <tr>
+                <td>
+                            <table border="0">
+                                <tr>
+                                    <td>
+                                        <img type="image"  src="{v_path_logo}" id="logo" width="60" height="60" />                                   
+                                    </td>
+                                    <td align="left">
+                                        <span><FONT SIZE=6><b>{v_razon_social}</b></FONT></span><br>
+                                        <span><FONT SIZE=2><b>{v_direc_razon_social}</b></FONT></span><br>
+                                        <span><FONT SIZE=2><b>{v_tel_razon_social}</b></FONT></span>                                    
+                                    </td>
+                                </tr>
+                            </table> 
+                </td>	
+            </tr>
+
+            <tr>
+                <td style="border: cornflowerblue" align="left">
+                    
+                    
+                    <table border="0" width="100%">
+                        <tr>
+                            <td align="left"  >
+                                Fecha:<b>{v_fecha}</b>
+                            </td>
+                            <td align="center" >
+                                Sucursal:<b>{v_sucursal}</b>
+                            </td>
+                            <td align="right">
+                                Usuario:<b>{v_vendedor}</b>
+                            </td>
+                       </tr>
+                    </table>   
+                    
+                </td>
+            </tr>
+            <!-- --------------------------------------------------------------------------- -->
+            <tr>   
+                <td colspan="3">        
+                    <!-- 
+                    *******************************************************************************
+                    **   Tablas de listados de encomiendas a marcar como entregada               **
+                    **                                                                           **
+                    **                                                                           **
+                    *****************************************************************************-->
+                    <table id="tabla_encomiendas_sin_procesar" style="display:{v_mostrar_sin_procesados}" border="1"  cellpadding="0" cellspacing="0" bordercolor="#DCDCDC" >
+                        <tr>    
+                            <td align="center" colspan="14" >
+                                <br><b>Encomiendas SIN procesar... </b>
+                            </td>    
+                        </tr>  
+                        <tr>
+                            <td align="center" >Nro. Guia     </td>
+                            <td align="center" >Fecha         </td>
+                            <td align="center"  >Remitente    </td>
+                            <td align="center"  >Destinatario </td>
+                            <td align="center"  >Tipo         </td>
+                            <td align="center"  >Prioridad    </td>
+                            <td align="center"  >Fecha entrega</td>
+                            <td align="center"  >Comisionista </td>
+                            <td align="center"  >Estado       </td>
+                            <td align="center"  >Vendedor     </td>
+                            <td align="center"  >Precio       </td>
+                            <td >                             </td>
+                        </tr>  
+
+                        <!-- BEGIN imprimir_listadoencomiendas -->  
+                        <tr height="0px" style="font-size: 11px; background:{v_color_fila}">   
+                            <td align="center">{v_nro_operacion}</td>
+                            <td align="center"> {v_fecha_op}</td>
+                            <td  width="10%" align="left" valign="middle">{v_remitente}</td>
+                            <td  width="10%" align="left" valign="middle">{v_destinatario}</td>
+                            <td align="center">{v_tipo_encomienda}</td>  
+                            <td align="center">{v_prioridad}</td>
+                            <td align="center">{v_fecha_entregal}</td>
+                            <td align="center">{v_comisionista}</td>
+                            <td align="center">{v_estado}</td>
+                            <td align="center">{v_personal}</td>
+                            <td align="right"><strong>$ </strong>{v_precio}</td>
+                        </tr>
+                        <!-- END imprimir_listadoencomiendas -->
+                        <tr>
+                            <td colspan="13">
+                                <table>
+                                    <tr>
+                                        <td align="left" >
+                                            <!--        <input type="text"  name="color_fila_pago_destino" disabled='true' style="width: 15px; background:{v_color_fila_pago_destino}" /> Pagos en destino   -->
+                                            <span  name="color_fila_pago_destino" style="background:{v_color_fila_pago_destino}"></span> Pagos en destino
+                                        </td>
+                                        <td align="right">
+                                            Cantidad de registro NO procesados:<b>{v_cant_reg}</b>  
+                                        </td>                                
+                                    </tr>
+
+                                </table>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="4" align="center">
+                                <br>
+                                <table height="0px" style="font-size: 11px" border="1" cellpadding="0" cellspacing="0">
+                                    <tr align="center">
+                                        <td colspan="3">
+                                            <B>SEGURO y CONTRARREMBOLSO</B>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>Total imp. SEGURO:</td>
+                                        <td></td>
+                                        <td align="right"><b>$ {v_total_seguro}</b></td>                                     
+                                    </tr>
+                                    <tr>
+                                        <td>Total imp. SEGURO en cobro destino:</td>
+                                        <td></td>
+                                        <td align="right"><b>$ {v_total_seguro_cobro_destino}</b></td>                                     
+                                    </tr>
+                                    <tr>
+                                        <td>Total imp. CONTRA-REEMBOLSO:</td>
+                                        <td align="right"><b>$ {v_total_importe_contrareembolso}</b></td>                                     
+                                        <td></td>
+
+                                    </tr>
+                                    <tr>
+                                        <td>Total comision CONTRA-REEMBOLSO:</td>
+                                        <td align="right"><b>$ {v_total_comision_contrareembolso}</b></td>                                     
+                                        <td></td>
+                                    </tr>
+                                    <tr >
+                                        <td>Total:</td>
+                                        <td align="right"><b>$ {v_total1_1}</b></td>
+                                        <td align="right"><b>$ {v_total1_2}</b></td>
+                                    </tr>
+                                </table>
+                                <br>
+                            </td>
+                            <td colspan="4" align="center">
+
+                                <table height="0px" style="font-size: 11px" border="1" cellpadding="0" cellspacing="0">
+                                    <tr align="center">
+                                        <td colspan="3" >
+                                            <B>COMISIONES</B>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total comisión comisionista:</td>
+                                        <td></td>
+                                        <td align="right"><b>$ {v_total_comisiones_comisionista}</b></td>                                     
+                                    </tr>                                  
+                                    <tr>
+                                        <td>Total comisión en cobro destino:</td>
+                                        <td align="right"><b>$ {v_total_comisiones_comisionista_cobro_destino}</b></td>                                     
+                                        <td></td>
+                                    </tr>                                  
+                                    <tr>
+                                        <td>Total comisión sucursal:</td>
+                                        <td></td>
+                                        <td align="right"><b>$ {v_total_comisiones_sucursal}</b></td>                                     
+                                    </tr>                                  
+                                    <tr>
+                                        <td>Total comisión sucursal en cobro destino:</td>
+                                        <td align="right"><b>$ {v_total_comisiones_sucursal_cobro_destino}</b></td>                                     
+                                        <td></td>                                      
+                                    </tr>                                                                 
+                                    <tr >
+                                        <td>
+                                            Total:
+                                        </td>
+                                        <td align="right">
+                                            <b>$ {v_total2_1}</b> 
+                                        </td>
+                                        <td align="right">
+                                            <b>$ {v_total2_2}</b> 
+                                        </td>
+                                    </tr>
+                                </table>                              
+                            </td>
+                            <td colspan="5" align="center">
+
+                                <table height="0px" style="font-size: 11px" border="1" cellpadding="0" cellspacing="0">
+                                    <tr align="center">
+                                        <td colspan="2" >
+                                            <B>TOTAL NETO</B>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total:</td>
+                                        <td align="right"><b>$ {v_total_procesados}</b></td>                                     
+                                    </tr>                                  
+                                    <tr>
+                                        <td>Total cobro en destino:</td>
+                                        <td align="right"><b>$ {v_total_procesados_cobro_destino}</b></td>                                     
+                                    </tr>   
+                                    <tr >
+                                        <td>
+                                            Total:
+                                        </td>
+                                        <td align="right">
+                                            <b>$ {v_total3}</b> 
+                                        </td>                                      
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>          
+            </tr>
+
+            <!--
+            //----------------------------------------------------------
+            //
+            //
+            //
+            //
+            //----------------------------------------------------------
+            -->
+            <tr>
+                <td colspan="3">
+                    <table id="tabla_encomiendas_procesadas" style="display: {v_mostrar_procesados}" border="1"  cellpadding="0" cellspacing="0" bordercolor="#DCDCDC" >
+                        <tr>    
+                            <td align="center" colspan="13">
+                                <br>
+                                <b>Encomiendas Procesadas.. </b>
+                            </td>    
+                        </tr> 
+                        <tr >
+                            <td align="center"  >Nro. Guia </td>
+                            <td align="center"  >Fecha . </td>
+                            <td align="center"  >Remitente</td>
+                            <td align="center"  >Destinatario</td>
+                            <td  align="center"  >Tipo</td>
+                            <td  align="center"  >Prioridad</td>
+                            <td  align="center"  >Fecha entrega</td>
+                            <td  align="center"  >Comisionista</td>
+                            <td  align="center"  >Estado</td>
+                            <td  align="center"  >Vendedor</td>
+                            <td  align="center"  >Precio</td>
+                        </tr>  
+
+                        <!-- BEGIN imprimir_listadoencomiendas_procesadas -->  
+                        <tr height="0px" style="font-size: 11px" >                               
+                            <td align="center" >{v_nro_operacion}</td>
+                            <td>{v_fecha_op}</td>
+                            <td  width="10%" align="left" valign="middle"  >{v_remitente}</td>
+                            <td  width="10%" align="left" valign="middle"  >{v_destinatario}</td>
+                            <td align="center">{v_tipo_encomienda}</td>  
+                            <td align="center">{v_prioridad}</td>
+                            <td align="center">{v_fecha_entregal}</td>
+                            <td align="center">{v_comisionista}</td>
+                            <td align="center">{v_estado}</td>
+                            <td align="center">{v_personal}</td>
+                            <td align="right">$ {v_precio}</td>                            
+                        </tr>
+
+                        <!-- END imprimir_listadoencomiendas_procesadas -->
+
+                        <tr >
+                            <td colspan="11">
+                                <table >
+                                    <tr>
+                                        <td align="left" >
+                                            <!-- <input name="color_fila_pago_destino"  style="width: 15px; background:{v_color_fila_pago_destino}"> Pagos en destino 
+                                            <span  name="color_fila_pago_destino" style="background:{v_color_fila_pago_destino}">__</span> Pagos en destino -->
+
+                                        </td>
+                                        <td  align="right">
+                                            Cantidad de registro procesados: <b>{v_cant_reg_procesados}</b>  
+                                        </td>                                
+                                    </tr>
+
+                                </table>
+                            </td>
+                        </tr>
+                        
+                        
+                        
+                        <tr>
+                            <td colspan="4" align="center">
+                                <br>
+                                <table height="0px" style="font-size: 11px" border="1" cellpadding="0" cellspacing="0">
+                                    <tr align="center">
+                                        <td colspan="3" >
+                                            <B>SEGURO y CONTRARREMBOLSO</B>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>Total imp. SEGURO:</td>
+                                        <td></td>
+                                        <td align="right"><b>$ {v_total_seguro_procesados}</b></td>                                     
+                                    </tr>
+                                    <tr>
+                                        <td>Total imp. CONTRA-REEMBOLSO:</td>
+                                        <td align="right"><b>$ {v_total_importe_contrareembolso_procesados}</b></td>                                     
+                                        <td></td>
+
+                                    </tr>
+                                    <tr>
+                                        <td>Total comision CONTRA-REEMBOLSO:</td>
+                                        <td align="right"><b>$ {v_total_comision_contrareembolso_procesados}</b></td>                                     
+                                        <td></td>
+                                    </tr>
+                                    <tr >
+                                        <td>Total:</td>
+                                        <td align="right"><b>$ {v_total1_1_procesados}</b></td>
+                                        <td align="right"><b>$ {v_total1_2_procesados}</b></td>
+                                    </tr>
+                                </table>
+                                <br>
+                            </td>
+                            <td colspan="4" align="center">
+
+                                <table height="0px" style="font-size: 11px" border="1" cellpadding="0" cellspacing="0">
+                                    <tr align="center">
+                                        <td colspan="3">
+                                            <B>COMISIONES</B>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>Total comisión comisionista:</td>
+                                        <td align="right"><b>$ {v_total_comisiones_comisionista_procesados}</b></td>                                     
+                                    </tr>                                  
+                                    <tr>
+                                        <td>Total comisión sucursal:</td>
+                                        <td align="right"><b>$ {v_total_comisiones_sucursal_procesados}</b></td>                                     
+                                    </tr>                                  
+                                    <tr >
+                                        <td>
+                                            Total:
+                                        </td>
+                                        <td align="right">
+                                            <b>$ {v_total2_2_procesados}</b> 
+                                        </td>
+
+                                    </tr>
+
+                                </table>                              
+
+                            </td>
+                            <td colspan="5" align="center">
+
+                                <table height="0px" style="font-size: 11px" border="1" cellpadding="0" cellspacing="0">
+                                    <tr align="center">
+                                        <td colspan="2" >
+                                            <B>TOTAL NETO</B>
+                                        </td>
+                                    </tr>
+                                    <tr >
+                                        <td>
+                                            Total:
+                                        </td>
+                                        <td align="right">
+                                            <b>$ {v_total3_procesados}</b> 
+                                        </td>
+
+                                    </tr>
+                                </table>
+
+                            </td>
+
+                        </tr>
+                    </table>        
+                  
+                </td>     
+            </tr>
+        </table>
+</FONT>        
+</body>
+</html>

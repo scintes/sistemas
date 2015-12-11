@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>{v_titulo_proyecto}</title>
+	<!-- ---- seccion de menu principal ------ -->
+	<link rel="stylesheet" type="text/css" href="css/estilos.css" />    
+        <link rel="shortcut icon" type="image/x-icon" href="{v_icono_proyecto}" />            
+        
+	<script src="js/menu/modernizr.custom.63321.js"></script> 
+	<script src="js/propias.js">                    </script> 
+        <script src="js/menu/jquery.min.js"></script>
+        <script src="js/menu/jquery.catslider.js"></script>
+        
+        <script>
+            $(function() {
+                $( '#mi-slider' ).catslider();
+                });
+        </script>     
+</head>
+<body background="{v_imagen_fondo}">
+    
+<!-- --------------------------------------------------------------------------------------------------------------------------------
+sexion nro 1
+-------------------------------------------------------------------------------------------------------------------------------- -->
+<div id="mi-slider" class="mi-slider">
+    {v_sub_menu_items_abm}    
+    <nav>
+        {v_sub_menu_secciones}
+    </nav>
+    <nav id="visor_descripcion" style=" border: 1px solid #CCC; background-color: #E0E0E0;  padding: .105em;  overflow: hidden;">
+        <b>
+            <span id="visor_de_hint">
+                {v_visor_de_accion}        
+            </span>
+        </b>
+    </nav>    
+</div>
+</body>
+
+</html>
+

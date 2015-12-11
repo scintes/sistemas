@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<script language="JavaScript" src="js/datepicker.js">
+</script>
+<title>Documento sin t&iacute;tulo
+</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css">
+<!--.style5 {font-size: 14px; color: #000000; }.style7 {font-size: 14px}.style9 {font-size: 12px}.style10 {font-size: 12px; color: #000000; }.style13 {font-size: 14}-->
+</style>
+<LINK href="css/datepicker.css" type=text/css rel=stylesheet>
+        <link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />            
+
+</head>
+<body>
+<p>&nbsp;</p>
+<table width="100%" height="223" border="1" align="center" cellspacing="0" bordercolor="#000000" bgcolor="#FFFFFF">
+<tr>
+	<td height="20" colspan="12" bgcolor="#FFCC33" scope="col">
+	<div align="center">
+		Cuenta Corriente Sucursales 
+	</div>
+	</td>
+	
+	<td height="20" colspan="5" bgcolor="#FFCC33" scope="col">
+	<div align="center" class="style7">Sucursal
+	</div>
+	</td>  
+</tr>
+<tr>    
+	<td height="20" colspan="12" rowspan="6" nowrap scope="col">
+	<p class="style13">Esta pantalla mostrar&aacute; todas las activaciones que aun se adeuda a la casa central..</p>      
+	
+	<form id="f_activaciones_realizadas" name="f_activaciones_realizadas" method="put" action="buscar_ctacte.php">        
+	<p>
+	   Fecha Desde:		<input name="e_fecha_desde" type="text" id="e_fecha_desde"  value="{v_fecha_desde}" size="10">           <input name="fecha_desde" type="button" id="fecha_desde"  value="Desde" onclick="displayDatePicker('e_fecha_desde', false, 'dmy','/');">    	
+	   Fecha Hasta:		<input name="e_fecha_hasta" type="text" id="e_fecha_hasta" value="{v_fecha_hasta}" size="10">    		<input name="fecha_hasta" type="button" id="fecha_hasta"  value="Hasta" onclick="displayDatePicker('e_fecha_hasta', false, 'dmy','/');">			
+					<input name="Mostrar" type="submit" id="Mostrar" value="Mostrar" />
+	</p>    
+	</form>      
+	</td>    
+	
+	<td height="9" colspan="5" scope="col">
+		<div align="center" class="style9">{v_sucursal}</div>
+	</td>  
+</tr>  
+
+<tr>    
+	<td height="3" colspan="5" bgcolor="#FFCC33" scope="col">
+		<div align="center" class="style7">Vendedor</div>
+	</td>  
+</tr>  
+
+<tr>    
+	<td height="1" colspan="5" scope="col">
+		<div align="center" class="style9">{v_vendedor}</div>
+	</td>  
+</tr>  
+
+<tr>    
+	<td height="0" colspan="5" valign="top" bgcolor="#FFCC33" scope="col">
+		<div align="center" class="style7">Total ($) </div>
+	</td>  
+</tr>  
+
+<tr>    
+	<td height="-1" colspan="5" scope="col">
+		<div align="center" class="style9">{v_total_ctacte}</div>
+	</td>  
+</tr>  
+
+<tr>    
+	<td height="-2" colspan="5" scope="col">&nbsp;
+	</td>  
+</tr>  
+
+<tr>    
+	<td height="20" colspan="12" bgcolor="#FFCC33" scope="col">
+		<div align="center" class="style7">Detalle Cta. Cte.. </div>
+	</td>    
+
+	<td height="20" colspan="5" bgcolor="#FFCC33" scope="col">
+		<div align="center" class="style7">Cant Reg . </div>
+	</td>  
+</tr>  
+
+<tr bgcolor="#FFCC33">    
+	<td width="10%" height="22">
+		<div align="center" class="style7">Nro. Op </div>
+	</td>    
+	<td width="8%">
+		<div align="center" class="style7">Fecha Opr. </div>
+	</td>    
+	<td width="6%">
+		<div align="center" class="style7">Cliente</div>
+	</td>    
+	<td width="5%">
+		<div align="center" class="style7">DNI</div>
+	</td>    
+	<td width="8%">
+		<div align="center" class="style7">Domicilio </div>
+	</td>    
+	<td width="7%">
+		<div align="center" class="style7">Equipo</div>
+	</td>    
+	<td width="5%">
+		<div align="center" class="style7">Emei</div>
+	</td>    
+	<td width="8%">
+		<div align="center" class="style7">Sim-Card</div>
+	</td>    
+	<td width="4%">
+		<div align="center" class="style7">Tipo</div>
+	</td>    
+	<td width="10%">
+		<div align="center" class="style7">Tipo Consumo</div>
+	</td>    
+	<td width="10%">
+		<div align="center" class="style7">Vendedor</div>
+	</td>    
+	<td width="9%">
+		<div align="center" class="style7">Precio</div>
+	</td>    
+	<td width="10%" bgcolor="#FFFFFF">
+		<div align="center">        
+			<p><span class="style7">{v_cant_reg}</span></p>    
+		</div>
+	</td>
+</tr>  <!-- BEGIN listadoactivacion -->  <tr>    <td class="style5" ><div align="center" class="style9">{v_nro_operacion}</div></td>    <td class="style5" ><div align="center" class="style9">      <p><span class="style10">{v_fecha_op}</span></p>      </div></td>    <td class="style5" ><div align="center" class="style9"><span class="style10">{v_cliente}</span></div></td>    <td height="19" ><p align="center" class="style10">{v_dni}</p></td>    <td height="19" ><div align="center" class="style10"><span class="style9">{v_domicilio}</span></div></td>    <td height="19" bgcolor="#C4FCC2" ><div align="center" class="style9"><span class="style10">{v_equipo}</span></div></td>    <td height="19" bgcolor="#C4FCC2" ><div align="center" class="style10">{v_imei}</div></td>    <td height="19" bgcolor="#C4FCC2" ><div align="center" class="style9"><span class="style10">{v_sim_card}</span></div></td>    <td height="19" ><div align="center" class="style10">{v_tipo}</div></td>    <td ><div align="center"><span class="style10">{v_tipo_consumo}</span></div></td>    <td height="19" ><div align="center" class="style10">{v_personal}</div></td>    <td height="19" bgcolor="#FFFFFF" ><div align="center" class="style9">$ {v_precio}</div></td>  </tr>  <!-- END listadoactivacion --></table><p>&nbsp;</p><p>&nbsp;</p></body></html>

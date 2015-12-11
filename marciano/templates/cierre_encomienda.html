@@ -1,0 +1,775 @@
+<!-- -------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Objetivo: Listar las encomiendas que se deben dar como entregadas y las que ya se entregaron
+Funcionalidad: Esta pantalla tiene como dato de entrada los datos cargados en las siguientes tablas.
+    Tablas: encomiendas -> Registro de encomiendas. 
+            detalle_encomiendas -> Esta tabla contiene los detalles de encomiendas como tipo, cantidad, etc.  
+            pagos -> Referencia a esta tabla para saber los pagos realizados a cada encomeindas.
+            tipo de encomiendas -> Referencia a los tipos de encomeindas que maneja la empresa.
+            La funcion de esta pantalla es marcar las encomiendas como entregadas. Para ellos cambiamos dos campos:
+            encomienda->entregada = 'S' y encomienda->estado = 'ENTREGADA'
+Salida de la pantalla
+            Las salidas de esta pantalla es un listado de las encomiendas por imprimir o no.
+--------------------------------------------------------------------------------
+---------------------------------------------------------------------------- -->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <title>Listado encomiendas...</title>
+        
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <LINK REL="stylesheet" TYPE="text/css" HREF="../css/estilos.css">
+        <LINK href="css/datepicker.css" type=text/css rel=stylesheet>
+                <link rel="shortcut icon" type="image/x-icon" href="./imagenes/sistema.ico" />            
+
+        <script language="JavaScript" src="./js/datepicker.js">
+        </script>
+
+        <script type="text/javascript" src="./js/jquery-1.3.2.js" ></script>            
+
+        <script type="text/javascript">
+        
+                $(document).ready(function() {
+                        $("#b_buscar_codigo_barra").click(function() {
+                            ejecutar_busqueda_por_codigo_barra();                
+                        });
+
+                        $("#b_buscar").click(function() {
+                            ejecutar_busqueda();
+                        });                
+
+                        $("#b_marcar_por_procesar").click(function() {
+                            tildar_todos_por_procesar();
+                        });                
+
+                        $("#b_desmarcar_por_procesar").click(function() {
+                            destildar_todos_por_procesar()                    
+                        });                
+
+                        $("#b_procesar_encomiendas").click(function() {
+                            cerrar_encomiendas_seleccionadas()
+                        });    
+
+                        $("#b_marcar_procesados").click(function() {
+                            tildar_todos_procesados();                    
+                        });                
+
+                        $("#b_desmarcar_procesados").click(function() {
+                            destildar_todos_procesados();                    
+                        });                
+
+                        $("#b_procesar_marcados").click(function() {
+                            abrir_encomiendas_seleccionadas();
+                        });    
+
+                        $("#b_imprimir").click(function(){
+                            imprimir_por_procesar();					
+                        });
+
+                        $("#b_imprimir_procesado").click(function(){
+                            imprimir_procesados();
+                        });    
+            })
+
+            //----------------------------------------------------------------------    
+            // Titulo: Titulo de la ventana
+            // Url: pagina con parametro 
+            // alto, ancho: alto y ancho de la ventana.
+            //----------------------------------------------------------------------    
+            function abrir_ventana(titulo, url, alto, ancho) {
+                var pos_x = (screen.height - alto) / 2;
+                var pos_y = (screen.width - ancho) / 2;
+                window.open(url, titulo, "toolbar = 0, status = 0, menubar = 0, resizable = 0, titlebar = 0, hotkeys = 0, height = " + alto + ", width = " + ancho + ", top = " + pos_y + ", left =" + pos_x);
+            }
+            ;
+
+            //----------------------------------------------------------------------
+            // Recorre todos los checkbox de la primera grilla y los marca como  
+            // checked = True
+            //----------------------------------------------------------------------       
+            function tildar_todos_por_procesar() {
+                $(".por_procesar:checkbox:not(:checked)").attr("checked", "true");
+                //$('.por_procesar').find('input[type=checkbox]').attr('checked','true');
+                /*
+                 $('input[type=checkbox]').each( function() {			
+                 this.checked = true;
+                 });
+                 */
+            }
+            ;
+            function tildar_todos_procesados() {
+                $(".procesados:checkbox:not(:checked)").attr("checked", "true");
+            }
+            ;
+
+            //----------------------------------------------------------------------
+            // Recorre todos los checkbox de la primera grilla y los marca como  
+            // checked = false
+            //----------------------------------------------------------------------       
+            function destildar_todos_por_procesar() {
+                $(".por_procesar:checkbox").removeAttr("checked");
+            }
+            ;
+
+
+            function destildar_todos_procesados() {
+                $(".procesados:checkbox").removeAttr("checked");
+            }
+            ;
+
+            //-----------------------------------------------------------------------
+            // Realiza la cancelacion de cada registro que se encuentra en la primer 
+            // grilla. Cambia dos campos por cada registro en la tabla ENCOMIENDA
+            // camp 1: ESTADO --> ENTREGADA
+            // camp 2: ENTREGADA --> S
+            //-----------------------------------------------------------------------
+            function cerrar_encomiendas_seleccionadas() {
+                var code = "";
+                // recorremos todos los checkbox de la grilla y concatenamos los 
+                // id (NRO DE ENCOMIENDA) que poseen cada uno.
+                $('input[type=checkbox]').each(function() {
+                    if (this.checked) {
+                        if (code == "") {
+                            code = this.id.valueOf();
+                        } else {
+                            code = code + "," + this.id.valueOf();
+                        }
+                    }
+                });
+
+                // ejecutamos el ajax pasando el conjunto de ID. Este ejecuta un 
+                // update prentando si el id del registro pertenece al conjunto 
+                // suministrado
+                if (code.length > 0) {
+                    $.post("ajax_cerrar_encomienda.php", {code: code}, function(resultado) {
+                        alert(resultado);
+                    });
+                    // refrescamos la pantalla
+                    $("#b_buscar").click();
+                }
+            }
+            
+            //-----------------------------------------------------------------------
+            // Realiza la devolucion de las encomiendas de cada registro que se 
+            // encuentra en la segunda grilla. 
+            // Cambia dos campos por cada registro en la tabla ENCOMIENDA
+            // camp 1: ESTADO --> 
+            // camp 2: ENTREGADA --> N
+            //-----------------------------------------------------------------------
+            function abrir_encomiendas_seleccionadas() {
+                var code = "";
+                // recorremos todos los checkbox de la grilla y concatenamos los 
+                // id (NRO DE ENCOMIENDA) que poseen cada uno.
+                $('input[type=checkbox]').each(function() {
+                    if (this.checked) {
+                        if (code == "") {
+                            code = this.id.valueOf();
+                        } else {
+                            code = code + "," + this.id.valueOf();
+                        }
+                    }
+                });
+
+                // ejecutamos el ajax pasando el conjunto de ID. Este ejecuta un 
+                // update prentando si el id del registro pertenece al conjunto 
+                // suministrado
+                if (code.length > 0) {
+                    $.post("ajax_devolver_encomienda_cerrada.php", {code: code}, function(resultado) {
+                        alert(resultado);
+                    });
+                    // refrescamos la pantalla
+                    $("#b_buscar").click();
+                }
+            };
+
+
+            //----------------------------------------------------------------------    
+            // Realiza la busqueda de las encomiendas lista para ser marcadas como 
+            // entregada
+            //----------------------------------------------------------------------          
+            function ejecutar_busqueda() {
+              //-----------------------------------------------------------------
+                // se cargan en este componente las variablas w,q,o de php para 
+                // utilizarlas en la impresion de los resumenes. 
+                //-----------------------------------------------------------------
+                $("#h_sql_where").val(  "<?php echo $w.$q.$o; ?>" ) ;
+            	
+                windows.submid();
+            }
+            
+            
+            
+
+            function ejecutar_busqueda_por_codigo_barra() {
+              var code = $("#e_codigo_barra").val();
+                //   if (code.length>0){
+                $.post("ajax_cerrar_encomienda.php", {code: code}, function(resultado) {
+                    alert(resultado);
+                });
+                // refrescamos la pantalla
+                $("#b_buscar").click();
+
+                // ponemos el foco para el proximo codigo de barra
+                $("#e_codigo_barra").focus();
+
+                //         }            
+            }
+           
+           
+           
+            function imprimir_por_procesar() {              
+                if (confirm("¿Deséa imprimir el listado de encomiendas sin procesar?")){                	
+                    var code = $("#h_sql_where").val();
+                    abrir_ventana('Imprimiendo cierre por encomiendas sin procesar.','imprimir_cierre_encomienda.php??tipo=false&sql_where='+code,600,500);
+                }
+            }
+            
+            function imprimir_procesados() {
+                if (confirm("¿Deséa imprimir el listado de encomiendas ya procesadas?")){                	
+                    var code = $("#h_sql_where_procesados").val();
+                    abrir_ventana('Imprmiendo cierre por encomiendas procesadas.','imprimir_cierre_encomienda.php?tipo=true&sql_where='+code,600,500);			
+                }
+            }
+
+        </script>
+
+    </head>
+    <body>
+        <div id="content">
+            <!--            <font face="arial"> -->
+
+            <table width="731" height="234" border="1" align="center" cellspacing="0" bordercolor="#DCDCDC" bgcolor="#FFFFFF">
+                <tr>
+                    <td colspan="3" align="center" bgcolor="{v_color_cabezera_tabla}" scope="col">
+                        <b>Cierre de encomiendas</b> 
+                    </td>	
+                </tr>
+                <tr>
+
+                    <td align="center" valign="middle" nowrap scope="col">
+                        <img src="./imagenes/tildar2.jpg" width="142" height="88" alt="encomienda">
+                    </td>
+
+                    <td width="731" colspan="2"  nowrap scope="col">
+                        <br>
+                        <form id="f_encomienda_encontrada_a_cerrar" name="f_encomienda_encontrada_a_cerrar" method="post" action="buscar_encomienda_a_cerrar.php">
+                            Fecha Desde:
+                            <input name="e_fecha_desde" type="text" id="e_fecha_desde"  value="{v_b_fecha_desde}" size="10">
+                            <input name="fecha_desde"   type="image" SRC="./imagenes/calendario.png" BORDER="0"  id="fecha_desde"  value="Desde" click="displayDatePicker('e_fecha_desde', false, 'dmy', '/');
+                return false">
+                            Fecha Hasta:          	
+                            <input name="e_fecha_hasta" type="text" id="e_fecha_hasta" value="{v_b_fecha_hasta}" size="10">
+                            <input name="fecha_hasta"   type="image" SRC="./imagenes/calendario.png" BORDER="0"  id="fecha_hasta"  value="Hasta" click="displayDatePicker('e_fecha_hasta', false, 'dmy', '/');
+                return false">  Nro Guia
+                            <input name="e_nro_orden"   type="text" id="e_nro_orden"  value="{v_b_nro_orden}" size="10">
+                            <br>
+                            Comisionista:
+                            <select name="e_comisionista" id="e_comisionista">
+                                {v_comboBox_comisionista}
+                            </select>
+                            Tipo de encomienda:
+                            <select name="e_tipo_encomienda" id="e_tipo_encomienda">
+                                {v_comboBox_tipo_encomienda}
+                            </select>
+                            <br>
+                            DNI Remitente
+                            <input name="e_dni_remitente" type="text" id="e_dni_remitente"  value="{v_b_dni_remitente}" size="15">
+                            DNI Destinatario
+                            <input name="e_dni_destinatario" type="text" id="e_dni_destinatario"  value="{v_b_dni_destinatario}" size="15">
+                            <input src="./imagenes/ejecutar.jpg" align="center" name="b_buscar" type="image" id="b_buscar" value="Buscar" />
+                            
+                            <input type="hidden" id="h_sql_where" value="{v_sql_where}"/>
+                            <input type="hidden" id="h_sql_where_procesados" value="{v_sql_where_procesados}"/>                            
+                            
+                        </form>   
+                        <br>
+                        Codigo de Barra:
+                        <input name="e_codigo_barra" align="center" type="text" id="e_codigo_barra"  value="" size="15">
+                        <input name="b_buscar_codigo_barra" align="center" src="./imagenes/ejecutar.jpg" type="image" id="b_buscar_codigo_barra" />               
+                        <br>
+                    </td>    
+                </tr>  
+
+
+
+                <tr align="center" valign="middle">
+                    <td nowrap scope="col">
+                        <!-- //*-*-*-*-*-*-*-*--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+                        //                   TABLA de BOTONERA
+                        //*-*-*-*-*-*-*-*--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* -->
+                        <table width="394" border="0" align="center">
+                            <tr>
+                                <td width="99">
+                                    <input name="b_marcar" TYPE="image" align="center" id="b_marcar_por_procesar" value="Tildar" SRC="./imagenes/tilde.png" 
+                                           align="left" BORDER="0" />
+                                    Marcar
+                                </td>
+
+                                <td width="183">
+                                    <input name="b_desamarcar"  TYPE="image" id="b_desmarcar_por_procesar" value="destildar" SRC="./imagenes/destilde.png" 
+                                           align="center" BORDER="0"  />
+                                    Desmarcar
+                                </td>
+
+                                <td width="183">
+                                    <input name="b_cierre" align="center" TYPE="image" id="b_procesar_encomiendas" value="Cierre Encomiendas" SRC="./imagenes/cierre_encomienda.png" align="left" BORDER="0" />
+                                    Procesar
+                                </td>
+                                <td>
+                                    <input name="b_imprimir" align="center" TYPE="image" id="b_imprimir" value="imprimir" SRC="./imagenes/imprimir.png" align="left" BORDER="0" />                                        
+                                    Imprimir
+                                </td>
+                                <td width="98">
+                                    <input name="b_volver" align="center" TYPE="image" id="b_volver" value="Volver" SRC="./imagenes/volver.jpg" align="left" BORDER="0" onclick="$(location).attr('href','principal.php');" />
+                                    Volver
+                                </td>                            
+                            </tr>
+                        </table>
+                        <!-- //*-*-*-*-*-*-*-*--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+                        // Fin de tabla de botonera
+                        //*-*-*-*-*-*-*-*--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* -->      
+                    </td>
+                    <td colspan="1">
+                        Sucursal:<b>{v_sucursal}</b>
+                        <!--                    
+                                            Codigo de Barra:
+                                            <input name="e_codigo_barra" align="center" type="text" id="e_codigo_barra"  value="" size="15">
+                                            <input name="b_buscar_codigo_barra" align="center" src="./imagenes/ejecutar.jpg" type="image" id="b_buscar_codigo_barra" onclick="ejecutar_busqueda_por_codigo_barra()" />               
+                        -->
+                    </td>
+                    <td>
+                        Usuario:<b>{v_vendedor}</b>
+                    </td>
+                </tr>
+                <tr>   
+                    <td colspan="3">        
+                        <!-- 
+                        *******************************************************************************
+                        **   Tablas de listados de encomiendas a marcar como entregada               **
+                        **                                                                           **
+                        **                                                                           **
+                        *****************************************************************************-->
+                        <table  width="100%" border="1" align="center" cellpadding="0" cellspacing="0" bordercolor="#000000" bgcolor="#FFFFFF">
+                            <tr>    
+                                <td align="center" colspan="14" bgcolor="{v_color_cabezera_tabla}" scope="col">
+                                    <br><b>Encomiendas SIN procesar.. </b>
+                                </td>    
+                            </tr>  
+                            <tr bgcolor="{v_color_cabezera_columna_tabla}">
+                                <td>                              </td>
+                                <td align="center" >Nro. Guia     </td>
+                                <td align="center" >Fecha         </td>
+                                <td align="center"  >Remitente    </td>
+                                <td align="center"  >Destinatario </td>
+                                <td align="center"  >Tipo         </td>
+                                <td align="center"  >Prioridad    </td>
+                                <td align="center"  >Fecha entrega</td>
+                                <td align="center"  >Comisionista </td>
+                                <td align="center"  >Estado       </td>
+                                <td align="center"  >Vendedor     </td>
+                                <td align="center"  >Precio       </td>
+                                <td >                             </td>
+                            </tr>  
+                            <div id="f_mandos_sobre_registros">
+                                <!-- BEGIN listadoencomiendas -->  
+                                <tr height="0px" style="font-size: 12px" bgcolor="{v_color_fila}">   
+                                    <td align="center">
+                                        <input type="checkbox" class="por_procesar" name="id_seleccionar" id="{v_nro_operacion}" value="Mostar" >
+                                    </td>
+                                    <td align="center">
+                                        {v_nro_operacion}
+                                        <input type="hidden" name="e_nro_guia" value="{v_nro_operacion}">
+                                    </td>
+
+                                    <td align="center"> {v_fecha_op}</td>
+                                    <td  width="10%" align="left" valign="middle" bgcolor="{v_color_columna_remitente}" >{v_remitente}</td>
+                                    <td  width="10%" align="left" valign="middle" bgcolor="{v_color_columna_destinatario}" >{v_destinatario}</td>
+                                    <td align="center">{v_tipo_encomienda}</td>  
+                                    <td align="center">{v_prioridad}</td>
+                                    <td align="center">{v_fecha_entregal}</td>
+                                    <td align="center">{v_comisionista}</td>
+                                    <td align="center">{v_estado}</td>
+                                    <td align="center">{v_personal}</td>
+                                    <td align="right"><strong>$ </strong>{v_precio}</td>
+                                    <td align="center">
+                                        <input TYPE="image" align="center" SRC="./imagenes/mostrar.gif" BORDER="0" name="id_mostrar" id="id_mostrar" value="Mostar" click=abrir_ventana("Encomienda", "mostrar_encomienda.php?id={v_nro_operacion}", 420, 900)>
+                                    </td>
+                                </tr>
+                                <!-- END listadoencomiendas -->
+                            </div> 
+                            <tr bgcolor="{v_color_pie_tabla}">
+                                <td colspan="13">
+                                    <table width="100%">
+                                        <tr>
+                                            <td colspan="8" align="left" bgcolor="{v_color_pie_tabla}">
+                                                <!--        <input type="text"  name="color_fila_pago_destino" disabled='true' style="width: 15px; background:{v_color_fila_pago_destino}" /> Pagos en destino   -->
+                                                <span  name="color_fila_pago_destino" style="background:{v_color_fila_pago_destino}">__</span> Pagos en destino
+                                            </td>
+                                            <td colspan="5" align="right">
+                                                Cantidad de registro NO procesados:<b>{v_cant_reg}</b>  
+                                            </td>                                
+                                        </tr>
+
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="4" align="center">
+                                    <br>
+                                    <table height="0px" style="font-size: 12px" border="1" cellpadding="0" cellspacing="0">
+                                        <tr align="center">
+                                            <td colspan="3" bgcolor="{v_color_cabezera_tabla}">
+                                                <B>SEGURO y CONTRARREMBOLSO</B>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>Total imp. SEGURO:</td>
+                                            <td></td>
+                                            <td align="right"><b>$ {v_total_seguro}</b></td>                                     
+                                        </tr>
+                                        <tr>
+                                            <td>Total imp. SEGURO en cobro destino:</td>
+                                            <td></td>
+                                            <td align="right"><b>$ {v_total_seguro_cobro_destino}</b></td>                                     
+                                        </tr>
+                                        <tr>
+                                            <td>Total imp. CONTRA-REEMBOLSO:</td>
+                                            <td align="right"><b>$ {v_total_importe_contrareembolso}</b></td>                                     
+                                            <td></td>
+
+                                        </tr>
+                                        <tr>
+                                            <td>Total comision CONTRA-REEMBOLSO:</td>
+                                            <td align="right"><b>$ {v_total_comision_contrareembolso}</b></td>                                     
+                                            <td></td>
+                                        </tr>
+                                        <tr bgcolor="{v_color_pie_tabla}">
+                                            <td>Total:</td>
+                                            <td align="right"><b>$ {v_total1_1}</b></td>
+                                            <td align="right"><b>$ {v_total1_2}</b></td>
+                                        </tr>
+                                    </table>
+                                    <br>
+                                </td>
+                                <td colspan="4" align="center">
+
+                                    <table height="0px" style="font-size: 12px" border="1" cellpadding="0" cellspacing="0">
+                                        <tr align="center">
+                                            <td colspan="3" bgcolor="{v_color_cabezera_tabla}">
+                                                <B>COMISIONES</B>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>Total comisiï¿½n comisionista:</td>
+                                            <td></td>
+                                            <td align="right"><b>$ {v_total_comisiones_comisionista}</b></td>                                     
+                                        </tr>                                  
+                                        <tr>
+                                            <td>Total comisiï¿½n en cobro destino:</td>
+                                            <td align="right"><b>$ {v_total_comisiones_comisionista_cobro_destino}</b></td>                                     
+                                            <td></td>
+                                        </tr>                                  
+                                        <tr>
+                                            <td>Total comisiï¿½n sucursal:</td>
+                                            <td></td>
+                                            <td align="right"><b>$ {v_total_comisiones_sucursal}</b></td>                                     
+                                        </tr>                                  
+                                        <tr>
+                                            <td>Total comisiï¿½n sucursal en cobro destino:</td>
+                                            <td align="right"><b>$ {v_total_comisiones_sucursal_cobro_destino}</b></td>                                     
+                                            <td></td>                                      
+                                        </tr>                                                                 
+                                        <tr bgcolor="{v_color_pie_tabla}">
+                                            <td>
+                                                Total:
+                                            </td>
+                                            <td align="right">
+                                                <b>$ {v_total2_1}</b> 
+                                            </td>
+                                            <td align="right">
+                                                <b>$ {v_total2_2}</b> 
+                                            </td>
+
+                                        </tr>
+
+                                    </table>                              
+
+                                </td>
+                                <td colspan="5" align="center">
+
+                                    <table height="0px" style="font-size: 12px" border="1" cellpadding="0" cellspacing="0">
+                                        <tr align="center">
+                                            <td colspan="2" bgcolor="{v_color_cabezera_tabla}">
+                                                <B>TOTAL NETO</B>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Total:</td>
+                                            <td align="right"><b>$ {v_total_procesados}</b></td>                                     
+                                        </tr>                                  
+                                        <tr>
+                                            <td>Total cobro en destino:</td>
+                                            <td align="right"><b>$ {v_total_procesados_cobro_destino}</b></td>                                     
+                                        </tr>   
+                                        <tr bgcolor="{v_color_pie_tabla}">
+                                            <td>
+                                                Total:
+                                            </td>
+                                            <td align="right">
+                                                <b>$ {v_total3}</b> 
+                                            </td>                                      
+                                        </tr>
+                                    </table>
+
+                                </td>
+                            </tr>
+
+                        </table>
+                    </td>          
+                </tr>
+                <!-- 
+                //----------------------------------------------------------
+                //
+                //
+                //
+                //
+                //
+                //
+                //
+                //
+                //
+                //
+                //
+                //
+                //----------------------------------------------------------
+                -->
+                <tr>
+                    <td colspan="3">
+                        <table  width="100%" border="1" align="center" cellpadding="0" cellspacing="0" bordercolor="#000000" bgcolor="#FFFFFF">
+                            <tr>
+                                <td colspan="5">
+                                    <table border="0" align="center">
+                                        <tr>
+                                            <td>
+                                                <input name="b_marcar" TYPE="image" align="center" id="b_marcar_procesados" value="Tildar" SRC="./imagenes/tilde.png" 
+                                                       align="left" BORDER="0" />
+                                                Marcar
+                                            </td>
+
+                                            <td>
+                                                <input name="b_desamarcar"  TYPE="image" id="b_desmarcar_procesados" value="destildar" SRC="./imagenes/destilde.png" 
+                                                       align="center" BORDER="0"  />
+                                                Desmarcar
+                                            </td>
+
+                                            <td>
+                                                <input name="b_cierre" align="center" type="image" id="b_procesar_marcados" value="Cierre Encomiendas" SRC="./imagenes/volver_encomienda.png" align="left" BORDER="0" />
+                                                Procesar
+                                            </td>
+                                            <td>
+                                                <input name="b_imprimir_procesado" align="center" TYPE="image" id="b_imprimir_procesado" value="imprimir" SRC="./imagenes/imprimir.png" align="left" BORDER="0" />                                        
+                                                Imprimir                                            
+                                            </td>    
+                                            <td>
+                                                <input name="b_volver_2" align="center" type="image" id="b_volver_2" value="Volver_2" src="./imagenes/volver.jpg" align="left"  click="javascript:history.go(-1);" />
+                                                Volver
+                                            </td>                            
+                                        </tr>
+
+                                    </table>
+
+                                </td>
+                                <td colspan="8" align="right">
+
+                                </td>
+
+                            </tr>
+                            <tr>    
+                                <td align="center" colspan="14" bgcolor="{v_color_cabezera_tabla}" scope="col">
+                                    <br>
+                                    <b>Encomiendas Procesadas.. </b>
+                                </td>    
+
+                            </tr> 
+
+                            <tr bgcolor="{v_color_cabezera_columna_tabla}">
+                                <td></td>
+                                <td align="center"  >Nro. Guia </td>
+                                <td align="center"  >Fecha . </td>
+                                <td align="center"  >Remitente</td>
+                                <td align="center"  >Destinatario</td>
+                                <td  align="center"  >Tipo</td>
+                                <td  align="center"  >Prioridad</td>
+                                <td  align="center"  >Fecha entrega</td>
+                                <td  align="center"  >Comisionista</td>
+                                <td  align="center"  >Estado</td>
+                                <td  align="center"  >Vendedor</td>
+                                <td  align="center"  >Precio</td>
+                                <td  >&nbsp;</td>
+                            </tr>  
+                            <!--   <form name="f_mandos_sobre_registros_procesados" -->
+                            <!-- BEGIN listadoencomiendas_procesadas -->  
+                            <tr height="0px" style="font-size: 12px" bgcolor="{v_color_fila}">   
+                                <td align="center">
+                                    <input type="checkbox" class="procesados" name="id_seleccionar" id="{v_nro_operacion}" value="Mostar" >
+                                </td>
+
+                                <td align="center" >
+                                    {v_nro_operacion}
+                                    <input type="hidden" name="e_nro_guia" value="{v_nro_operacion}">
+                                </td>
+                                <td>{v_fecha_op}</td>
+                                <td  width="10%" align="left" valign="middle" bgcolor="{v_color_columna_remitente}" >{v_remitente}</td>
+                                <td  width="10%" align="left" valign="middle" bgcolor="{v_color_columna_destinatario}" >{v_destinatario}</td>
+                                <td align="center">{v_tipo_encomienda}</td>  
+                                <td align="center">{v_prioridad}</td>
+                                <td align="center">{v_fecha_entregal}</td>
+                                <td align="center">{v_comisionista}</td>
+                                <td align="center">{v_estado}</td>
+                                <td align="center">{v_personal}</td>
+                                <td align="right">$ {v_precio}</td>
+                                <td>
+                                    <!-- <input type="checkbox" name="id_seleccionar" id="{v_nro_operacion}" value="Mostar" > -->
+                                    <input type="image" src="./imagenes/mostrar.gif" name="id_mostrar" id="id_mostrar" click= "abrir_ventana('Encomienda', 'mostrar_encomienda.php?h_id_mostrar={v_nro_operacion}', 420, 900)" />
+                                </td>
+                            </tr>
+
+                            <!-- END listadoencomiendas_procesadas -->
+                            <!-- </form -->
+                            <tr>
+                            <tr bgcolor="{v_color_pie_tabla}">
+                                <td colspan="13">
+                                    <table width="100%">
+                                        <tr>
+                                            <td colspan="8" align="left" bgcolor="{v_color_pie_tabla}">
+                                                <!-- <input name="color_fila_pago_destino"  style="width: 15px; background:{v_color_fila_pago_destino}"> Pagos en destino 
+                                                <span  name="color_fila_pago_destino" style="background:{v_color_fila_pago_destino}">__</span> Pagos en destino -->
+
+                                            </td>
+                                            <td colspan="5" align="right">
+                                                Cantidad de registro procesados: <b>{v_cant_reg_procesados}</b>  
+                                            </td>                                
+                                        </tr>
+
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <td colspan="4" align="center">
+                                <br>
+                                <table height="0px" style="font-size: 12px" border="1" cellpadding="0" cellspacing="0">
+                                    <tr align="center">
+                                        <td colspan="3" bgcolor="{v_color_cabezera_tabla}">
+                                            <B>SEGURO y CONTRARREMBOLSO</B>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>Total imp. SEGURO:</td>
+                                        <td></td>
+                                        <td align="right"><b>$ {v_total_seguro_procesados}</b></td>                                     
+                                    </tr>
+                                    <tr>
+                                        <td>Total imp. CONTRA-REEMBOLSO:</td>
+                                        <td align="right"><b>$ {v_total_importe_contrareembolso_procesados}</b></td>                                     
+                                        <td></td>
+
+                                    </tr>
+                                    <tr>
+                                        <td>Total comision CONTRA-REEMBOLSO:</td>
+                                        <td align="right"><b>$ {v_total_comision_contrareembolso_procesados}</b></td>                                     
+                                        <td></td>
+                                    </tr>
+                                    <tr bgcolor="{v_color_pie_tabla}">
+                                        <td>Total:</td>
+                                        <td align="right"><b>$ {v_total1_1_procesados}</b></td>
+                                        <td align="right"><b>$ {v_total1_2_procesados}</b></td>
+                                    </tr>
+                                </table>
+                                <br>
+                            </td>
+                            <td colspan="4" align="center">
+
+                                <table height="0px" style="font-size: 12px" border="1" cellpadding="0" cellspacing="0">
+                                    <tr align="center">
+                                        <td colspan="3" bgcolor="{v_color_cabezera_tabla}">
+                                            <B>COMISIONES</B>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>Total comisiï¿½n comisionista:</td>
+                                        <td align="right"><b>$ {v_total_comisiones_comisionista_procesados}</b></td>                                     
+                                    </tr>                                  
+                                    <tr>
+                                        <td>Total comisiï¿½n sucursal:</td>
+                                        <td align="right"><b>$ {v_total_comisiones_sucursal_procesados}</b></td>                                     
+                                    </tr>                                  
+                                    <tr bgcolor="{v_color_pie_tabla}">
+                                        <td>
+                                            Total:
+                                        </td>
+                                        <td align="right">
+                                            <b>$ {v_total2_2_procesados}</b> 
+                                        </td>
+
+                                    </tr>
+
+                                </table>                              
+
+                            </td>
+                            <td colspan="5" align="center">
+
+                                <table height="0px" style="font-size: 12px" border="1" cellpadding="0" cellspacing="0">
+                                    <tr align="center">
+                                        <td colspan="2" bgcolor="{v_color_cabezera_tabla}">
+                                            <B>TOTAL NETO</B>
+                                        </td>
+                                    </tr>
+                                    <tr bgcolor="{v_color_pie_tabla}">
+                                        <td>
+                                            Total:
+                                        </td>
+                                        <td align="right">
+                                            <b>$ {v_total3_procesados}</b> 
+                                        </td>
+
+                                    </tr>
+                                </table>
+
+                            </td>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </tr>
+            </table>        
+        </td>     
+    </tr>
+</table>
+<!--            </font> -->
+</div>  
+</body>
+</html>
