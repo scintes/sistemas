@@ -227,7 +227,6 @@ class cdefault {
 	function Page_Main() {
 		global $Security, $Language;
 		if (!$Security->IsLoggedIn()) $Security->AutoLogin();
-		$Security->LoadUserLevel(); // Load User Level
 		$this->Page_Terminate("inicio/inicio.php"); // Exit and go to default page
 		if ($Security->AllowList(CurrentProjectID() . 'choferes'))
 			$this->Page_Terminate("chofereslist.php");
@@ -272,6 +271,10 @@ class cdefault {
 			$this->Page_Terminate("nivel_permisos_usuariolist.php");
 		if ($Security->AllowList(CurrentProjectID() . 'nivel_usuario'))
 			$this->Page_Terminate("nivel_usuariolist.php");
+		if ($Security->AllowList(CurrentProjectID() . 'backup_v1.php'))
+			$this->Page_Terminate("backup_v1.php");
+		if ($Security->AllowList(CurrentProjectID() . 'backup.php'))
+			$this->Page_Terminate("backup.php");
 		if ($Security->IsLoggedIn()) {
 			$this->setFailureMessage($Language->Phrase("NoPermission") . "<br><br><a href=\"logout.php\">" . $Language->Phrase("BackToLogin") . "</a>");
 		} else {

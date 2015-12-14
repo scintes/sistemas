@@ -238,10 +238,6 @@ class cnivel_usuario_add extends cnivel_usuario {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
-		if (!$Security->CanAdmin()) {
-			$Security->SaveLastUrl();
-			$this->Page_Terminate(ew_GetUrl("login.php"));
-		}
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
@@ -341,28 +337,6 @@ class cnivel_usuario_add extends cnivel_usuario {
 			$this->CurrentAction = $_POST["a_add"]; // Get form action
 			$this->CopyRecord = $this->LoadOldRecord(); // Load old recordset
 			$this->LoadFormValues(); // Load form values
-
-			// Load values for user privileges
-			$AllowAdd = @$_POST["x__AllowAdd"];
-			if ($AllowAdd == "") $AllowAdd = 0;
-			$AllowEdit = @$_POST["x__AllowEdit"];
-			if ($AllowEdit == "") $AllowEdit = 0;
-			$AllowDelete = @$_POST["x__AllowDelete"];
-			if ($AllowDelete == "") $AllowDelete = 0;
-			$AllowList = @$_POST["x__AllowList"];
-			if ($AllowList == "") $AllowList = 0;
-			if (defined("EW_USER_LEVEL_COMPAT")) {
-				$this->Priv = intval($AllowAdd) + intval($AllowEdit) +
-					intval($AllowDelete) + intval($AllowList);
-			} else {
-				$AllowView = @$_POST["x__AllowView"];
-				if ($AllowView == "") $AllowView = 0;
-				$AllowSearch = @$_POST["x__AllowSearch"];
-				if ($AllowSearch == "") $AllowSearch = 0;
-				$this->Priv = intval($AllowAdd) + intval($AllowEdit) +
-					intval($AllowDelete) + intval($AllowList) +
-					intval($AllowView) + intval($AllowSearch);
-			}
 		} else { // Not post back
 
 			// Load key values from QueryString
@@ -494,11 +468,6 @@ class cnivel_usuario_add extends cnivel_usuario {
 		$row = &$rs->fields;
 		$this->Row_Selected($row);
 		$this->codigo->setDbValue($rs->fields('codigo'));
-		if (is_null($this->codigo->CurrentValue)) {
-			$this->codigo->CurrentValue = 0;
-		} else {
-			$this->codigo->CurrentValue = intval($this->codigo->CurrentValue);
-		}
 		$this->nombre_nivel->setDbValue($rs->fields('nombre_nivel'));
 	}
 
@@ -633,23 +602,6 @@ class cnivel_usuario_add extends cnivel_usuario {
 	// Add record
 	function AddRow($rsold = NULL) {
 		global $conn, $Language, $Security;
-		if (trim(strval($this->codigo->CurrentValue)) == "") {
-			$this->setFailureMessage($Language->Phrase("MissingUserLevelID"));
-		} elseif (trim($this->nombre_nivel->CurrentValue) == "") {
-			$this->setFailureMessage($Language->Phrase("MissingUserLevelName"));
-		} elseif (!is_numeric($this->codigo->CurrentValue)) {
-			$this->setFailureMessage($Language->Phrase("UserLevelIDInteger"));
-		} elseif (intval($this->codigo->CurrentValue) < -1) {
-			$this->setFailureMessage($Language->Phrase("UserLevelIDIncorrect"));
-		} elseif (intval($this->codigo->CurrentValue) == 0 && strtolower(trim($this->nombre_nivel->CurrentValue)) <> "default") {
-			$this->setFailureMessage($Language->Phrase("UserLevelDefaultName"));
-		} elseif (intval($this->codigo->CurrentValue) == -1 && strtolower(trim($this->nombre_nivel->CurrentValue)) <> "administrator") {
-			$this->setFailureMessage($Language->Phrase("UserLevelAdministratorName"));
-		} elseif (intval($this->codigo->CurrentValue) > 0 && (strtolower(trim($this->nombre_nivel->CurrentValue)) == "administrator" || strtolower(trim($this->nombre_nivel->CurrentValue)) == "default")) {
-			$this->setFailureMessage($Language->Phrase("UserLevelNameIncorrect"));
-		}
-		if ($this->getFailureMessage() <> "")
-			return FALSE;
 
 		// Load db values from rsold
 		if ($rsold) {
@@ -711,24 +663,6 @@ class cnivel_usuario_add extends cnivel_usuario {
 			// Call Row Inserted event
 			$rs = ($rsold == NULL) ? NULL : $rsold->fields;
 			$this->Row_Inserted($rs, $rsnew);
-		}
-
-		// Add User Level priv
-		if ($this->Priv > 0) {
-			$UserLevelList = array();
-			$UserLevelPrivList = array();
-			$TableList = array();
-			$GLOBALS["Security"]->LoadUserLevelFromConfigFile($UserLevelList, $UserLevelPrivList, $TableList, TRUE);
-			$TableNameCount = count($TableList);
-			for ($i = 0; $i < $TableNameCount; $i++) {
-				$sSql = "INSERT INTO " . EW_USER_LEVEL_PRIV_TABLE . " (" .
-					EW_USER_LEVEL_PRIV_TABLE_NAME_FIELD . ", " .
-					EW_USER_LEVEL_PRIV_USER_LEVEL_ID_FIELD . ", " .
-					EW_USER_LEVEL_PRIV_PRIV_FIELD . ") VALUES ('" .
-					ew_AdjustSql($TableList[$i][4] . $TableList[$i][0]) .
-					"', " . $this->codigo->CurrentValue . ", " . $this->Priv . ")";
-				$conn->Execute($sSql);
-			}
 		}
 		return $AddRow;
 	}
@@ -865,27 +799,6 @@ fnivel_usuarioadd.Validate = function() {
 			elm = this.GetElements("x" + infix + "_nombre_nivel");
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
 				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $nivel_usuario->nombre_nivel->FldCaption(), $nivel_usuario->nombre_nivel->ReqErrMsg)) ?>");
-			var elId = fobj.elements["x" + infix + "_codigo"];
-			var elName = fobj.elements["x" + infix + "_nombre_nivel"];
-			if (elId && elName) {
-				elId.value = $.trim(elId.value);
-				elName.value = $.trim(elName.value);
-				if (elId && !ew_CheckInteger(elId.value))
-					return this.OnError(elId, ewLanguage.Phrase("UserLevelIDInteger"));
-				var level = parseInt(elId.value, 10);
-				if (level == 0) {
-					if (!ew_SameText(elName.value, "default"))
-						return this.OnError(elName, ewLanguage.Phrase("UserLevelDefaultName"));
-				} else if (level == -1) {
-					if (!ew_SameText(elName.value, "administrator"))
-						return this.OnError(elName, ewLanguage.Phrase("UserLevelAdministratorName"));
-				} else if (level < -1) {
-					return this.OnError(elId, ewLanguage.Phrase("UserLevelIDIncorrect"));
-				} else if (level > 0) { 
-					if (ew_SameText(elName.value, "administrator") || ew_SameText(elName.value, "default"))
-						return this.OnError(elName, ewLanguage.Phrase("UserLevelNameIncorrect"));
-				}
-			}
 
 			// Set up row object
 			ew_ElementsToRow(fobj);
@@ -965,22 +878,6 @@ $nivel_usuario_add->ShowMessage();
 <?php echo $nivel_usuario->nombre_nivel->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
-	<!-- row for permission values -->
-	<div id="rp_permission" class="form-group">
-		<label class="col-sm-2 control-label ewLabel"><?php echo ew_HtmlTitle($Language->Phrase("Permission")) ?></label>
-		<div class="col-sm-10">
-<label class="checkbox-inline"><input type="checkbox" name="x__AllowAdd" id="Add" value="<?php echo EW_ALLOW_ADD ?>"><?php echo $Language->Phrase("PermissionAddCopy") ?></label>
-<label class="checkbox-inline"><input type="checkbox" name="x__AllowDelete" id="Delete" value="<?php echo EW_ALLOW_DELETE ?>"><?php echo $Language->Phrase("PermissionDelete") ?></label>
-<label class="checkbox-inline"><input type="checkbox" name="x__AllowEdit" id="Edit" value="<?php echo EW_ALLOW_EDIT ?>"><?php echo $Language->Phrase("PermissionEdit") ?></label>
-<?php if (defined("EW_USER_LEVEL_COMPAT")) { ?>
-<label class="checkbox-inline"><input type="checkbox" name="x__AllowList" id="List" value="<?php echo EW_ALLOW_LIST ?>"><?php echo $Language->Phrase("PermissionListSearchView") ?></label>
-<?php } else { ?>
-<label class="checkbox-inline"><input type="checkbox" name="x__AllowList" id="List" value="<?php echo EW_ALLOW_LIST ?>"><?php echo $Language->Phrase("PermissionList") ?></label>
-<label class="checkbox-inline"><input type="checkbox" name="x__AllowView" id="View" value="<?php echo EW_ALLOW_VIEW ?>"><?php echo $Language->Phrase("PermissionView") ?></label>
-<label class="checkbox-inline"><input type="checkbox" name="x__AllowSearch" id="Search" value="<?php echo EW_ALLOW_SEARCH ?>"><?php echo $Language->Phrase("PermissionSearch") ?></label>
-<?php } ?>
-		</div>
-	</div>
 </div>
 <div class="form-group">
 	<div class="col-sm-offset-2 col-sm-10">

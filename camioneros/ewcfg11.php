@@ -29,7 +29,7 @@ define("EW_CONFIG_FILE_FOLDER", EW_PROJECT_NAME . "", TRUE); // Config file name
 define("EW_PROJECT_ID", "{DFBA9E6C-101B-48AB-A301-122D5C6C603B}", TRUE); // Project ID (GUID)
 $EW_RELATED_PROJECT_ID = "";
 $EW_RELATED_LANGUAGE_FOLDER = "";
-define("EW_RANDOM_KEY", 'cCf7jLl1RgjXjGvt', TRUE); // Random key for encryption
+define("EW_RANDOM_KEY", 'u7dchLjJ7NRFocdO', TRUE); // Random key for encryption
 define("EW_PROJECT_STYLESHEET_FILENAME", "phpcss/camioneros.css", TRUE); // Project stylesheet file name
 define("EW_CHARSET", "utf-8", TRUE); // Project charset
 define("EW_EMAIL_CHARSET", EW_CHARSET, TRUE); // Email charset
@@ -98,7 +98,7 @@ define("EW_MYSQL_CHARSET", "utf8", TRUE);
  * irreversible, password will be reset during password recovery.
  */
 define("EW_ENCRYPTED_PASSWORD", TRUE, TRUE); // Use encrypted password
-define("EW_CASE_SENSITIVE_PASSWORD", FALSE, TRUE); // Case-sensitive password
+define("EW_CASE_SENSITIVE_PASSWORD", TRUE, TRUE); // Case-sensitive password
 
 /**
  * Remove XSS
@@ -210,21 +210,6 @@ define("EW_ADMIN_USER_NAME", "admin", TRUE); // Administrator user name
 define("EW_ADMIN_PASSWORD", "admin", TRUE); // Administrator password
 define("EW_USE_CUSTOM_LOGIN", TRUE, TRUE); // Use custom login
 
-// Dynamic User Level settings
-// User level definition table/field names
-
-@define("EW_USER_LEVEL_TABLE", "`nivel_usuario`", TRUE);
-@define("EW_USER_LEVEL_ID_FIELD", "`codigo`", TRUE);
-@define("EW_USER_LEVEL_NAME_FIELD", "`nombre_nivel`", TRUE);
-
-// User Level privileges table/field names
-@define("EW_USER_LEVEL_PRIV_TABLE", "`nivel_permisos_usuario`", TRUE);
-@define("EW_USER_LEVEL_PRIV_TABLE_NAME_FIELD", "`nombre_tabla`", TRUE);
-@define("EW_USER_LEVEL_PRIV_TABLE_NAME_FIELD_2", "nombre_tabla", TRUE);
-@define("EW_USER_LEVEL_PRIV_TABLE_NAME_FIELD_SIZE", 255, TRUE);
-@define("EW_USER_LEVEL_PRIV_USER_LEVEL_ID_FIELD", "`id_nivel_usuario`", TRUE);
-@define("EW_USER_LEVEL_PRIV_PRIV_FIELD", "`permisos`", TRUE);
-
 // User level constants
 define("EW_ALLOW_ADD", 1, TRUE); // Add
 define("EW_ALLOW_DELETE", 2, TRUE); // Delete
@@ -252,7 +237,7 @@ define("EW_USER_TABLE", "`usuarios`",  TRUE);
 define("EW_USER_NAME_FILTER", "(`usuario` = '%u')",  TRUE);
 define("EW_USER_ID_FILTER", "(`codigo` = %u)",  TRUE);
 define("EW_USER_EMAIL_FILTER", "(`email` = '%e')",  TRUE);
-define("EW_USER_ACTIVATE_FILTER", "(`nombre` = 'Y')",  TRUE);
+define("EW_USER_ACTIVATE_FILTER", "(`activo` = 1)",  TRUE);
 
 // User Profile Constants
 define("EW_USER_PROFILE_KEY_SEPARATOR", "", TRUE);

@@ -295,10 +295,6 @@ class cnivel_usuario_view extends cnivel_usuario {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
-		if (!$Security->CanAdmin()) {
-			$Security->SaveLastUrl();
-			$this->Page_Terminate(ew_GetUrl("login.php"));
-		}
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
@@ -638,11 +634,6 @@ class cnivel_usuario_view extends cnivel_usuario {
 		$row = &$rs->fields;
 		$this->Row_Selected($row);
 		$this->codigo->setDbValue($rs->fields('codigo'));
-		if (is_null($this->codigo->CurrentValue)) {
-			$this->codigo->CurrentValue = 0;
-		} else {
-			$this->codigo->CurrentValue = intval($this->codigo->CurrentValue);
-		}
 		$this->nombre_nivel->setDbValue($rs->fields('nombre_nivel'));
 	}
 

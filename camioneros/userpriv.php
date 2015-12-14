@@ -220,10 +220,6 @@ class cuserpriv extends cnivel_usuario {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel(CurrentProjectID() . 'nivel_usuario');
 		$Security->TablePermission_Loaded();
-		if (!$Security->CanAdmin()) {
-			$Security->SaveLastUrl();
-			$this->Page_Terminate(ew_GetUrl("login.php"));
-		}
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();

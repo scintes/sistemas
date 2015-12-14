@@ -20,6 +20,8 @@ Thank you for registering with us. Your registration details with us is as follo
 
 <!--FieldCaption_email-->: <!--email-->
 
+<!--FieldCaption_activo-->: <!--activo-->
+
 
 
 Please click the following link to activate your account:

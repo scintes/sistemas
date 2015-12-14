@@ -234,15 +234,6 @@ class cusuarios_edit extends cusuarios {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
-		if (!$Security->IsLoggedIn()) {
-			$Security->SaveLastUrl();
-			$this->Page_Terminate(ew_GetUrl("login.php"));
-		}
-		if (!$Security->CanEdit()) {
-			$Security->SaveLastUrl();
-			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
-			$this->Page_Terminate(ew_GetUrl("usuarioslist.php"));
-		}
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
@@ -634,7 +625,6 @@ class cusuarios_edit extends cusuarios {
 			$this->_email->ViewCustomAttributes = "";
 
 			// activo
-			if ($Security->CanAdmin()) { // System admin
 			if (strval($this->activo->CurrentValue) <> "") {
 				$sFilterWrk = "`codigo`" . ew_SearchString("=", $this->activo->CurrentValue, EW_DATATYPE_NUMBER);
 			$sSqlWrk = "SELECT `codigo`, `nombre_nivel` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `nivel_usuario`";
@@ -655,9 +645,6 @@ class cusuarios_edit extends cusuarios {
 				}
 			} else {
 				$this->activo->ViewValue = NULL;
-			}
-			} else {
-				$this->activo->ViewValue = "********";
 			}
 			$this->activo->ViewCustomAttributes = "";
 
@@ -725,9 +712,6 @@ class cusuarios_edit extends cusuarios {
 			// activo
 			$this->activo->EditAttrs["class"] = "form-control";
 			$this->activo->EditCustomAttributes = "";
-			if (!$Security->CanAdmin()) { // System admin
-				$this->activo->EditValue = "********";
-			} else {
 			$sFilterWrk = "";
 			$sSqlWrk = "SELECT `codigo`, `nombre_nivel` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `nivel_usuario`";
 			$sWhereWrk = "";
@@ -743,7 +727,6 @@ class cusuarios_edit extends cusuarios {
 			if ($rswrk) $rswrk->Close();
 			array_unshift($arwrk, array("", $Language->Phrase("PleaseSelect"), "", "", "", "", "", "", ""));
 			$this->activo->EditValue = $arwrk;
-			}
 
 			// Edit refer script
 			// codigo
@@ -847,9 +830,7 @@ class cusuarios_edit extends cusuarios {
 			$this->_email->SetDbValueDef($rsnew, $this->_email->CurrentValue, NULL, $this->_email->ReadOnly);
 
 			// activo
-			if ($Security->CanAdmin()) { // System admin
 			$this->activo->SetDbValueDef($rsnew, $this->activo->CurrentValue, NULL, $this->activo->ReadOnly);
-			}
 
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
@@ -1170,11 +1151,6 @@ $usuarios_edit->ShowMessage();
 	<div id="r_activo" class="form-group">
 		<label id="elh_usuarios_activo" for="x_activo" class="col-sm-2 control-label ewLabel"><?php echo $usuarios->activo->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $usuarios->activo->CellAttributes() ?>>
-<?php if (!$Security->IsAdmin() && $Security->IsLoggedIn()) { // Non system admin ?>
-<span id="el_usuarios_activo">
-<p class="form-control-static"><?php echo $usuarios->activo->EditValue ?></p>
-</span>
-<?php } else { ?>
 <span id="el_usuarios_activo">
 <select data-field="x_activo" id="x_activo" name="x_activo"<?php echo $usuarios->activo->EditAttributes() ?>>
 <?php
@@ -1198,7 +1174,6 @@ if (is_array($usuarios->activo->EditValue)) {
 fusuariosedit.Lists["x_activo"].Options = <?php echo (is_array($usuarios->activo->EditValue)) ? ew_ArrayToJson($usuarios->activo->EditValue, 1) : "[]" ?>;
 </script>
 </span>
-<?php } ?>
 <?php echo $usuarios->activo->CustomMsg ?></div></div>
 	</div>
 <?php } ?>

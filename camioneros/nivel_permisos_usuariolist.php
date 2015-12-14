@@ -313,10 +313,6 @@ class cnivel_permisos_usuario_list extends cnivel_permisos_usuario {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
-		if (!$Security->CanAdmin()) {
-			$Security->SaveLastUrl();
-			$this->Page_Terminate(ew_GetUrl("login.php"));
-		}
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();

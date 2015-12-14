@@ -239,15 +239,6 @@ class choja_mantenimientos_add extends choja_mantenimientos {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
-		if (!$Security->IsLoggedIn()) {
-			$Security->SaveLastUrl();
-			$this->Page_Terminate(ew_GetUrl("login.php"));
-		}
-		if (!$Security->CanAdd()) {
-			$Security->SaveLastUrl();
-			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
-			$this->Page_Terminate(ew_GetUrl("hoja_mantenimientoslist.php"));
-		}
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
@@ -1264,9 +1255,7 @@ if (is_array($hoja_mantenimientos->id_vehiculo->EditValue)) {
 }
 ?>
 </select>
-<?php if (AllowAdd(CurrentProjectID() . "vehiculos")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $hoja_mantenimientos->id_vehiculo->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_vehiculo',url:'vehiculosaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_vehiculo"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $hoja_mantenimientos->id_vehiculo->FldCaption() ?></span></button>
-<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `Patente` AS `DispFld`, `modelo` AS `Disp2Fld`, `nombre` AS `Disp3Fld`, '' AS `Disp4Fld` FROM `vehiculos`";
 $sWhereWrk = "";
@@ -1307,9 +1296,7 @@ if (is_array($hoja_mantenimientos->id_taller->EditValue)) {
 }
 ?>
 </select>
-<?php if (AllowAdd(CurrentProjectID() . "talleres")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $hoja_mantenimientos->id_taller->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_taller',url:'talleresaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_taller"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $hoja_mantenimientos->id_taller->FldCaption() ?></span></button>
-<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `taller` AS `DispFld`, `tel` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `talleres`";
 $sWhereWrk = "";
@@ -1347,9 +1334,7 @@ if (is_array($hoja_mantenimientos->id_tipo_mantenimiento->EditValue)) {
 }
 ?>
 </select>
-<?php if (AllowAdd(CurrentProjectID() . "tipo_mantenimientos")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $hoja_mantenimientos->id_tipo_mantenimiento->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_tipo_mantenimiento',url:'tipo_mantenimientosaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_tipo_mantenimiento"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $hoja_mantenimientos->id_tipo_mantenimiento->FldCaption() ?></span></button>
-<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `tipo_mantenimiento` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `tipo_mantenimientos`";
 $sWhereWrk = "";

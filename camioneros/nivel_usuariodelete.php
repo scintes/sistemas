@@ -238,10 +238,6 @@ class cnivel_usuario_delete extends cnivel_usuario {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
-		if (!$Security->CanAdmin()) {
-			$Security->SaveLastUrl();
-			$this->Page_Terminate(ew_GetUrl("login.php"));
-		}
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
@@ -415,11 +411,6 @@ class cnivel_usuario_delete extends cnivel_usuario {
 		$row = &$rs->fields;
 		$this->Row_Selected($row);
 		$this->codigo->setDbValue($rs->fields('codigo'));
-		if (is_null($this->codigo->CurrentValue)) {
-			$this->codigo->CurrentValue = 0;
-		} else {
-			$this->codigo->CurrentValue = intval($this->codigo->CurrentValue);
-		}
 		$this->nombre_nivel->setDbValue($rs->fields('nombre_nivel'));
 	}
 
@@ -517,7 +508,6 @@ class cnivel_usuario_delete extends cnivel_usuario {
 				$sThisKey = "";
 				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
 				$sThisKey .= $row['codigo'];
-				$x_codigo = $row['codigo']; // Get User Level id
 				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
 				$DeleteRows = $this->Delete($row); // Delete
 				$conn->raiseErrorFn = '';
@@ -525,9 +515,6 @@ class cnivel_usuario_delete extends cnivel_usuario {
 					break;
 				if ($sKey <> "") $sKey .= ", ";
 				$sKey .= $sThisKey;
-				if (!is_null($x_codigo)) {
-					$conn->Execute("DELETE FROM " . EW_USER_LEVEL_PRIV_TABLE . " WHERE " . EW_USER_LEVEL_PRIV_USER_LEVEL_ID_FIELD . " = " . $x_codigo); // Delete user rights as well
-				}
 			}
 		} else {
 

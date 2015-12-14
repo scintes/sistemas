@@ -238,10 +238,6 @@ class cnivel_usuario_edit extends cnivel_usuario {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
-		if (!$Security->CanAdmin()) {
-			$Security->SaveLastUrl();
-			$this->Page_Terminate(ew_GetUrl("login.php"));
-		}
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
@@ -543,11 +539,6 @@ class cnivel_usuario_edit extends cnivel_usuario {
 		$row = &$rs->fields;
 		$this->Row_Selected($row);
 		$this->codigo->setDbValue($rs->fields('codigo'));
-		if (is_null($this->codigo->CurrentValue)) {
-			$this->codigo->CurrentValue = 0;
-		} else {
-			$this->codigo->CurrentValue = intval($this->codigo->CurrentValue);
-		}
 		$this->nombre_nivel->setDbValue($rs->fields('nombre_nivel'));
 	}
 
@@ -846,27 +837,6 @@ fnivel_usuarioedit.Validate = function() {
 			elm = this.GetElements("x" + infix + "_nombre_nivel");
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
 				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $nivel_usuario->nombre_nivel->FldCaption(), $nivel_usuario->nombre_nivel->ReqErrMsg)) ?>");
-			var elId = fobj.elements["x" + infix + "_codigo"];
-			var elName = fobj.elements["x" + infix + "_nombre_nivel"];
-			if (elId && elName) {
-				elId.value = $.trim(elId.value);
-				elName.value = $.trim(elName.value);
-				if (elId && !ew_CheckInteger(elId.value))
-					return this.OnError(elId, ewLanguage.Phrase("UserLevelIDInteger"));
-				var level = parseInt(elId.value, 10);
-				if (level == 0) {
-					if (!ew_SameText(elName.value, "default"))
-						return this.OnError(elName, ewLanguage.Phrase("UserLevelDefaultName"));
-				} else if (level == -1) {
-					if (!ew_SameText(elName.value, "administrator"))
-						return this.OnError(elName, ewLanguage.Phrase("UserLevelAdministratorName"));
-				} else if (level < -1) {
-					return this.OnError(elId, ewLanguage.Phrase("UserLevelIDIncorrect"));
-				} else if (level > 0) { 
-					if (ew_SameText(elName.value, "administrator") || ew_SameText(elName.value, "default"))
-						return this.OnError(elName, ewLanguage.Phrase("UserLevelNameIncorrect"));
-				}
-			}
 
 			// Set up row object
 			ew_ElementsToRow(fobj);

@@ -313,10 +313,6 @@ class cnivel_usuario_list extends cnivel_usuario {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
-		if (!$Security->CanAdmin()) {
-			$Security->SaveLastUrl();
-			$this->Page_Terminate(ew_GetUrl("login.php"));
-		}
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
@@ -897,13 +893,6 @@ class cnivel_usuario_list extends cnivel_usuario {
 		$item->Visible = $Security->CanDelete();
 		$item->OnLeft = FALSE;
 
-		// "userpermission"
-		$item = &$this->ListOptions->Add("userpermission");
-		$item->CssStyle = "white-space: nowrap;";
-		$item->Visible = $Security->IsAdmin();
-		$item->OnLeft = FALSE;
-		$item->ButtonGroupName = "userpermission"; // Use own group
-
 		// "checkbox"
 		$item = &$this->ListOptions->Add("checkbox");
 		$item->Visible = FALSE;
@@ -962,14 +951,6 @@ class cnivel_usuario_list extends cnivel_usuario {
 			$oListOpt->Body = "<a class=\"ewRowLink ewDelete\"" . "" . " title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("DeleteLink") . "</a>";
 		else
 			$oListOpt->Body = "";
-
-		// "userpermission"
-		$oListOpt = &$this->ListOptions->Items["userpermission"];
-		if ($this->codigo->CurrentValue < 0) {
-			$oListOpt->Body = "-";
-		} else {
-			$oListOpt->Body = "<a class=\"ewRowLink ewUserPermission\" title=\"" . ew_HtmlTitle($Language->Phrase("Permission")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("Permission")) . "\" href=\"" . ew_HtmlEncode("userpriv.php?codigo=" . $this->codigo->CurrentValue) . "\">" . $Language->Phrase("Permission") . "</a>";
-		}
 
 		// "checkbox"
 		$oListOpt = &$this->ListOptions->Items["checkbox"];
@@ -1211,11 +1192,6 @@ class cnivel_usuario_list extends cnivel_usuario {
 		$row = &$rs->fields;
 		$this->Row_Selected($row);
 		$this->codigo->setDbValue($rs->fields('codigo'));
-		if (is_null($this->codigo->CurrentValue)) {
-			$this->codigo->CurrentValue = 0;
-		} else {
-			$this->codigo->CurrentValue = intval($this->codigo->CurrentValue);
-		}
 		$this->nombre_nivel->setDbValue($rs->fields('nombre_nivel'));
 	}
 

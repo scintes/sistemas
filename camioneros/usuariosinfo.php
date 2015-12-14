@@ -595,7 +595,6 @@ class cusuarios extends cTable {
 		$this->_email->ViewCustomAttributes = "";
 
 		// activo
-		if ($Security->CanAdmin()) { // System admin
 		if (strval($this->activo->CurrentValue) <> "") {
 			$sFilterWrk = "`codigo`" . ew_SearchString("=", $this->activo->CurrentValue, EW_DATATYPE_NUMBER);
 		$sSqlWrk = "SELECT `codigo`, `nombre_nivel` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `nivel_usuario`";
@@ -616,9 +615,6 @@ class cusuarios extends cTable {
 			}
 		} else {
 			$this->activo->ViewValue = NULL;
-		}
-		} else {
-			$this->activo->ViewValue = "********";
 		}
 		$this->activo->ViewCustomAttributes = "";
 
@@ -696,10 +692,6 @@ class cusuarios extends cTable {
 		// activo
 		$this->activo->EditAttrs["class"] = "form-control";
 		$this->activo->EditCustomAttributes = "";
-		if (!$Security->CanAdmin()) { // System admin
-			$this->activo->EditValue = "********";
-		} else {
-		}
 
 		// Call Row Rendered event
 		$this->Row_Rendered();

@@ -238,15 +238,6 @@ class clocalidades_add extends clocalidades {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
-		if (!$Security->IsLoggedIn()) {
-			$Security->SaveLastUrl();
-			$this->Page_Terminate(ew_GetUrl("login.php"));
-		}
-		if (!$Security->CanAdd()) {
-			$Security->SaveLastUrl();
-			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
-			$this->Page_Terminate(ew_GetUrl("localidadeslist.php"));
-		}
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
@@ -968,9 +959,7 @@ if (is_array($localidades->id_provincia->EditValue)) {
 }
 ?>
 </select>
-<?php if (AllowAdd(CurrentProjectID() . "provincias")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $localidades->id_provincia->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_provincia',url:'provinciasaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_provincia"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $localidades->id_provincia->FldCaption() ?></span></button>
-<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `provincia` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `provincias`";
 $sWhereWrk = "";

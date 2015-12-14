@@ -239,15 +239,6 @@ class choja_rutas_add extends choja_rutas {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
-		if (!$Security->IsLoggedIn()) {
-			$Security->SaveLastUrl();
-			$this->Page_Terminate(ew_GetUrl("login.php"));
-		}
-		if (!$Security->CanAdd()) {
-			$Security->SaveLastUrl();
-			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
-			$this->Page_Terminate(ew_GetUrl("hoja_rutaslist.php"));
-		}
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
@@ -1782,9 +1773,7 @@ if (is_array($hoja_rutas->id_cliente->EditValue)) {
 }
 ?>
 </select>
-<?php if (AllowAdd(CurrentProjectID() . "clientes")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $hoja_rutas->id_cliente->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_cliente',url:'clientesaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_cliente"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $hoja_rutas->id_cliente->FldCaption() ?></span></button>
-<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `cuit_cuil` AS `DispFld`, `razon_social` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `clientes`";
 $sWhereWrk = "";
@@ -1952,9 +1941,7 @@ if (is_array($hoja_rutas->id_vehiculo->EditValue)) {
 }
 ?>
 </select>
-<?php if (AllowAdd(CurrentProjectID() . "vehiculos")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $hoja_rutas->id_vehiculo->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_vehiculo',url:'vehiculosaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_vehiculo"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $hoja_rutas->id_vehiculo->FldCaption() ?></span></button>
-<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `Patente` AS `DispFld`, `nombre` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `vehiculos`";
 $sWhereWrk = "";
@@ -1996,9 +1983,7 @@ if (is_array($hoja_rutas->id_tipo_carga->EditValue)) {
 }
 ?>
 </select>
-<?php if (AllowAdd(CurrentProjectID() . "tipo_cargas")) { ?>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $hoja_rutas->id_tipo_carga->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_tipo_carga',url:'tipo_cargasaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_tipo_carga"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $hoja_rutas->id_tipo_carga->FldCaption() ?></span></button>
-<?php } ?>
 <?php
 $sSqlWrk = "SELECT `codigo`, `Tipo_carga` AS `DispFld`, `precio_base` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `tipo_cargas`";
 $sWhereWrk = "";

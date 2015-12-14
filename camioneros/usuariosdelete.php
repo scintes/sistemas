@@ -234,15 +234,6 @@ class cusuarios_delete extends cusuarios {
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
-		if (!$Security->IsLoggedIn()) {
-			$Security->SaveLastUrl();
-			$this->Page_Terminate(ew_GetUrl("login.php"));
-		}
-		if (!$Security->CanDelete()) {
-			$Security->SaveLastUrl();
-			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
-			$this->Page_Terminate(ew_GetUrl("usuarioslist.php"));
-		}
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
@@ -500,7 +491,6 @@ class cusuarios_delete extends cusuarios {
 			$this->_email->ViewCustomAttributes = "";
 
 			// activo
-			if ($Security->CanAdmin()) { // System admin
 			if (strval($this->activo->CurrentValue) <> "") {
 				$sFilterWrk = "`codigo`" . ew_SearchString("=", $this->activo->CurrentValue, EW_DATATYPE_NUMBER);
 			$sSqlWrk = "SELECT `codigo`, `nombre_nivel` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `nivel_usuario`";
@@ -521,9 +511,6 @@ class cusuarios_delete extends cusuarios {
 				}
 			} else {
 				$this->activo->ViewValue = NULL;
-			}
-			} else {
-				$this->activo->ViewValue = "********";
 			}
 			$this->activo->ViewCustomAttributes = "";
 

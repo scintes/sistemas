@@ -433,11 +433,11 @@ class cregister extends cusuarios {
 			$rsnew = $rs->fields;
 			$this->LoadRowValues($rs); // Load row values
 			$rs->Close();
-			$rsact = array('nombre' => "Y"); // Auto register
+			$rsact = array('activo' => 1); // Auto register
 			$this->CurrentFilter = $sFilter;
 			$res = $this->Update($rsact);
 			if ($res) { // Call User Activated event
-				$rsnew['nombre'] = "Y";
+				$rsnew['activo'] = 1;
 				$this->User_Activated($rsnew);
 			}
 			return $res;
@@ -595,7 +595,6 @@ class cregister extends cusuarios {
 			$this->_email->ViewCustomAttributes = "";
 
 			// activo
-			if ($Security->CanAdmin()) { // System admin
 			if (strval($this->activo->CurrentValue) <> "") {
 				$sFilterWrk = "`codigo`" . ew_SearchString("=", $this->activo->CurrentValue, EW_DATATYPE_NUMBER);
 			$sSqlWrk = "SELECT `codigo`, `nombre_nivel` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `nivel_usuario`";
@@ -616,9 +615,6 @@ class cregister extends cusuarios {
 				}
 			} else {
 				$this->activo->ViewValue = NULL;
-			}
-			} else {
-				$this->activo->ViewValue = "********";
 			}
 			$this->activo->ViewCustomAttributes = "";
 
@@ -682,9 +678,6 @@ class cregister extends cusuarios {
 			// activo
 			$this->activo->EditAttrs["class"] = "form-control";
 			$this->activo->EditCustomAttributes = "";
-			if (!$Security->CanAdmin()) { // System admin
-				$this->activo->EditValue = "********";
-			} else {
 			$sFilterWrk = "";
 			$sSqlWrk = "SELECT `codigo`, `nombre_nivel` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `nivel_usuario`";
 			$sWhereWrk = "";
@@ -700,7 +693,6 @@ class cregister extends cusuarios {
 			if ($rswrk) $rswrk->Close();
 			array_unshift($arwrk, array("", $Language->Phrase("PleaseSelect"), "", "", "", "", "", "", ""));
 			$this->activo->EditValue = $arwrk;
-			}
 
 			// Edit refer script
 			// codigo
@@ -821,7 +813,7 @@ class cregister extends cusuarios {
 		$this->_email->SetDbValueDef($rsnew, $this->_email->CurrentValue, NULL, FALSE);
 
 		// activo
-		$rsnew['activo'] = 0; // Set default User Level
+		$this->activo->SetDbValueDef($rsnew, $this->activo->CurrentValue, NULL, FALSE);
 
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
@@ -1114,6 +1106,24 @@ $register->ShowMessage();
 <input type="hidden" data-field="c_contrasenia" name="c_contrasenia" id="c_contrasenia" value="<?php echo ew_HtmlEncode($usuarios->contrasenia->FormValue) ?>">
 <?php } ?>
 </div></div>
+	</div>
+<?php } ?>
+<?php if ($usuarios->nombre->Visible) { // nombre ?>
+	<div id="r_nombre" class="form-group">
+		<label id="elh_usuarios_nombre" for="x_nombre" class="col-sm-2 control-label ewLabel"><?php echo $usuarios->nombre->FldCaption() ?></label>
+		<div class="col-sm-10"><div<?php echo $usuarios->nombre->CellAttributes() ?>>
+<?php if ($usuarios->CurrentAction <> "F") { ?>
+<span id="el_usuarios_nombre">
+<input type="text" data-field="x_nombre" name="x_nombre" id="x_nombre" size="30" maxlength="150" placeholder="<?php echo ew_HtmlEncode($usuarios->nombre->PlaceHolder) ?>" value="<?php echo $usuarios->nombre->EditValue ?>"<?php echo $usuarios->nombre->EditAttributes() ?>>
+</span>
+<?php } else { ?>
+<span id="el_usuarios_nombre">
+<span<?php echo $usuarios->nombre->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $usuarios->nombre->ViewValue ?></p></span>
+</span>
+<input type="hidden" data-field="x_nombre" name="x_nombre" id="x_nombre" value="<?php echo ew_HtmlEncode($usuarios->nombre->FormValue) ?>">
+<?php } ?>
+<?php echo $usuarios->nombre->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($usuarios->_email->Visible) { // email ?>
