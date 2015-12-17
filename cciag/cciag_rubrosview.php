@@ -1,14 +1,15 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_rubrosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_actividadgridcls.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_rubrosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_actividadgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -458,9 +459,6 @@ class crubros_view extends crubros {
 			if (@$_GET["id"] <> "") {
 				$this->id->setQueryStringValue($_GET["id"]);
 				$this->RecKey["id"] = $this->id->QueryStringValue;
-			} elseif (@$_POST["id"] <> "") {
-				$this->id->setFormValue($_POST["id"]);
-				$this->RecKey["id"] = $this->id->FormValue;
 			} else {
 				$sReturnUrl = "cciag_rubroslist.php"; // Return to list
 			}
@@ -522,6 +520,20 @@ class crubros_view extends crubros {
 		$item = &$option->Add("delete");
 		$item->Body = "<a class=\"ewAction ewDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("ViewPageDeleteLink") . "</a>";
 		$item->Visible = ($this->DeleteUrl <> "" && $Security->CanDelete());
+
+		// Show detail edit/copy
+		if ($this->getCurrentDetailTable() <> "") {
+
+			// Detail Edit
+			$item = &$option->Add("detailedit");
+			$item->Body = "<a class=\"ewAction ewDetailEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=" . $this->getCurrentDetailTable())) . "\">" . $Language->Phrase("MasterDetailEditLink") . "</a>";
+			$item->Visible = ($Security->CanEdit());
+
+			// Detail Copy
+			$item = &$option->Add("detailcopy");
+			$item->Body = "<a class=\"ewAction ewDetailCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=" . $this->getCurrentDetailTable())) . "\">" . $Language->Phrase("MasterDetailCopyLink") . "</a>";
+			$item->Visible = ($Security->CanAdd());
+		}
 		$option = &$options["detail"];
 		$DetailTableLink = "";
 		$DetailViewTblVar = "";
@@ -530,8 +542,8 @@ class crubros_view extends crubros {
 
 		// "detail_actividad"
 		$item = &$option->Add("detail_actividad");
-		$body = $Language->Phrase("ViewPageDetailLink") . $Language->TablePhrase("actividad", "TblCaption");
-		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_actividadlist.php?" . EW_TABLE_SHOW_MASTER . "=rubros&fk_id=" . urlencode(strval($this->id->CurrentValue)) . "") . "\">" . $body . "</a>";
+		$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("actividad", "TblCaption");
+		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_actividadlist.php?" . EW_TABLE_SHOW_MASTER . "=rubros&fk_id=" . strval($this->id->CurrentValue) . "") . "\">" . $body . "</a>";
 		$links = "";
 		if ($GLOBALS["actividad_grid"] && $GLOBALS["actividad_grid"]->DetailView && $Security->CanView() && $Security->AllowView(CurrentProjectID() . 'actividad')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=actividad")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
@@ -653,7 +665,7 @@ class crubros_view extends crubros {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -858,10 +870,7 @@ class crubros_view extends crubros {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -1011,17 +1020,10 @@ class crubros_view extends crubros {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -1085,10 +1087,9 @@ class crubros_view extends crubros {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_rubroslist.php", "", $this->TableVar, TRUE);
 		$PageId = "view";
-		$Breadcrumb->Add("view", $PageId, $url);
+		$Breadcrumb->Add("view", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -1196,7 +1197,7 @@ Page_Rendering();
 // Page Rendering event
 $rubros_view->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($rubros->Export == "") { ?>
 <script type="text/javascript">
 
@@ -1262,7 +1263,7 @@ $rubros_view->ShowMessage();
 	<tr id="r_id">
 		<td><span id="elh_rubros_id"><?php echo $rubros->id->FldCaption() ?></span></td>
 		<td<?php echo $rubros->id->CellAttributes() ?>>
-<span id="el_rubros_id">
+<span id="el_rubros_id" class="form-group">
 <span<?php echo $rubros->id->ViewAttributes() ?>>
 <?php echo $rubros->id->ViewValue ?></span>
 </span>
@@ -1273,7 +1274,7 @@ $rubros_view->ShowMessage();
 	<tr id="r_rubro">
 		<td><span id="elh_rubros_rubro"><?php echo $rubros->rubro->FldCaption() ?></span></td>
 		<td<?php echo $rubros->rubro->CellAttributes() ?>>
-<span id="el_rubros_rubro">
+<span id="el_rubros_rubro" class="form-group">
 <span<?php echo $rubros->rubro->ViewAttributes() ?>>
 <?php echo $rubros->rubro->ViewValue ?></span>
 </span>
@@ -1284,7 +1285,7 @@ $rubros_view->ShowMessage();
 	<tr id="r_Descripcion">
 		<td><span id="elh_rubros_Descripcion"><?php echo $rubros->Descripcion->FldCaption() ?></span></td>
 		<td<?php echo $rubros->Descripcion->CellAttributes() ?>>
-<span id="el_rubros_Descripcion">
+<span id="el_rubros_Descripcion" class="form-group">
 <span<?php echo $rubros->Descripcion->ViewAttributes() ?>>
 <?php echo $rubros->Descripcion->ViewValue ?></span>
 </span>
@@ -1295,7 +1296,7 @@ $rubros_view->ShowMessage();
 	<tr id="r_activa">
 		<td><span id="elh_rubros_activa"><?php echo $rubros->activa->FldCaption() ?></span></td>
 		<td<?php echo $rubros->activa->CellAttributes() ?>>
-<span id="el_rubros_activa">
+<span id="el_rubros_activa" class="form-group">
 <span<?php echo $rubros->activa->ViewAttributes() ?>>
 <?php echo $rubros->activa->ViewValue ?></span>
 </span>
@@ -1328,7 +1329,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $rubros_view->Page_Terminate();
 ?>

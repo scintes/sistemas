@@ -1,13 +1,14 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_montosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_montosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -404,7 +405,7 @@ class cmontos_delete extends cmontos {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -572,7 +573,7 @@ class cmontos_delete extends cmontos {
 		}
 		$DeleteRows = TRUE;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE) {
@@ -609,7 +610,7 @@ class cmontos_delete extends cmontos {
 				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
 				$sThisKey .= $row['id'];
 				$this->LoadDbValues($row);
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				$DeleteRows = $this->Delete($row); // Delete
 				$conn->raiseErrorFn = '';
 				if ($DeleteRows === FALSE)
@@ -663,10 +664,9 @@ class cmontos_delete extends cmontos {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_montoslist.php", "", $this->TableVar, TRUE);
 		$PageId = "delete";
-		$Breadcrumb->Add("delete", $PageId, $url);
+		$Breadcrumb->Add("delete", $PageId, ew_CurrentUrl());
 	}
 
 	// Write Audit Trail start/end for grid update
@@ -787,7 +787,7 @@ Page_Rendering();
 // Page Rendering event
 $montos_delete->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -898,7 +898,7 @@ while (!$montos_delete->Recordset->EOF) {
 	<tr<?php echo $montos->RowAttributes() ?>>
 <?php if ($montos->id->Visible) { // id ?>
 		<td<?php echo $montos->id->CellAttributes() ?>>
-<span id="el<?php echo $montos_delete->RowCnt ?>_montos_id" class="montos_id">
+<span id="el<?php echo $montos_delete->RowCnt ?>_montos_id" class="form-group montos_id">
 <span<?php echo $montos->id->ViewAttributes() ?>>
 <?php echo $montos->id->ListViewValue() ?></span>
 </span>
@@ -906,7 +906,7 @@ while (!$montos_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($montos->descripcion->Visible) { // descripcion ?>
 		<td<?php echo $montos->descripcion->CellAttributes() ?>>
-<span id="el<?php echo $montos_delete->RowCnt ?>_montos_descripcion" class="montos_descripcion">
+<span id="el<?php echo $montos_delete->RowCnt ?>_montos_descripcion" class="form-group montos_descripcion">
 <span<?php echo $montos->descripcion->ViewAttributes() ?>>
 <?php echo $montos->descripcion->ListViewValue() ?></span>
 </span>
@@ -914,7 +914,7 @@ while (!$montos_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($montos->importe->Visible) { // importe ?>
 		<td<?php echo $montos->importe->CellAttributes() ?>>
-<span id="el<?php echo $montos_delete->RowCnt ?>_montos_importe" class="montos_importe">
+<span id="el<?php echo $montos_delete->RowCnt ?>_montos_importe" class="form-group montos_importe">
 <span<?php echo $montos->importe->ViewAttributes() ?>>
 <?php echo $montos->importe->ListViewValue() ?></span>
 </span>
@@ -922,7 +922,7 @@ while (!$montos_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($montos->fecha_creacion->Visible) { // fecha_creacion ?>
 		<td<?php echo $montos->fecha_creacion->CellAttributes() ?>>
-<span id="el<?php echo $montos_delete->RowCnt ?>_montos_fecha_creacion" class="montos_fecha_creacion">
+<span id="el<?php echo $montos_delete->RowCnt ?>_montos_fecha_creacion" class="form-group montos_fecha_creacion">
 <span<?php echo $montos->fecha_creacion->ViewAttributes() ?>>
 <?php echo $montos->fecha_creacion->ListViewValue() ?></span>
 </span>
@@ -930,7 +930,7 @@ while (!$montos_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($montos->activa->Visible) { // activa ?>
 		<td<?php echo $montos->activa->CellAttributes() ?>>
-<span id="el<?php echo $montos_delete->RowCnt ?>_montos_activa" class="montos_activa">
+<span id="el<?php echo $montos_delete->RowCnt ?>_montos_activa" class="form-group montos_activa">
 <span<?php echo $montos->activa->ViewAttributes() ?>>
 <?php echo $montos->activa->ListViewValue() ?></span>
 </span>
@@ -938,7 +938,7 @@ while (!$montos_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($montos->id_usuario->Visible) { // id_usuario ?>
 		<td<?php echo $montos->id_usuario->CellAttributes() ?>>
-<span id="el<?php echo $montos_delete->RowCnt ?>_montos_id_usuario" class="montos_id_usuario">
+<span id="el<?php echo $montos_delete->RowCnt ?>_montos_id_usuario" class="form-group montos_id_usuario">
 <span<?php echo $montos->id_usuario->ViewAttributes() ?>>
 <?php echo $montos->id_usuario->ListViewValue() ?></span>
 </span>
@@ -972,7 +972,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $montos_delete->Page_Terminate();
 ?>

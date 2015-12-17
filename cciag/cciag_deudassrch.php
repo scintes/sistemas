@@ -1,14 +1,15 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_deudasinfo.php" ?>
-<?php include_once "cciag_sociosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_deudasinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -727,10 +728,9 @@ class cdeudas_search extends cdeudas {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_deudaslist.php", "", $this->TableVar, TRUE);
 		$PageId = "search";
-		$Breadcrumb->Add("search", $PageId, $url);
+		$Breadcrumb->Add("search", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -819,7 +819,7 @@ Page_Rendering();
 // Page Rendering event
 $deudas_search->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -965,7 +965,7 @@ if (is_array($deudas->id->EditValue)) {
 		<div class="<?php echo $deudas_search->SearchRightColumnClass ?>"><div<?php echo $deudas->fecha->CellAttributes() ?>>
 			<span id="el_deudas_fecha">
 <input type="text" data-field="x_fecha" name="x_fecha" id="x_fecha" placeholder="<?php echo ew_HtmlEncode($deudas->fecha->PlaceHolder) ?>" value="<?php echo $deudas->fecha->EditValue ?>"<?php echo $deudas->fecha->EditAttributes() ?>>
-<?php if (!$deudas->fecha->ReadOnly && !$deudas->fecha->Disabled && !isset($deudas->fecha->EditAttrs["readonly"]) && !isset($deudas->fecha->EditAttrs["disabled"])) { ?>
+<?php if (!$deudas->fecha->ReadOnly && !$deudas->fecha->Disabled && @$deudas->fecha->EditAttrs["readonly"] == "" && @$deudas->fecha->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fdeudassearch", "x_fecha", "%d/%m/%Y");
 </script>
@@ -1057,7 +1057,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $deudas_search->Page_Terminate();
 ?>

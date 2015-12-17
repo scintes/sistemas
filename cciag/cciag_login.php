@@ -1,12 +1,13 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -265,9 +266,8 @@ class clogin extends cusuario {
 	function Page_Main() {
 		global $Security, $Language, $UserProfile, $gsFormError;
 		global $Breadcrumb;
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb = new cBreadcrumb;
-		$Breadcrumb->Add("login", "LoginPage", $url, "", "", TRUE);
+		$Breadcrumb->Add("login", "LoginPage", ew_CurrentUrl(), "", "", TRUE);
 		$sPassword = "";
 		$sLastUrl = $Security->LastUrl(); // Get last URL
 		if ($sLastUrl == "")
@@ -498,7 +498,7 @@ Page_Rendering();
 // Page Rendering event
 $login->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Write your client script here, no need to add script tags.
@@ -597,7 +597,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $login->Page_Terminate();
 ?>

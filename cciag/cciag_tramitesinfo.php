@@ -30,8 +30,6 @@ class ctramites extends cTable {
 		$this->ExportPageBreakCount = 0; // Page break per every n record (PDF only)
 		$this->ExportPageOrientation = "portrait"; // Page orientation (PDF only)
 		$this->ExportPageSize = "a4"; // Page size (PDF only)
-		$this->ExportExcelPageOrientation = ""; // Page orientation (PHPExcel only)
-		$this->ExportExcelPageSize = ""; // Page size (PHPExcel only)
 		$this->DetailAdd = TRUE; // Allow detail add
 		$this->DetailEdit = TRUE; // Allow detail edit
 		$this->DetailView = TRUE; // Allow detail view
@@ -388,15 +386,11 @@ class ctramites extends cTable {
 	function Update(&$rs, $where = "", $rsold = NULL) {
 		global $conn;
 
-		// Cascade Update detail table 'seguimiento_tramites'
-		$bCascadeUpdate = FALSE;
-		$rscascade = array();
-		if (!is_null($rsold) && (isset($rs['codigo']) && $rsold['codigo'] <> $rs['codigo'])) { // Update detail field 'id_tramite'
-			$bCascadeUpdate = TRUE;
-			$rscascade['id_tramite'] = $rs['codigo']; 
-		}
-		if ($bCascadeUpdate) {
+		// Cascade update detail field 'id_tramite'
+		if (!is_null($rsold) && (isset($rs['codigo']) && $rsold['codigo'] <> $rs['codigo'])) {
 			if (!isset($GLOBALS["seguimiento_tramites"])) $GLOBALS["seguimiento_tramites"] = new cseguimiento_tramites();
+			$rscascade = array();
+			$rscascade['id_tramite'] = $rs['codigo']; 
 			$GLOBALS["seguimiento_tramites"]->Update($rscascade, "`id_tramite` = " . ew_QuotedValue($rsold['codigo'], EW_DATATYPE_NUMBER));
 		}
 		return $conn->Execute($this->UpdateSQL($rs, $where));
@@ -769,9 +763,6 @@ class ctramites extends cTable {
 
 	// Aggregate list row (for rendering)
 	function AggregateListRow() {
-
-		// Call Row Rendered event
-		$this->Row_Rendered();
 	}
 	var $ExportDoc;
 

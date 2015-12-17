@@ -1,13 +1,14 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_userlevelsinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userlevelsinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -448,9 +449,6 @@ class cuserlevels_view extends cuserlevels {
 			if (@$_GET["userlevelid"] <> "") {
 				$this->userlevelid->setQueryStringValue($_GET["userlevelid"]);
 				$this->RecKey["userlevelid"] = $this->userlevelid->QueryStringValue;
-			} elseif (@$_POST["userlevelid"] <> "") {
-				$this->userlevelid->setFormValue($_POST["userlevelid"]);
-				$this->RecKey["userlevelid"] = $this->userlevelid->FormValue;
 			} else {
 				$sReturnUrl = "cciag_userlevelslist.php"; // Return to list
 			}
@@ -565,7 +563,7 @@ class cuserlevels_view extends cuserlevels {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -733,10 +731,7 @@ class cuserlevels_view extends cuserlevels {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -868,17 +863,10 @@ class cuserlevels_view extends cuserlevels {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -913,10 +901,9 @@ class cuserlevels_view extends cuserlevels {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_userlevelslist.php", "", $this->TableVar, TRUE);
 		$PageId = "view";
-		$Breadcrumb->Add("view", $PageId, $url);
+		$Breadcrumb->Add("view", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -1024,7 +1011,7 @@ Page_Rendering();
 // Page Rendering event
 $userlevels_view->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($userlevels->Export == "") { ?>
 <script type="text/javascript">
 
@@ -1090,7 +1077,7 @@ $userlevels_view->ShowMessage();
 	<tr id="r_userlevelid">
 		<td><span id="elh_userlevels_userlevelid"><?php echo $userlevels->userlevelid->FldCaption() ?></span></td>
 		<td<?php echo $userlevels->userlevelid->CellAttributes() ?>>
-<span id="el_userlevels_userlevelid">
+<span id="el_userlevels_userlevelid" class="form-group">
 <span<?php echo $userlevels->userlevelid->ViewAttributes() ?>>
 <?php echo $userlevels->userlevelid->ViewValue ?></span>
 </span>
@@ -1101,7 +1088,7 @@ $userlevels_view->ShowMessage();
 	<tr id="r_userlevelname">
 		<td><span id="elh_userlevels_userlevelname"><?php echo $userlevels->userlevelname->FldCaption() ?></span></td>
 		<td<?php echo $userlevels->userlevelname->CellAttributes() ?>>
-<span id="el_userlevels_userlevelname">
+<span id="el_userlevels_userlevelname" class="form-group">
 <span<?php echo $userlevels->userlevelname->ViewAttributes() ?>>
 <?php echo $userlevels->userlevelname->ViewValue ?></span>
 </span>
@@ -1126,7 +1113,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $userlevels_view->Page_Terminate();
 ?>

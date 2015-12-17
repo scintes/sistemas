@@ -1,5 +1,5 @@
-<?php include_once "cciag_actividadinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_actividadinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
 <?php
 
 //
@@ -469,14 +469,12 @@ class cactividad_grid extends cactividad {
 		$this->CurrentFilter = "";
 
 		// Load record count first
-		if (!$this->IsAddOrEdit()) {
-			$bSelectLimit = EW_SELECT_LIMIT;
-			if ($bSelectLimit) {
-				$this->TotalRecs = $this->SelectRecordCount();
-			} else {
-				if ($this->Recordset = $this->LoadRecordset())
-					$this->TotalRecs = $this->Recordset->RecordCount();
-			}
+		$bSelectLimit = EW_SELECT_LIMIT;
+		if ($bSelectLimit) {
+			$this->TotalRecs = $this->SelectRecordCount();
+		} else {
+			if ($this->Recordset = $this->LoadRecordset())
+				$this->TotalRecs = $this->Recordset->RecordCount();
 		}
 	}
 
@@ -1074,7 +1072,7 @@ class cactividad_grid extends cactividad {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -1508,7 +1506,7 @@ class cactividad_grid extends cactividad {
 		}
 		$DeleteRows = TRUE;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE) {
@@ -1544,7 +1542,7 @@ class cactividad_grid extends cactividad {
 				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
 				$sThisKey .= $row['id'];
 				$this->LoadDbValues($row);
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				$DeleteRows = $this->Delete($row); // Delete
 				$conn->raiseErrorFn = '';
 				if ($DeleteRows === FALSE)
@@ -1588,7 +1586,7 @@ class cactividad_grid extends cactividad {
 		$sFilter = $this->KeyFilter();
 		$this->CurrentFilter = $sFilter;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE)
@@ -1617,7 +1615,7 @@ class cactividad_grid extends cactividad {
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
 			if ($bUpdateRow) {
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				if (count($rsnew) > 0)
 					$EditRow = $this->Update($rsnew, "", $rsold);
 				else
@@ -1680,7 +1678,7 @@ class cactividad_grid extends cactividad {
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
 		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
 		if ($bInsertRow) {
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 			$AddRow = $this->Insert($rsnew);
 			$conn->raiseErrorFn = '';
 			if ($AddRow) {

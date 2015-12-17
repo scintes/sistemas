@@ -8,16 +8,15 @@
  * V1.42 ADOdb Lite 11 January 2007 (C) 2005-2007 Mark Dickenson. Released LGPL.
  */
 $PHPMaker_vers = 'PHPMaker 11 (C) 2002-2014 e.World Technology Limited';
-if (!defined('ADODB_FETCH_DEFAULT')) define('ADODB_FETCH_DEFAULT', 0);
-if (!defined('ADODB_FETCH_NUM')) define('ADODB_FETCH_NUM', 1);
-if (!defined('ADODB_FETCH_ASSOC')) define('ADODB_FETCH_ASSOC', 2);
-if (!defined('ADODB_FETCH_BOTH')) define('ADODB_FETCH_BOTH', 3);
+define('ADODB_FETCH_DEFAULT', 0);
+define('ADODB_FETCH_NUM', 1);
+define('ADODB_FETCH_ASSOC', 2);
+define('ADODB_FETCH_BOTH', 3);
 define('EW_USE_MYSQLI', FALSE && extension_loaded("mysqli"), TRUE);
 
 /**
  * ADOConnection
  */
-if (!class_exists("ADOConnection")) { // Check if ADOConnection class exists
 
 class ADOConnection
 {
@@ -223,7 +222,6 @@ class ADORecordSet_empty
 
 	function Close(){return true;}
 }
-} // End check if ADOConnection class exists
 
 /**
  * mysqlt_driver_ADOConnection

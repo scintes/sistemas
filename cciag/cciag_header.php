@@ -74,7 +74,6 @@ var EW_UPLOAD_URL = "<?php echo EW_UPLOAD_URL ?>"; // Upload url
 var EW_UPLOAD_THUMBNAIL_WIDTH = <?php echo EW_UPLOAD_THUMBNAIL_WIDTH ?>; // Upload thumbnail width
 var EW_UPLOAD_THUMBNAIL_HEIGHT = <?php echo EW_UPLOAD_THUMBNAIL_HEIGHT ?>; // Upload thumbnail height
 var EW_MULTIPLE_UPLOAD_SEPARATOR = "<?php echo EW_MULTIPLE_UPLOAD_SEPARATOR ?>"; // Upload multiple separator
-var EW_USE_COLORBOX = <?php echo (EW_USE_COLORBOX) ? "true" : "false" ?>;
 var EW_USE_JAVASCRIPT_MESSAGE = false;
 var EW_IS_MOBILE = <?php echo (ew_IsMobile()) ? "true" : "false" ?>;
 var EW_PROJECT_STYLESHEET_FILENAME = "<?php echo EW_PROJECT_STYLESHEET_FILENAME ?>"; // Project style sheet
@@ -88,18 +87,18 @@ var EW_CSS_FLIP = <?php echo (EW_CSS_FLIP) ? "true" : "false" ?>;
 <script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>phpjs/cciag_ewp11.js"></script>
 <?php } ?>
 <?php if (@$gsExport == "" || @$gsExport == "print") { ?>
+<script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>phpjs/cciag_userfn11.js"></script>
 <script type="text/javascript">
 <?php echo $Language->ToJSON() ?>
 </script>
 <script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>phpjs/swfobject.js"></script>
 <script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>phpjs/cciag_ewflashfiles.js"></script>
-<script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>phpjs/cciag_userfn11.js"></script>
 <script type="text/javascript">
 
 // Write your client script here, no need to add script tags.
 </script>
 <?php } ?>
-<meta name="generator" content="PHPMaker v11.0.6">
+<meta name="generator" content="PHPMaker v11.0.3">
 </head>
 <body>
 <?php if (@!$gbSkipHeaderFooter) { ?>
@@ -136,7 +135,7 @@ var EW_CSS_FLIP = <?php echo (EW_CSS_FLIP) ? "true" : "false" ?>;
 	$RootMenu->MenuLinkDropdownClass = "ewDropdown";
 	$RootMenu->MenuLinkClassName = "icon-arrow-right";
 ?>
-<?php include_once "cciag_ewmobilemenu.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmobilemenu.php" ?>
 		</div><!-- /.navbar-collapse -->
 	</div><!-- /.container-fluid -->
 </nav>
@@ -148,7 +147,7 @@ var EW_CSS_FLIP = <?php echo (EW_CSS_FLIP) ? "true" : "false" ?>;
 			<div id="ewMenuColumn" class="<?php echo $gsMenuColumnClass ?>">
 				<!-- left column (begin) -->
 				<div class="ewMenu">
-<?php include_once "cciag_ewmenu.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmenu.php" ?>
 				</div>
 				<!-- left column (end) -->
 			</div>

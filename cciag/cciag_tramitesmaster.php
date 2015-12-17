@@ -15,7 +15,7 @@
 		<tr id="r_codigo">
 			<td><?php echo $tramites->codigo->FldCaption() ?></td>
 			<td<?php echo $tramites->codigo->CellAttributes() ?>>
-<span id="el_tramites_codigo">
+<span id="el_tramites_codigo" class="form-group">
 <span<?php echo $tramites->codigo->ViewAttributes() ?>>
 <?php echo $tramites->codigo->ListViewValue() ?></span>
 </span>
@@ -26,7 +26,7 @@
 		<tr id="r_Titulo">
 			<td><?php echo $tramites->Titulo->FldCaption() ?></td>
 			<td<?php echo $tramites->Titulo->CellAttributes() ?>>
-<span id="el_tramites_Titulo">
+<span id="el_tramites_Titulo" class="form-group">
 <span<?php echo $tramites->Titulo->ViewAttributes() ?>>
 <?php echo $tramites->Titulo->ListViewValue() ?></span>
 </span>
@@ -37,7 +37,7 @@
 		<tr id="r_fecha">
 			<td><?php echo $tramites->fecha->FldCaption() ?></td>
 			<td<?php echo $tramites->fecha->CellAttributes() ?>>
-<span id="el_tramites_fecha">
+<span id="el_tramites_fecha" class="form-group">
 <span<?php echo $tramites->fecha->ViewAttributes() ?>>
 <?php echo $tramites->fecha->ListViewValue() ?></span>
 </span>
@@ -48,7 +48,7 @@
 		<tr id="r_archivo">
 			<td><?php echo $tramites->archivo->FldCaption() ?></td>
 			<td<?php echo $tramites->archivo->CellAttributes() ?>>
-<span id="el_tramites_archivo">
+<span id="el_tramites_archivo" class="form-group">
 <span<?php echo $tramites->archivo->ViewAttributes() ?>>
 <ul class="list-inline"><?php
 $Files = explode(EW_MULTIPLE_UPLOAD_SEPARATOR, $tramites->archivo->Upload->DbValue);
@@ -88,7 +88,7 @@ $Files[$i] = str_replace("%f", ew_HtmlEncode(ew_UploadPathEx(FALSE, $tramites->a
 		<tr id="r_estado">
 			<td><?php echo $tramites->estado->FldCaption() ?></td>
 			<td<?php echo $tramites->estado->CellAttributes() ?>>
-<span id="el_tramites_estado">
+<span id="el_tramites_estado" class="form-group">
 <span<?php echo $tramites->estado->ViewAttributes() ?>>
 <?php echo $tramites->estado->ListViewValue() ?></span>
 </span>

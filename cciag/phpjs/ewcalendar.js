@@ -1,4 +1,4 @@
-// Create calendar
+// Create time picker
 function ew_CreateCalendar(formid, id, format) {
 	if (id.indexOf("$rowindex$") > -1)
 		return;

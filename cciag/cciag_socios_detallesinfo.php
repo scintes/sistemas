@@ -27,8 +27,6 @@ class csocios_detalles extends cTable {
 		$this->ExportPageBreakCount = 0; // Page break per every n record (PDF only)
 		$this->ExportPageOrientation = "portrait"; // Page orientation (PDF only)
 		$this->ExportPageSize = "a4"; // Page size (PDF only)
-		$this->ExportExcelPageOrientation = ""; // Page orientation (PHPExcel only)
-		$this->ExportExcelPageSize = ""; // Page size (PHPExcel only)
 		$this->DetailAdd = TRUE; // Allow detail add
 		$this->DetailEdit = TRUE; // Allow detail edit
 		$this->DetailView = TRUE; // Allow detail view
@@ -807,9 +805,6 @@ class csocios_detalles extends cTable {
 
 	// Aggregate list row (for rendering)
 	function AggregateListRow() {
-
-		// Call Row Rendered event
-		$this->Row_Rendered();
 	}
 	var $ExportDoc;
 

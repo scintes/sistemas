@@ -1,13 +1,14 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_userlevelsinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userlevelsinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -373,7 +374,7 @@ class cuserlevels_delete extends cuserlevels {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -474,7 +475,7 @@ class cuserlevels_delete extends cuserlevels {
 		}
 		$DeleteRows = TRUE;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE) {
@@ -511,7 +512,7 @@ class cuserlevels_delete extends cuserlevels {
 				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
 				$sThisKey .= $row['userlevelid'];
 				$this->LoadDbValues($row);
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				$DeleteRows = $this->Delete($row); // Delete
 				$conn->raiseErrorFn = '';
 				if ($DeleteRows === FALSE)
@@ -557,10 +558,9 @@ class cuserlevels_delete extends cuserlevels {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_userlevelslist.php", "", $this->TableVar, TRUE);
 		$PageId = "delete";
-		$Breadcrumb->Add("delete", $PageId, $url);
+		$Breadcrumb->Add("delete", $PageId, ew_CurrentUrl());
 	}
 
 	// Write Audit Trail start/end for grid update
@@ -681,7 +681,7 @@ Page_Rendering();
 // Page Rendering event
 $userlevels_delete->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -780,7 +780,7 @@ while (!$userlevels_delete->Recordset->EOF) {
 	<tr<?php echo $userlevels->RowAttributes() ?>>
 <?php if ($userlevels->userlevelid->Visible) { // userlevelid ?>
 		<td<?php echo $userlevels->userlevelid->CellAttributes() ?>>
-<span id="el<?php echo $userlevels_delete->RowCnt ?>_userlevels_userlevelid" class="userlevels_userlevelid">
+<span id="el<?php echo $userlevels_delete->RowCnt ?>_userlevels_userlevelid" class="form-group userlevels_userlevelid">
 <span<?php echo $userlevels->userlevelid->ViewAttributes() ?>>
 <?php echo $userlevels->userlevelid->ListViewValue() ?></span>
 </span>
@@ -788,7 +788,7 @@ while (!$userlevels_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($userlevels->userlevelname->Visible) { // userlevelname ?>
 		<td<?php echo $userlevels->userlevelname->CellAttributes() ?>>
-<span id="el<?php echo $userlevels_delete->RowCnt ?>_userlevels_userlevelname" class="userlevels_userlevelname">
+<span id="el<?php echo $userlevels_delete->RowCnt ?>_userlevels_userlevelname" class="form-group userlevels_userlevelname">
 <span<?php echo $userlevels->userlevelname->ViewAttributes() ?>>
 <?php echo $userlevels->userlevelname->ListViewValue() ?></span>
 </span>
@@ -822,7 +822,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $userlevels_delete->Page_Terminate();
 ?>

@@ -16,7 +16,7 @@
 		<tr id="r_id">
 			<td><?php echo $deudas->id->FldCaption() ?></td>
 			<td<?php echo $deudas->id->CellAttributes() ?>>
-<span id="el_deudas_id">
+<span id="el_deudas_id" class="form-group">
 <span<?php echo $deudas->id->ViewAttributes() ?>>
 <?php echo $deudas->id->ListViewValue() ?></span>
 </span>
@@ -27,7 +27,7 @@
 		<tr id="r_mes">
 			<td><?php echo $deudas->mes->FldCaption() ?></td>
 			<td<?php echo $deudas->mes->CellAttributes() ?>>
-<span id="el_deudas_mes">
+<span id="el_deudas_mes" class="form-group">
 <span<?php echo $deudas->mes->ViewAttributes() ?>>
 <?php echo $deudas->mes->ListViewValue() ?></span>
 </span>
@@ -38,7 +38,7 @@
 		<tr id="r_anio">
 			<td><?php echo $deudas->anio->FldCaption() ?></td>
 			<td<?php echo $deudas->anio->CellAttributes() ?>>
-<span id="el_deudas_anio">
+<span id="el_deudas_anio" class="form-group">
 <span<?php echo $deudas->anio->ViewAttributes() ?>>
 <?php echo $deudas->anio->ListViewValue() ?></span>
 </span>
@@ -49,7 +49,7 @@
 		<tr id="r_fecha">
 			<td><?php echo $deudas->fecha->FldCaption() ?></td>
 			<td<?php echo $deudas->fecha->CellAttributes() ?>>
-<span id="el_deudas_fecha">
+<span id="el_deudas_fecha" class="form-group">
 <span<?php echo $deudas->fecha->ViewAttributes() ?>>
 <?php echo $deudas->fecha->ListViewValue() ?></span>
 </span>
@@ -60,7 +60,7 @@
 		<tr id="r_monto">
 			<td><?php echo $deudas->monto->FldCaption() ?></td>
 			<td<?php echo $deudas->monto->CellAttributes() ?>>
-<span id="el_deudas_monto">
+<span id="el_deudas_monto" class="form-group">
 <span<?php echo $deudas->monto->ViewAttributes() ?>>
 <?php echo $deudas->monto->ListViewValue() ?></span>
 </span>
@@ -71,7 +71,7 @@
 		<tr id="r_id_socio">
 			<td><?php echo $deudas->id_socio->FldCaption() ?></td>
 			<td<?php echo $deudas->id_socio->CellAttributes() ?>>
-<span id="el_deudas_id_socio">
+<span id="el_deudas_id_socio" class="form-group">
 <span<?php echo $deudas->id_socio->ViewAttributes() ?>>
 <?php echo $deudas->id_socio->ListViewValue() ?></span>
 </span>

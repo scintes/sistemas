@@ -1,12 +1,13 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -282,9 +283,8 @@ class cregister extends cusuario {
 		global $Breadcrumb;
 
 		// Set up Breadcrumb
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb = new cBreadcrumb();
-		$Breadcrumb->Add("register", "RegisterPage", $url, "", "", TRUE);
+		$Breadcrumb->Add("register", "RegisterPage", ew_CurrentUrl(), "", "", TRUE);
 		$bUserExists = FALSE;
 		if (@$_POST["a_register"] <> "") {
 
@@ -414,7 +414,7 @@ class cregister extends cusuario {
 		global $conn, $Language;
 		$sFilter = str_replace("%e", ew_AdjustSql($email), EW_USER_EMAIL_FILTER);
 		$sSql = $this->GetSQL($sFilter, "");
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if (!$rs)
@@ -658,7 +658,7 @@ class cregister extends cusuario {
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
 		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
 		if ($bInsertRow) {
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 			$AddRow = $this->Insert($rsnew);
 			$conn->raiseErrorFn = '';
 			if ($AddRow) {
@@ -836,7 +836,7 @@ Page_Rendering();
 // Page Rendering event
 $register->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -966,7 +966,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $register->Page_Terminate();
 ?>

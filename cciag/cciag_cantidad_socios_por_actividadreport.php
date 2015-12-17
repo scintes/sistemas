@@ -1,10 +1,11 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
 <?php
 
 // Global variable for table object
@@ -32,8 +33,6 @@ class ccantidad_socios_por_actividad extends cTableBase {
 		$this->ExportPageBreakCount = 0; // Page break per every n record (PDF only)
 		$this->ExportPageOrientation = "portrait"; // Page orientation (PDF only)
 		$this->ExportPageSize = "a4"; // Page size (PDF only)
-		$this->ExportExcelPageOrientation = ""; // Page orientation (PHPExcel only)
-		$this->ExportExcelPageSize = ""; // Page size (PHPExcel only)
 		$this->UserIDAllowSecurity = 104; // User ID Allow
 
 		// socio_nro
@@ -408,8 +407,8 @@ class ccantidad_socios_por_actividad extends cTableBase {
 	}
 }
 ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -747,6 +746,12 @@ class ccantidad_socios_por_actividad_report extends ccantidad_socios_por_activid
 			$sContent = ob_get_contents();
 			$fn = $EW_EXPORT_REPORT[$this->Export];
 			$this->$fn($sContent);
+			if ($this->Export == "email") { // Email
+				ob_end_clean();
+				$conn->Close(); // Close connection
+				header("Location: " . ew_CurrentPage());
+				exit();
+			}
 		}
 		$this->Page_Redirecting($url);
 
@@ -890,7 +895,7 @@ class ccantidad_socios_por_actividad_report extends ccantidad_socios_por_activid
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
+		$url = ew_CurrentUrl();
 		$url = preg_replace('/\?cmd=reset(all){0,1}$/i', '', $url); // Remove cmd=reset / cmd=resetall
 		$Breadcrumb->Add("report", $this->TableVar, $url, "", $this->TableVar, TRUE);
 	}
@@ -1000,7 +1005,7 @@ Page_Rendering();
 // Page Rendering event
 $cantidad_socios_por_actividad_report->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($cantidad_socios_por_actividad->Export == "") { ?>
 <script type="text/javascript">
 
@@ -1042,6 +1047,10 @@ $cantidad_socios_por_actividad_report->RecordExists = !$cantidad_socios_por_acti
 <?php } ?>
 <?php } ?>
 <?php $cantidad_socios_por_actividad_report->ShowPageHeader(); ?>
+<form method="post">
+<?php if ($cantidad_socios_por_actividad_report->CheckToken) { ?>
+<input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $cantidad_socios_por_actividad_report->Token ?>">
+<?php } ?>
 <table class="ewReportTable">
 <?php
 
@@ -1178,6 +1187,7 @@ $cantidad_socios_por_actividad_report->Recordset->Close();
 	<tr><td><?php echo $Language->Phrase("NoRecord") ?></td></tr>
 <?php } ?>
 </table>
+</form>
 <?php
 $cantidad_socios_por_actividad_report->ShowPageFooter();
 if (EW_DEBUG_ENABLED)
@@ -1191,7 +1201,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $cantidad_socios_por_actividad_report->Page_Terminate();
 ?>

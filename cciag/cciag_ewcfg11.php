@@ -29,7 +29,7 @@ define("EW_CONFIG_FILE_FOLDER", EW_PROJECT_NAME . "", TRUE); // Config file name
 define("EW_PROJECT_ID", "{E85D8E60-21B0-46D8-A725-BE5A2EF61FC0}", TRUE); // Project ID (GUID)
 $EW_RELATED_PROJECT_ID = "";
 $EW_RELATED_LANGUAGE_FOLDER = "";
-define("EW_RANDOM_KEY", 'rds0qjyxFRJS5ohn', TRUE); // Random key for encryption
+define("EW_RANDOM_KEY", 'yzA5OidorB4dC7Ev', TRUE); // Random key for encryption
 define("EW_PROJECT_STYLESHEET_FILENAME", "phpcss/cciag.css", TRUE); // Project stylesheet file name
 define("EW_CHARSET", "utf-8", TRUE); // Project charset
 define("EW_EMAIL_CHARSET", EW_CHARSET, TRUE); // Email charset
@@ -51,9 +51,6 @@ define("EW_CONN_PORT", 3306, TRUE);
 define("EW_CONN_USER", 'root', TRUE);
 define("EW_CONN_PASS", '', TRUE);
 define("EW_CONN_DB", 'cciag-sauceviejo', TRUE);
-
-// Set up database error function
-$EW_ERROR_FN = 'ew_ErrorFn';
 
 // ADODB (Access/SQL Server)
 define("EW_CODEPAGE", 65001, TRUE); // Code page
@@ -160,7 +157,6 @@ define("EW_DATATYPE_XML", 9, TRUE);
 define("EW_DATATYPE_OTHER", 10, TRUE);
 
 // Row types
-define("EW_ROWTYPE_HEADER", 0, TRUE); // Row type header
 define("EW_ROWTYPE_VIEW", 1, TRUE); // Row type view
 define("EW_ROWTYPE_ADD", 2, TRUE); // Row type add
 define("EW_ROWTYPE_EDIT", 3, TRUE); // Row type edit
@@ -276,7 +272,7 @@ define("EW_UPLOAD_THUMBNAIL_HEIGHT", 0, TRUE); // Temporary thumbnail max height
 define("EW_UPLOAD_ALLOWED_FILE_EXT", "gif,jpg,jpeg,bmp,png,doc,xls,pdf,zip", TRUE); // Allowed file extensions
 define("EW_IMAGE_ALLOWED_FILE_EXT", "gif,jpg,png,bmp", TRUE); // Allowed file extensions for images
 define("EW_MAX_FILE_SIZE", 2000000000, TRUE); // Max file size
-define("EW_MAX_FILE_COUNT", 0, TRUE); // Max file count
+define("EW_MAX_FILE_COUNT", 0, TRUE); // Max file size
 define("EW_THUMBNAIL_DEFAULT_WIDTH", 0, TRUE); // Thumbnail default width
 define("EW_THUMBNAIL_DEFAULT_HEIGHT", 0, TRUE); // Thumbnail default height
 define("EW_THUMBNAIL_DEFAULT_QUALITY", 75, TRUE); // Thumbnail default qualtity (JPEG)

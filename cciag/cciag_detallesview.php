@@ -1,14 +1,15 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_detallesinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_socios_detallesgridcls.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_detallesinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_socios_detallesgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -459,9 +460,6 @@ class cdetalles_view extends cdetalles {
 			if (@$_GET["codigo"] <> "") {
 				$this->codigo->setQueryStringValue($_GET["codigo"]);
 				$this->RecKey["codigo"] = $this->codigo->QueryStringValue;
-			} elseif (@$_POST["codigo"] <> "") {
-				$this->codigo->setFormValue($_POST["codigo"]);
-				$this->RecKey["codigo"] = $this->codigo->FormValue;
 			} else {
 				$sReturnUrl = "cciag_detalleslist.php"; // Return to list
 			}
@@ -523,6 +521,20 @@ class cdetalles_view extends cdetalles {
 		$item = &$option->Add("delete");
 		$item->Body = "<a class=\"ewAction ewDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("ViewPageDeleteLink") . "</a>";
 		$item->Visible = ($this->DeleteUrl <> "" && $Security->CanDelete());
+
+		// Show detail edit/copy
+		if ($this->getCurrentDetailTable() <> "") {
+
+			// Detail Edit
+			$item = &$option->Add("detailedit");
+			$item->Body = "<a class=\"ewAction ewDetailEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=" . $this->getCurrentDetailTable())) . "\">" . $Language->Phrase("MasterDetailEditLink") . "</a>";
+			$item->Visible = ($Security->CanEdit());
+
+			// Detail Copy
+			$item = &$option->Add("detailcopy");
+			$item->Body = "<a class=\"ewAction ewDetailCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=" . $this->getCurrentDetailTable())) . "\">" . $Language->Phrase("MasterDetailCopyLink") . "</a>";
+			$item->Visible = ($Security->CanAdd());
+		}
 		$option = &$options["detail"];
 		$DetailTableLink = "";
 		$DetailViewTblVar = "";
@@ -531,9 +543,9 @@ class cdetalles_view extends cdetalles {
 
 		// "detail_socios_detalles"
 		$item = &$option->Add("detail_socios_detalles");
-		$body = $Language->Phrase("ViewPageDetailLink") . $Language->TablePhrase("socios_detalles", "TblCaption");
+		$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("socios_detalles", "TblCaption");
 		$body .= str_replace("%c", $this->socios_detalles_Count, $Language->Phrase("DetailCount"));
-		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_socios_detalleslist.php?" . EW_TABLE_SHOW_MASTER . "=detalles&fk_codigo=" . urlencode(strval($this->codigo->CurrentValue)) . "") . "\">" . $body . "</a>";
+		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_socios_detalleslist.php?" . EW_TABLE_SHOW_MASTER . "=detalles&fk_codigo=" . strval($this->codigo->CurrentValue) . "") . "\">" . $body . "</a>";
 		$links = "";
 		if ($GLOBALS["socios_detalles_grid"] && $GLOBALS["socios_detalles_grid"]->DetailView && $Security->CanView() && $Security->AllowView(CurrentProjectID() . 'socios_detalles')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=socios_detalles")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
@@ -655,7 +667,7 @@ class cdetalles_view extends cdetalles {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -866,10 +878,7 @@ class cdetalles_view extends cdetalles {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -1019,17 +1028,10 @@ class cdetalles_view extends cdetalles {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -1093,10 +1095,9 @@ class cdetalles_view extends cdetalles {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_detalleslist.php", "", $this->TableVar, TRUE);
 		$PageId = "view";
-		$Breadcrumb->Add("view", $PageId, $url);
+		$Breadcrumb->Add("view", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -1204,7 +1205,7 @@ Page_Rendering();
 // Page Rendering event
 $detalles_view->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($detalles->Export == "") { ?>
 <script type="text/javascript">
 
@@ -1270,7 +1271,7 @@ $detalles_view->ShowMessage();
 	<tr id="r_codigo">
 		<td><span id="elh_detalles_codigo"><?php echo $detalles->codigo->FldCaption() ?></span></td>
 		<td<?php echo $detalles->codigo->CellAttributes() ?>>
-<span id="el_detalles_codigo">
+<span id="el_detalles_codigo" class="form-group">
 <span<?php echo $detalles->codigo->ViewAttributes() ?>>
 <?php echo $detalles->codigo->ViewValue ?></span>
 </span>
@@ -1281,7 +1282,7 @@ $detalles_view->ShowMessage();
 	<tr id="r_nombre">
 		<td><span id="elh_detalles_nombre"><?php echo $detalles->nombre->FldCaption() ?></span></td>
 		<td<?php echo $detalles->nombre->CellAttributes() ?>>
-<span id="el_detalles_nombre">
+<span id="el_detalles_nombre" class="form-group">
 <span<?php echo $detalles->nombre->ViewAttributes() ?>>
 <?php echo $detalles->nombre->ViewValue ?></span>
 </span>
@@ -1292,7 +1293,7 @@ $detalles_view->ShowMessage();
 	<tr id="r_descripcion">
 		<td><span id="elh_detalles_descripcion"><?php echo $detalles->descripcion->FldCaption() ?></span></td>
 		<td<?php echo $detalles->descripcion->CellAttributes() ?>>
-<span id="el_detalles_descripcion">
+<span id="el_detalles_descripcion" class="form-group">
 <span<?php echo $detalles->descripcion->ViewAttributes() ?>>
 <?php echo $detalles->descripcion->ViewValue ?></span>
 </span>
@@ -1303,7 +1304,7 @@ $detalles_view->ShowMessage();
 	<tr id="r_activa">
 		<td><span id="elh_detalles_activa"><?php echo $detalles->activa->FldCaption() ?></span></td>
 		<td<?php echo $detalles->activa->CellAttributes() ?>>
-<span id="el_detalles_activa">
+<span id="el_detalles_activa" class="form-group">
 <span<?php echo $detalles->activa->ViewAttributes() ?>>
 <?php echo $detalles->activa->ViewValue ?></span>
 </span>
@@ -1336,7 +1337,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $detalles_view->Page_Terminate();
 ?>

@@ -1,15 +1,16 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_detalle_deudasinfo.php" ?>
-<?php include_once "cciag_deudasinfo.php" ?>
-<?php include_once "cciag_sociosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_detalle_deudasinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_deudasinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -643,14 +644,12 @@ class cdetalle_deudas_list extends cdetalle_deudas {
 		}
 
 		// Load record count first
-		if (!$this->IsAddOrEdit()) {
-			$bSelectLimit = EW_SELECT_LIMIT;
-			if ($bSelectLimit) {
-				$this->TotalRecs = $this->SelectRecordCount();
-			} else {
-				if ($this->Recordset = $this->LoadRecordset())
-					$this->TotalRecs = $this->Recordset->RecordCount();
-			}
+		$bSelectLimit = EW_SELECT_LIMIT;
+		if ($bSelectLimit) {
+			$this->TotalRecs = $this->SelectRecordCount();
+		} else {
+			if ($this->Recordset = $this->LoadRecordset())
+				$this->TotalRecs = $this->Recordset->RecordCount();
 		}
 
 		// Search options
@@ -1004,7 +1003,7 @@ class cdetalle_deudas_list extends cdetalle_deudas {
 		if ($sFilter <> "" && $UserAction <> "") {
 			$this->CurrentFilter = $sFilter;
 			$sSql = $this->SQL();
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 			$rs = $conn->Execute($sSql);
 			$conn->raiseErrorFn = '';
 			$rsuser = ($rs) ? $rs->GetRows() : array();
@@ -1056,7 +1055,7 @@ class cdetalle_deudas_list extends cdetalle_deudas {
 		// Show all button
 		$item = &$this->SearchOptions->Add("showall");
 		$item->Body = "<a class=\"btn btn-default ewShowAll\" title=\"" . $Language->Phrase("ShowAll") . "\" data-caption=\"" . $Language->Phrase("ShowAll") . "\" href=\"" . $this->PageUrl() . "cmd=reset\">" . $Language->Phrase("ShowAllBtn") . "</a>";
-		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere && $this->SearchWhere <> "0=101");
+		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere);
 
 		// Button group for search
 		$this->SearchOptions->UseDropDownButton = FALSE;
@@ -1136,7 +1135,7 @@ class cdetalle_deudas_list extends cdetalle_deudas {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -1357,10 +1356,7 @@ class cdetalle_deudas_list extends cdetalle_deudas {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -1413,10 +1409,8 @@ class cdetalle_deudas_list extends cdetalle_deudas {
 				$ExportStyle = $Doc->Style;
 				$Doc->SetStyle("v"); // Change to vertical
 				if ($this->Export <> "csv" || EW_EXPORT_MASTER_RECORD_FOR_CSV) {
-					$Doc->Table = &$deudas;
 					$deudas->ExportDocument($Doc, $rsmaster, 1, 1);
 					$Doc->ExportEmptyRow();
-					$Doc->Table = &$this;
 				}
 				$Doc->SetStyle($ExportStyle); // Restore
 				$rsmaster->Close();
@@ -1521,17 +1515,10 @@ class cdetalle_deudas_list extends cdetalle_deudas {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -1629,7 +1616,7 @@ class cdetalle_deudas_list extends cdetalle_deudas {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
+		$url = ew_CurrentUrl();
 		$url = preg_replace('/\?cmd=reset(all){0,1}$/i', '', $url); // Remove cmd=reset / cmd=resetall
 		$Breadcrumb->Add("list", $this->TableVar, $url, "", $this->TableVar, TRUE);
 	}
@@ -1772,7 +1759,7 @@ Page_Rendering();
 // Page Rendering event
 $detalle_deudas_list->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($detalle_deudas->Export == "") { ?>
 <script type="text/javascript">
 
@@ -1816,7 +1803,7 @@ var fdetalle_deudaslistsrch = new ew_Form("fdetalle_deudaslistsrch");
 <?php if ($detalle_deudas->Export == "") { ?>
 <?php $Breadcrumb->Render(); ?>
 <?php } ?>
-<?php if ($detalle_deudas_list->TotalRecs > 0 && $detalle_deudas_list->ExportOptions->Visible()) { ?>
+<?php if ($detalle_deudas_list->TotalRecs > 0 && $detalle_deudas->getCurrentMasterTable() == "" && $detalle_deudas_list->ExportOptions->Visible()) { ?>
 <?php $detalle_deudas_list->ExportOptions->Render("body") ?>
 <?php } ?>
 <?php if ($detalle_deudas_list->SearchOptions->Visible()) { ?>
@@ -1835,7 +1822,10 @@ if ($detalle_deudas_list->DbMasterFilter <> "" && $detalle_deudas->getCurrentMas
 	if ($detalle_deudas_list->MasterRecordExists) {
 		if ($detalle_deudas->getCurrentMasterTable() == $detalle_deudas->TableVar) $gsMasterReturnUrl .= "?" . EW_TABLE_SHOW_MASTER . "=";
 ?>
-<?php include_once "cciag_deudasmaster.php" ?>
+<?php if ($detalle_deudas_list->ExportOptions->Visible()) { ?>
+<div class="ewListExportOptions"><?php $detalle_deudas_list->ExportOptions->Render("body") ?></div>
+<?php } ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_deudasmaster.php" ?>
 <?php
 	}
 }
@@ -1844,10 +1834,9 @@ if ($detalle_deudas_list->DbMasterFilter <> "" && $detalle_deudas->getCurrentMas
 <?php
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
-		if ($detalle_deudas_list->TotalRecs <= 0)
-			$detalle_deudas_list->TotalRecs = $detalle_deudas->SelectRecordCount();
+		$detalle_deudas_list->TotalRecs = $detalle_deudas->SelectRecordCount();
 	} else {
-		if (!$detalle_deudas_list->Recordset && ($detalle_deudas_list->Recordset = $detalle_deudas_list->LoadRecordset()))
+		if ($detalle_deudas_list->Recordset = $detalle_deudas_list->LoadRecordset())
 			$detalle_deudas_list->TotalRecs = $detalle_deudas_list->Recordset->RecordCount();
 	}
 	$detalle_deudas_list->StartRec = 1;
@@ -1974,9 +1963,6 @@ $detalle_deudas_list->ShowMessage();
 <thead><!-- Table header -->
 	<tr class="ewTableHeader">
 <?php
-
-// Header row
-$detalle_deudas->RowType = EW_ROWTYPE_HEADER;
 
 // Render list options
 $detalle_deudas_list->RenderListOptions();
@@ -2152,7 +2138,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $detalle_deudas_list->Page_Terminate();
 ?>

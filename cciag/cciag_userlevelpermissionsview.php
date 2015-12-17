@@ -1,13 +1,14 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_userlevelpermissionsinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userlevelpermissionsinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -456,18 +457,12 @@ class cuserlevelpermissions_view extends cuserlevelpermissions {
 			if (@$_GET["userlevelid"] <> "") {
 				$this->userlevelid->setQueryStringValue($_GET["userlevelid"]);
 				$this->RecKey["userlevelid"] = $this->userlevelid->QueryStringValue;
-			} elseif (@$_POST["userlevelid"] <> "") {
-				$this->userlevelid->setFormValue($_POST["userlevelid"]);
-				$this->RecKey["userlevelid"] = $this->userlevelid->FormValue;
 			} else {
 				$sReturnUrl = "cciag_userlevelpermissionslist.php"; // Return to list
 			}
 			if (@$_GET["_tablename"] <> "") {
 				$this->_tablename->setQueryStringValue($_GET["_tablename"]);
 				$this->RecKey["_tablename"] = $this->_tablename->QueryStringValue;
-			} elseif (@$_POST["_tablename"] <> "") {
-				$this->_tablename->setFormValue($_POST["_tablename"]);
-				$this->RecKey["_tablename"] = $this->_tablename->FormValue;
 			} else {
 				$sReturnUrl = "cciag_userlevelpermissionslist.php"; // Return to list
 			}
@@ -582,7 +577,7 @@ class cuserlevelpermissions_view extends cuserlevelpermissions {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -782,10 +777,7 @@ class cuserlevelpermissions_view extends cuserlevelpermissions {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -917,17 +909,10 @@ class cuserlevelpermissions_view extends cuserlevelpermissions {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -962,10 +947,9 @@ class cuserlevelpermissions_view extends cuserlevelpermissions {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_userlevelpermissionslist.php", "", $this->TableVar, TRUE);
 		$PageId = "view";
-		$Breadcrumb->Add("view", $PageId, $url);
+		$Breadcrumb->Add("view", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -1073,7 +1057,7 @@ Page_Rendering();
 // Page Rendering event
 $userlevelpermissions_view->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($userlevelpermissions->Export == "") { ?>
 <script type="text/javascript">
 
@@ -1140,7 +1124,7 @@ $userlevelpermissions_view->ShowMessage();
 	<tr id="r_userlevelid">
 		<td><span id="elh_userlevelpermissions_userlevelid"><?php echo $userlevelpermissions->userlevelid->FldCaption() ?></span></td>
 		<td<?php echo $userlevelpermissions->userlevelid->CellAttributes() ?>>
-<span id="el_userlevelpermissions_userlevelid">
+<span id="el_userlevelpermissions_userlevelid" class="form-group">
 <span<?php echo $userlevelpermissions->userlevelid->ViewAttributes() ?>>
 <?php echo $userlevelpermissions->userlevelid->ViewValue ?></span>
 </span>
@@ -1151,7 +1135,7 @@ $userlevelpermissions_view->ShowMessage();
 	<tr id="r__tablename">
 		<td><span id="elh_userlevelpermissions__tablename"><?php echo $userlevelpermissions->_tablename->FldCaption() ?></span></td>
 		<td<?php echo $userlevelpermissions->_tablename->CellAttributes() ?>>
-<span id="el_userlevelpermissions__tablename">
+<span id="el_userlevelpermissions__tablename" class="form-group">
 <span<?php echo $userlevelpermissions->_tablename->ViewAttributes() ?>>
 <?php echo $userlevelpermissions->_tablename->ViewValue ?></span>
 </span>
@@ -1162,7 +1146,7 @@ $userlevelpermissions_view->ShowMessage();
 	<tr id="r_permission">
 		<td><span id="elh_userlevelpermissions_permission"><?php echo $userlevelpermissions->permission->FldCaption() ?></span></td>
 		<td<?php echo $userlevelpermissions->permission->CellAttributes() ?>>
-<span id="el_userlevelpermissions_permission">
+<span id="el_userlevelpermissions_permission" class="form-group">
 <span<?php echo $userlevelpermissions->permission->ViewAttributes() ?>>
 <?php echo $userlevelpermissions->permission->ViewValue ?></span>
 </span>
@@ -1187,7 +1171,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $userlevelpermissions_view->Page_Terminate();
 ?>

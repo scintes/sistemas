@@ -1,16 +1,17 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_sociosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_socios_detallesgridcls.php" ?>
-<?php include_once "cciag_deudasgridcls.php" ?>
-<?php include_once "cciag_socios_cuotasgridcls.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_socios_detallesgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_deudasgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_socios_cuotasgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -732,14 +733,12 @@ class csocios_list extends csocios {
 		}
 
 		// Load record count first
-		if (!$this->IsAddOrEdit()) {
-			$bSelectLimit = EW_SELECT_LIMIT;
-			if ($bSelectLimit) {
-				$this->TotalRecs = $this->SelectRecordCount();
-			} else {
-				if ($this->Recordset = $this->LoadRecordset())
-					$this->TotalRecs = $this->Recordset->RecordCount();
-			}
+		$bSelectLimit = EW_SELECT_LIMIT;
+		if ($bSelectLimit) {
+			$this->TotalRecs = $this->SelectRecordCount();
+		} else {
+			if ($this->Recordset = $this->LoadRecordset())
+				$this->TotalRecs = $this->Recordset->RecordCount();
 		}
 
 		// Search options
@@ -1764,7 +1763,7 @@ class csocios_list extends csocios {
 		$oListOpt = &$this->ListOptions->Items["detail_socios_detalles"];
 		if ($Security->AllowList(CurrentProjectID() . 'socios_detalles') && $this->ShowOptionLink()) {
 			$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("socios_detalles", "TblCaption");
-			$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_socios_detalleslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . urlencode(strval($this->socio_nro->CurrentValue)) . "") . "\">" . $body . "</a>";
+			$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_socios_detalleslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . strval($this->socio_nro->CurrentValue) . "") . "\">" . $body . "</a>";
 			$links = "";
 			if ($GLOBALS["socios_detalles_grid"]->DetailView && $Security->CanView() && $this->ShowOptionLink('view') && $Security->AllowView(CurrentProjectID() . 'socios_detalles')) {
 				$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=socios_detalles")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
@@ -1794,7 +1793,7 @@ class csocios_list extends csocios {
 		$oListOpt = &$this->ListOptions->Items["detail_deudas"];
 		if ($Security->AllowList(CurrentProjectID() . 'deudas') && $this->ShowOptionLink()) {
 			$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("deudas", "TblCaption");
-			$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_deudaslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . urlencode(strval($this->socio_nro->CurrentValue)) . "") . "\">" . $body . "</a>";
+			$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_deudaslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . strval($this->socio_nro->CurrentValue) . "") . "\">" . $body . "</a>";
 			$links = "";
 			if ($GLOBALS["deudas_grid"]->DetailView && $Security->CanView() && $this->ShowOptionLink('view') && $Security->AllowView(CurrentProjectID() . 'deudas')) {
 				$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
@@ -1824,7 +1823,7 @@ class csocios_list extends csocios {
 		$oListOpt = &$this->ListOptions->Items["detail_socios_cuotas"];
 		if ($Security->AllowList(CurrentProjectID() . 'socios_cuotas') && $this->ShowOptionLink()) {
 			$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("socios_cuotas", "TblCaption");
-			$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_socios_cuotaslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . urlencode(strval($this->socio_nro->CurrentValue)) . "") . "\">" . $body . "</a>";
+			$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_socios_cuotaslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . strval($this->socio_nro->CurrentValue) . "") . "\">" . $body . "</a>";
 			$links = "";
 			if ($GLOBALS["socios_cuotas_grid"]->DetailView && $Security->CanView() && $this->ShowOptionLink('view') && $Security->AllowView(CurrentProjectID() . 'socios_cuotas')) {
 				$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=socios_cuotas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
@@ -2046,7 +2045,7 @@ class csocios_list extends csocios {
 		if ($sFilter <> "" && $UserAction <> "") {
 			$this->CurrentFilter = $sFilter;
 			$sSql = $this->SQL();
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 			$rs = $conn->Execute($sSql);
 			$conn->raiseErrorFn = '';
 			$rsuser = ($rs) ? $rs->GetRows() : array();
@@ -2098,7 +2097,7 @@ class csocios_list extends csocios {
 		// Show all button
 		$item = &$this->SearchOptions->Add("showall");
 		$item->Body = "<a class=\"btn btn-default ewShowAll\" title=\"" . $Language->Phrase("ShowAll") . "\" data-caption=\"" . $Language->Phrase("ShowAll") . "\" href=\"" . $this->PageUrl() . "cmd=reset\">" . $Language->Phrase("ShowAllBtn") . "</a>";
-		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere && $this->SearchWhere <> "0=101");
+		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere);
 
 		// Advanced search button
 		$item = &$this->SearchOptions->Add("advancedsearch");
@@ -2323,7 +2322,7 @@ class csocios_list extends csocios {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -2818,7 +2817,7 @@ class csocios_list extends csocios {
 		}
 		$DeleteRows = TRUE;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE) {
@@ -2854,7 +2853,7 @@ class csocios_list extends csocios {
 				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
 				$sThisKey .= $row['socio_nro'];
 				$this->LoadDbValues($row);
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				$DeleteRows = $this->Delete($row); // Delete
 				$conn->raiseErrorFn = '';
 				if ($DeleteRows === FALSE)
@@ -2898,7 +2897,7 @@ class csocios_list extends csocios {
 		$sFilter = $this->KeyFilter();
 		$this->CurrentFilter = $sFilter;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE)
@@ -2939,7 +2938,7 @@ class csocios_list extends csocios {
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
 			if ($bUpdateRow) {
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				if (count($rsnew) > 0)
 					$EditRow = $this->Update($rsnew, "", $rsold);
 				else
@@ -3014,7 +3013,7 @@ class csocios_list extends csocios {
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
 		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
 		if ($bInsertRow) {
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 			$AddRow = $this->Insert($rsnew);
 			$conn->raiseErrorFn = '';
 			if ($AddRow) {
@@ -3129,10 +3128,7 @@ class csocios_list extends csocios {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -3274,17 +3270,10 @@ class csocios_list extends csocios {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -3358,7 +3347,7 @@ class csocios_list extends csocios {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
+		$url = ew_CurrentUrl();
 		$url = preg_replace('/\?cmd=reset(all){0,1}$/i', '', $url); // Remove cmd=reset / cmd=resetall
 		$Breadcrumb->Add("list", $this->TableVar, $url, "", $this->TableVar, TRUE);
 	}
@@ -3614,7 +3603,7 @@ Page_Rendering();
 // Page Rendering event
 $socios_list->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($socios->Export == "") { ?>
 <script type="text/javascript">
 
@@ -3752,10 +3741,9 @@ if ($socios->CurrentAction == "gridadd") {
 } else {
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
-		if ($socios_list->TotalRecs <= 0)
-			$socios_list->TotalRecs = $socios->SelectRecordCount();
+		$socios_list->TotalRecs = $socios->SelectRecordCount();
 	} else {
-		if (!$socios_list->Recordset && ($socios_list->Recordset = $socios_list->LoadRecordset()))
+		if ($socios_list->Recordset = $socios_list->LoadRecordset())
 			$socios_list->TotalRecs = $socios_list->Recordset->RecordCount();
 	}
 	$socios_list->StartRec = 1;
@@ -3884,9 +3872,6 @@ $socios_list->ShowMessage();
 	<tr class="ewTableHeader">
 <?php
 
-// Header row
-$socios->RowType = EW_ROWTYPE_HEADER;
-
 // Render list options
 $socios_list->RenderListOptions();
 
@@ -4012,12 +3997,12 @@ $socios_list->ListOptions->Render("header", "right");
 $socios_list->ListOptions->Render("body", "left", $socios_list->RowCnt);
 ?>
 	<?php if ($socios->socio_nro->Visible) { // socio_nro ?>
-		<td data-name="socio_nro">
+		<td>
 <input type="hidden" data-field="x_socio_nro" name="o<?php echo $socios_list->RowIndex ?>_socio_nro" id="o<?php echo $socios_list->RowIndex ?>_socio_nro" value="<?php echo ew_HtmlEncode($socios->socio_nro->OldValue) ?>">
 </td>
 	<?php } ?>
 	<?php if ($socios->propietario->Visible) { // propietario ?>
-		<td data-name="propietario">
+		<td>
 <span id="el<?php echo $socios_list->RowCnt ?>_socios_propietario" class="form-group socios_propietario">
 <input type="text" data-field="x_propietario" name="x<?php echo $socios_list->RowIndex ?>_propietario" id="x<?php echo $socios_list->RowIndex ?>_propietario" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->propietario->PlaceHolder) ?>" value="<?php echo $socios->propietario->EditValue ?>"<?php echo $socios->propietario->EditAttributes() ?>>
 </span>
@@ -4025,7 +4010,7 @@ $socios_list->ListOptions->Render("body", "left", $socios_list->RowCnt);
 </td>
 	<?php } ?>
 	<?php if ($socios->comercio->Visible) { // comercio ?>
-		<td data-name="comercio">
+		<td>
 <span id="el<?php echo $socios_list->RowCnt ?>_socios_comercio" class="form-group socios_comercio">
 <input type="text" data-field="x_comercio" name="x<?php echo $socios_list->RowIndex ?>_comercio" id="x<?php echo $socios_list->RowIndex ?>_comercio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->comercio->PlaceHolder) ?>" value="<?php echo $socios->comercio->EditValue ?>"<?php echo $socios->comercio->EditAttributes() ?>>
 </span>
@@ -4033,7 +4018,7 @@ $socios_list->ListOptions->Render("body", "left", $socios_list->RowCnt);
 </td>
 	<?php } ?>
 	<?php if ($socios->direccion_comercio->Visible) { // direccion_comercio ?>
-		<td data-name="direccion_comercio">
+		<td>
 <span id="el<?php echo $socios_list->RowCnt ?>_socios_direccion_comercio" class="form-group socios_direccion_comercio">
 <input type="text" data-field="x_direccion_comercio" name="x<?php echo $socios_list->RowIndex ?>_direccion_comercio" id="x<?php echo $socios_list->RowIndex ?>_direccion_comercio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->direccion_comercio->PlaceHolder) ?>" value="<?php echo $socios->direccion_comercio->EditValue ?>"<?php echo $socios->direccion_comercio->EditAttributes() ?>>
 </span>
@@ -4041,7 +4026,7 @@ $socios_list->ListOptions->Render("body", "left", $socios_list->RowCnt);
 </td>
 	<?php } ?>
 	<?php if ($socios->activo->Visible) { // activo ?>
-		<td data-name="activo">
+		<td>
 <span id="el<?php echo $socios_list->RowCnt ?>_socios_activo" class="form-group socios_activo">
 <div id="tp_x<?php echo $socios_list->RowIndex ?>_activo" class="<?php echo EW_ITEM_TEMPLATE_CLASSNAME ?>"><input type="radio" name="x<?php echo $socios_list->RowIndex ?>_activo" id="x<?php echo $socios_list->RowIndex ?>_activo" value="{value}"<?php echo $socios->activo->EditAttributes() ?>></div>
 <div id="dsl_x<?php echo $socios_list->RowIndex ?>_activo" data-repeatcolumn="5" class="ewItemList">
@@ -4070,7 +4055,7 @@ if (@$emptywrk) $socios->activo->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($socios->mail->Visible) { // mail ?>
-		<td data-name="mail">
+		<td>
 <span id="el<?php echo $socios_list->RowCnt ?>_socios_mail" class="form-group socios_mail">
 <input type="text" data-field="x_mail" name="x<?php echo $socios_list->RowIndex ?>_mail" id="x<?php echo $socios_list->RowIndex ?>_mail" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->mail->PlaceHolder) ?>" value="<?php echo $socios->mail->EditValue ?>"<?php echo $socios->mail->EditAttributes() ?>>
 </span>
@@ -4078,7 +4063,7 @@ if (@$emptywrk) $socios->activo->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($socios->tel->Visible) { // tel ?>
-		<td data-name="tel">
+		<td>
 <span id="el<?php echo $socios_list->RowCnt ?>_socios_tel" class="form-group socios_tel">
 <input type="text" data-field="x_tel" name="x<?php echo $socios_list->RowIndex ?>_tel" id="x<?php echo $socios_list->RowIndex ?>_tel" size="30" maxlength="40" placeholder="<?php echo ew_HtmlEncode($socios->tel->PlaceHolder) ?>" value="<?php echo $socios->tel->EditValue ?>"<?php echo $socios->tel->EditAttributes() ?>>
 </span>
@@ -4086,7 +4071,7 @@ if (@$emptywrk) $socios->activo->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($socios->cel->Visible) { // cel ?>
-		<td data-name="cel">
+		<td>
 <span id="el<?php echo $socios_list->RowCnt ?>_socios_cel" class="form-group socios_cel">
 <input type="text" data-field="x_cel" name="x<?php echo $socios_list->RowIndex ?>_cel" id="x<?php echo $socios_list->RowIndex ?>_cel" size="30" maxlength="40" placeholder="<?php echo ew_HtmlEncode($socios->cel->PlaceHolder) ?>" value="<?php echo $socios->cel->EditValue ?>"<?php echo $socios->cel->EditAttributes() ?>>
 </span>
@@ -4094,7 +4079,7 @@ if (@$emptywrk) $socios->activo->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
-		<td data-name="cuit_cuil">
+		<td>
 <span id="el<?php echo $socios_list->RowCnt ?>_socios_cuit_cuil" class="form-group socios_cuit_cuil">
 <input type="text" data-field="x_cuit_cuil" name="x<?php echo $socios_list->RowIndex ?>_cuit_cuil" id="x<?php echo $socios_list->RowIndex ?>_cuit_cuil" size="30" maxlength="14" placeholder="<?php echo ew_HtmlEncode($socios->cuit_cuil->PlaceHolder) ?>" value="<?php echo $socios->cuit_cuil->EditValue ?>"<?php echo $socios->cuit_cuil->EditAttributes() ?>>
 </span>
@@ -4481,12 +4466,12 @@ fsocioslist.UpdateOpts(<?php echo $socios_list->RowIndex ?>);
 $socios_list->ListOptions->Render("body", "left", $socios_list->RowIndex);
 ?>
 	<?php if ($socios->socio_nro->Visible) { // socio_nro ?>
-		<td data-name="socio_nro">
+		<td>
 <input type="hidden" data-field="x_socio_nro" name="o<?php echo $socios_list->RowIndex ?>_socio_nro" id="o<?php echo $socios_list->RowIndex ?>_socio_nro" value="<?php echo ew_HtmlEncode($socios->socio_nro->OldValue) ?>">
 </td>
 	<?php } ?>
 	<?php if ($socios->propietario->Visible) { // propietario ?>
-		<td data-name="propietario">
+		<td>
 <span id="el$rowindex$_socios_propietario" class="form-group socios_propietario">
 <input type="text" data-field="x_propietario" name="x<?php echo $socios_list->RowIndex ?>_propietario" id="x<?php echo $socios_list->RowIndex ?>_propietario" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->propietario->PlaceHolder) ?>" value="<?php echo $socios->propietario->EditValue ?>"<?php echo $socios->propietario->EditAttributes() ?>>
 </span>
@@ -4494,7 +4479,7 @@ $socios_list->ListOptions->Render("body", "left", $socios_list->RowIndex);
 </td>
 	<?php } ?>
 	<?php if ($socios->comercio->Visible) { // comercio ?>
-		<td data-name="comercio">
+		<td>
 <span id="el$rowindex$_socios_comercio" class="form-group socios_comercio">
 <input type="text" data-field="x_comercio" name="x<?php echo $socios_list->RowIndex ?>_comercio" id="x<?php echo $socios_list->RowIndex ?>_comercio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->comercio->PlaceHolder) ?>" value="<?php echo $socios->comercio->EditValue ?>"<?php echo $socios->comercio->EditAttributes() ?>>
 </span>
@@ -4502,7 +4487,7 @@ $socios_list->ListOptions->Render("body", "left", $socios_list->RowIndex);
 </td>
 	<?php } ?>
 	<?php if ($socios->direccion_comercio->Visible) { // direccion_comercio ?>
-		<td data-name="direccion_comercio">
+		<td>
 <span id="el$rowindex$_socios_direccion_comercio" class="form-group socios_direccion_comercio">
 <input type="text" data-field="x_direccion_comercio" name="x<?php echo $socios_list->RowIndex ?>_direccion_comercio" id="x<?php echo $socios_list->RowIndex ?>_direccion_comercio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->direccion_comercio->PlaceHolder) ?>" value="<?php echo $socios->direccion_comercio->EditValue ?>"<?php echo $socios->direccion_comercio->EditAttributes() ?>>
 </span>
@@ -4510,7 +4495,7 @@ $socios_list->ListOptions->Render("body", "left", $socios_list->RowIndex);
 </td>
 	<?php } ?>
 	<?php if ($socios->activo->Visible) { // activo ?>
-		<td data-name="activo">
+		<td>
 <span id="el$rowindex$_socios_activo" class="form-group socios_activo">
 <div id="tp_x<?php echo $socios_list->RowIndex ?>_activo" class="<?php echo EW_ITEM_TEMPLATE_CLASSNAME ?>"><input type="radio" name="x<?php echo $socios_list->RowIndex ?>_activo" id="x<?php echo $socios_list->RowIndex ?>_activo" value="{value}"<?php echo $socios->activo->EditAttributes() ?>></div>
 <div id="dsl_x<?php echo $socios_list->RowIndex ?>_activo" data-repeatcolumn="5" class="ewItemList">
@@ -4539,7 +4524,7 @@ if (@$emptywrk) $socios->activo->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($socios->mail->Visible) { // mail ?>
-		<td data-name="mail">
+		<td>
 <span id="el$rowindex$_socios_mail" class="form-group socios_mail">
 <input type="text" data-field="x_mail" name="x<?php echo $socios_list->RowIndex ?>_mail" id="x<?php echo $socios_list->RowIndex ?>_mail" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->mail->PlaceHolder) ?>" value="<?php echo $socios->mail->EditValue ?>"<?php echo $socios->mail->EditAttributes() ?>>
 </span>
@@ -4547,7 +4532,7 @@ if (@$emptywrk) $socios->activo->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($socios->tel->Visible) { // tel ?>
-		<td data-name="tel">
+		<td>
 <span id="el$rowindex$_socios_tel" class="form-group socios_tel">
 <input type="text" data-field="x_tel" name="x<?php echo $socios_list->RowIndex ?>_tel" id="x<?php echo $socios_list->RowIndex ?>_tel" size="30" maxlength="40" placeholder="<?php echo ew_HtmlEncode($socios->tel->PlaceHolder) ?>" value="<?php echo $socios->tel->EditValue ?>"<?php echo $socios->tel->EditAttributes() ?>>
 </span>
@@ -4555,7 +4540,7 @@ if (@$emptywrk) $socios->activo->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($socios->cel->Visible) { // cel ?>
-		<td data-name="cel">
+		<td>
 <span id="el$rowindex$_socios_cel" class="form-group socios_cel">
 <input type="text" data-field="x_cel" name="x<?php echo $socios_list->RowIndex ?>_cel" id="x<?php echo $socios_list->RowIndex ?>_cel" size="30" maxlength="40" placeholder="<?php echo ew_HtmlEncode($socios->cel->PlaceHolder) ?>" value="<?php echo $socios->cel->EditValue ?>"<?php echo $socios->cel->EditAttributes() ?>>
 </span>
@@ -4563,7 +4548,7 @@ if (@$emptywrk) $socios->activo->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
-		<td data-name="cuit_cuil">
+		<td>
 <span id="el$rowindex$_socios_cuit_cuil" class="form-group socios_cuit_cuil">
 <input type="text" data-field="x_cuit_cuil" name="x<?php echo $socios_list->RowIndex ?>_cuit_cuil" id="x<?php echo $socios_list->RowIndex ?>_cuit_cuil" size="30" maxlength="14" placeholder="<?php echo ew_HtmlEncode($socios->cuit_cuil->PlaceHolder) ?>" value="<?php echo $socios->cuit_cuil->EditValue ?>"<?php echo $socios->cuit_cuil->EditAttributes() ?>>
 </span>
@@ -4644,7 +4629,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $socios_list->Page_Terminate();
 ?>

@@ -1,14 +1,15 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_actividadinfo.php" ?>
-<?php include_once "cciag_rubrosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_actividadinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_rubrosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -456,9 +457,6 @@ class cactividad_view extends cactividad {
 			if (@$_GET["id"] <> "") {
 				$this->id->setQueryStringValue($_GET["id"]);
 				$this->RecKey["id"] = $this->id->QueryStringValue;
-			} elseif (@$_POST["id"] <> "") {
-				$this->id->setFormValue($_POST["id"]);
-				$this->RecKey["id"] = $this->id->FormValue;
 			} else {
 				$sReturnUrl = "cciag_actividadlist.php"; // Return to list
 			}
@@ -573,7 +571,7 @@ class cactividad_view extends cactividad {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -815,10 +813,7 @@ class cactividad_view extends cactividad {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -950,17 +945,10 @@ class cactividad_view extends cactividad {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -1038,10 +1026,9 @@ class cactividad_view extends cactividad {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_actividadlist.php", "", $this->TableVar, TRUE);
 		$PageId = "view";
-		$Breadcrumb->Add("view", $PageId, $url);
+		$Breadcrumb->Add("view", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -1149,7 +1136,7 @@ Page_Rendering();
 // Page Rendering event
 $actividad_view->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($actividad->Export == "") { ?>
 <script type="text/javascript">
 
@@ -1216,7 +1203,7 @@ $actividad_view->ShowMessage();
 	<tr id="r_id">
 		<td><span id="elh_actividad_id"><?php echo $actividad->id->FldCaption() ?></span></td>
 		<td<?php echo $actividad->id->CellAttributes() ?>>
-<span id="el_actividad_id">
+<span id="el_actividad_id" class="form-group">
 <span<?php echo $actividad->id->ViewAttributes() ?>>
 <?php echo $actividad->id->ViewValue ?></span>
 </span>
@@ -1227,7 +1214,7 @@ $actividad_view->ShowMessage();
 	<tr id="r_id_rubro">
 		<td><span id="elh_actividad_id_rubro"><?php echo $actividad->id_rubro->FldCaption() ?></span></td>
 		<td<?php echo $actividad->id_rubro->CellAttributes() ?>>
-<span id="el_actividad_id_rubro">
+<span id="el_actividad_id_rubro" class="form-group">
 <span<?php echo $actividad->id_rubro->ViewAttributes() ?>>
 <?php echo $actividad->id_rubro->ViewValue ?></span>
 </span>
@@ -1238,7 +1225,7 @@ $actividad_view->ShowMessage();
 	<tr id="r_actividad">
 		<td><span id="elh_actividad_actividad"><?php echo $actividad->actividad->FldCaption() ?></span></td>
 		<td<?php echo $actividad->actividad->CellAttributes() ?>>
-<span id="el_actividad_actividad">
+<span id="el_actividad_actividad" class="form-group">
 <span<?php echo $actividad->actividad->ViewAttributes() ?>>
 <?php echo $actividad->actividad->ViewValue ?></span>
 </span>
@@ -1249,7 +1236,7 @@ $actividad_view->ShowMessage();
 	<tr id="r_descripcion">
 		<td><span id="elh_actividad_descripcion"><?php echo $actividad->descripcion->FldCaption() ?></span></td>
 		<td<?php echo $actividad->descripcion->CellAttributes() ?>>
-<span id="el_actividad_descripcion">
+<span id="el_actividad_descripcion" class="form-group">
 <span<?php echo $actividad->descripcion->ViewAttributes() ?>>
 <?php echo $actividad->descripcion->ViewValue ?></span>
 </span>
@@ -1260,7 +1247,7 @@ $actividad_view->ShowMessage();
 	<tr id="r_activa">
 		<td><span id="elh_actividad_activa"><?php echo $actividad->activa->FldCaption() ?></span></td>
 		<td<?php echo $actividad->activa->CellAttributes() ?>>
-<span id="el_actividad_activa">
+<span id="el_actividad_activa" class="form-group">
 <span<?php echo $actividad->activa->ViewAttributes() ?>>
 <?php echo $actividad->activa->ViewValue ?></span>
 </span>
@@ -1285,7 +1272,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $actividad_view->Page_Terminate();
 ?>

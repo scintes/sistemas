@@ -1,13 +1,14 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_detallesinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_detallesinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -381,7 +382,7 @@ class cdetalles_delete extends cdetalles {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -510,7 +511,7 @@ class cdetalles_delete extends cdetalles {
 		}
 		$DeleteRows = TRUE;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE) {
@@ -546,7 +547,7 @@ class cdetalles_delete extends cdetalles {
 				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
 				$sThisKey .= $row['codigo'];
 				$this->LoadDbValues($row);
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				$DeleteRows = $this->Delete($row); // Delete
 				$conn->raiseErrorFn = '';
 				if ($DeleteRows === FALSE)
@@ -586,10 +587,9 @@ class cdetalles_delete extends cdetalles {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_detalleslist.php", "", $this->TableVar, TRUE);
 		$PageId = "delete";
-		$Breadcrumb->Add("delete", $PageId, $url);
+		$Breadcrumb->Add("delete", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -671,7 +671,7 @@ Page_Rendering();
 // Page Rendering event
 $detalles_delete->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -773,7 +773,7 @@ while (!$detalles_delete->Recordset->EOF) {
 	<tr<?php echo $detalles->RowAttributes() ?>>
 <?php if ($detalles->codigo->Visible) { // codigo ?>
 		<td<?php echo $detalles->codigo->CellAttributes() ?>>
-<span id="el<?php echo $detalles_delete->RowCnt ?>_detalles_codigo" class="detalles_codigo">
+<span id="el<?php echo $detalles_delete->RowCnt ?>_detalles_codigo" class="form-group detalles_codigo">
 <span<?php echo $detalles->codigo->ViewAttributes() ?>>
 <?php echo $detalles->codigo->ListViewValue() ?></span>
 </span>
@@ -781,7 +781,7 @@ while (!$detalles_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($detalles->nombre->Visible) { // nombre ?>
 		<td<?php echo $detalles->nombre->CellAttributes() ?>>
-<span id="el<?php echo $detalles_delete->RowCnt ?>_detalles_nombre" class="detalles_nombre">
+<span id="el<?php echo $detalles_delete->RowCnt ?>_detalles_nombre" class="form-group detalles_nombre">
 <span<?php echo $detalles->nombre->ViewAttributes() ?>>
 <?php echo $detalles->nombre->ListViewValue() ?></span>
 </span>
@@ -789,7 +789,7 @@ while (!$detalles_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($detalles->activa->Visible) { // activa ?>
 		<td<?php echo $detalles->activa->CellAttributes() ?>>
-<span id="el<?php echo $detalles_delete->RowCnt ?>_detalles_activa" class="detalles_activa">
+<span id="el<?php echo $detalles_delete->RowCnt ?>_detalles_activa" class="form-group detalles_activa">
 <span<?php echo $detalles->activa->ViewAttributes() ?>>
 <?php echo $detalles->activa->ListViewValue() ?></span>
 </span>
@@ -823,7 +823,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $detalles_delete->Page_Terminate();
 ?>

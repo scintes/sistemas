@@ -1,4 +1,4 @@
-<?php include_once "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
 <?php
 
 // Create page object
@@ -115,10 +115,9 @@ if ($seguimiento_tramites->CurrentAction == "gridadd") {
 } else {
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
-		if ($seguimiento_tramites_grid->TotalRecs <= 0)
-			$seguimiento_tramites_grid->TotalRecs = $seguimiento_tramites->SelectRecordCount();
+		$seguimiento_tramites_grid->TotalRecs = $seguimiento_tramites->SelectRecordCount();
 	} else {
-		if (!$seguimiento_tramites_grid->Recordset && ($seguimiento_tramites_grid->Recordset = $seguimiento_tramites_grid->LoadRecordset()))
+		if ($seguimiento_tramites_grid->Recordset = $seguimiento_tramites_grid->LoadRecordset())
 			$seguimiento_tramites_grid->TotalRecs = $seguimiento_tramites_grid->Recordset->RecordCount();
 	}
 	$seguimiento_tramites_grid->StartRec = 1;
@@ -160,9 +159,6 @@ $seguimiento_tramites_grid->ShowMessage();
 <thead><!-- Table header -->
 	<tr class="ewTableHeader">
 <?php
-
-// Header row
-$seguimiento_tramites->RowType = EW_ROWTYPE_HEADER;
 
 // Render list options
 $seguimiento_tramites_grid->RenderListOptions();
@@ -435,8 +431,10 @@ if (@$emptywrk) $seguimiento_tramites->id_tramite->OldValue = "";
 <?php } ?>
 <?php if ($seguimiento_tramites->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
 <span id="el<?php echo $seguimiento_tramites_grid->RowCnt ?>_seguimiento_tramites_titulo" class="form-group seguimiento_tramites_titulo">
-<input type="text" data-field="x_titulo" name="x<?php echo $seguimiento_tramites_grid->RowIndex ?>_titulo" id="x<?php echo $seguimiento_tramites_grid->RowIndex ?>_titulo" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($seguimiento_tramites->titulo->PlaceHolder) ?>" value="<?php echo $seguimiento_tramites->titulo->EditValue ?>"<?php echo $seguimiento_tramites->titulo->EditAttributes() ?>>
+<span<?php echo $seguimiento_tramites->titulo->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $seguimiento_tramites->titulo->EditValue ?></p></span>
 </span>
+<input type="hidden" data-field="x_titulo" name="x<?php echo $seguimiento_tramites_grid->RowIndex ?>_titulo" id="x<?php echo $seguimiento_tramites_grid->RowIndex ?>_titulo" value="<?php echo ew_HtmlEncode($seguimiento_tramites->titulo->CurrentValue) ?>">
 <?php } ?>
 <?php if ($seguimiento_tramites->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span<?php echo $seguimiento_tramites->titulo->ViewAttributes() ?>>
@@ -449,7 +447,7 @@ if (@$emptywrk) $seguimiento_tramites->id_tramite->OldValue = "";
 	<?php if ($seguimiento_tramites->archivo->Visible) { // archivo ?>
 		<td data-name="archivo"<?php echo $seguimiento_tramites->archivo->CellAttributes() ?>>
 <?php if ($seguimiento_tramites_grid->RowAction == "insert") { // Add record ?>
-<span id="el<?php echo $seguimiento_tramites_grid->RowCnt ?>_seguimiento_tramites_archivo" class="form-group seguimiento_tramites_archivo">
+<span id="el$rowindex$_seguimiento_tramites_archivo" class="form-group seguimiento_tramites_archivo">
 <div id="fd_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo">
 <span title="<?php echo $seguimiento_tramites->archivo->FldTitle() ? $seguimiento_tramites->archivo->FldTitle() : $Language->Phrase("ChooseFiles") ?>" class="btn btn-default btn-sm fileinput-button ewTooltip<?php if ($seguimiento_tramites->archivo->ReadOnly || $seguimiento_tramites->archivo->Disabled) echo " hide"; ?>">
 	<span><?php echo $Language->Phrase("ChooseFileBtn") ?></span>
@@ -499,24 +497,39 @@ $Files[$i] = str_replace("%f", ew_HtmlEncode(ew_UploadPathEx(FALSE, $seguimiento
 </span>
 <?php } else  { // Edit record ?>
 <span id="el<?php echo $seguimiento_tramites_grid->RowCnt ?>_seguimiento_tramites_archivo" class="form-group seguimiento_tramites_archivo">
-<div id="fd_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo">
-<span title="<?php echo $seguimiento_tramites->archivo->FldTitle() ? $seguimiento_tramites->archivo->FldTitle() : $Language->Phrase("ChooseFiles") ?>" class="btn btn-default btn-sm fileinput-button ewTooltip<?php if ($seguimiento_tramites->archivo->ReadOnly || $seguimiento_tramites->archivo->Disabled) echo " hide"; ?>">
-	<span><?php echo $Language->Phrase("ChooseFileBtn") ?></span>
-	<input type="file" title=" " data-field="x_archivo" name="x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" id="x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" multiple="multiple">
-</span>
-<input type="hidden" name="fn_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" id= "fn_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" value="<?php echo $seguimiento_tramites->archivo->Upload->FileName ?>">
-<?php if (@$_POST["fa_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo"] == "0") { ?>
-<input type="hidden" name="fa_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" id= "fa_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" value="0">
-<?php } else { ?>
-<input type="hidden" name="fa_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" id= "fa_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" value="1">
+<span<?php echo $seguimiento_tramites->archivo->ViewAttributes() ?>>
+<ul class="list-inline"><?php
+$Files = explode(EW_MULTIPLE_UPLOAD_SEPARATOR, $seguimiento_tramites->archivo->Upload->DbValue);
+$HrefValue = $seguimiento_tramites->archivo->HrefValue;
+$FileCount = count($Files);
+for ($i = 0; $i < $FileCount; $i++) {
+if ($Files[$i] <> "") {
+$seguimiento_tramites->archivo->ViewValue = $Files[$i];
+$seguimiento_tramites->archivo->HrefValue = str_replace("%u", ew_HtmlEncode(ew_UploadPathEx(FALSE, $seguimiento_tramites->archivo->UploadPath) . $Files[$i]), $HrefValue);
+$Files[$i] = str_replace("%f", ew_HtmlEncode(ew_UploadPathEx(FALSE, $seguimiento_tramites->archivo->UploadPath) . $Files[$i]), $seguimiento_tramites->archivo->EditValue);
+?>
+<li>
+<?php if ($seguimiento_tramites->archivo->LinkAttributes() <> "") { ?>
+<?php if (!empty($seguimiento_tramites->archivo->Upload->DbValue)) { ?>
+<?php echo $seguimiento_tramites->archivo->EditValue ?>
+<?php } elseif (!in_array($seguimiento_tramites->CurrentAction, array("I", "edit", "gridedit"))) { ?>	
+&nbsp;
 <?php } ?>
-<input type="hidden" name="fs_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" id= "fs_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" value="255">
-<input type="hidden" name="fx_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" id= "fx_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" value="<?php echo $seguimiento_tramites->archivo->UploadAllowedFileExt ?>">
-<input type="hidden" name="fm_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" id= "fm_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" value="<?php echo $seguimiento_tramites->archivo->UploadMaxFileSize ?>">
-<input type="hidden" name="fc_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" id= "fc_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" value="<?php echo $seguimiento_tramites->archivo->UploadMaxFileCount ?>">
-</div>
-<table id="ft_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" class="table table-condensed pull-left ewUploadTable"><tbody class="files"></tbody></table>
+<?php } else { ?>
+<?php if (!empty($seguimiento_tramites->archivo->Upload->DbValue)) { ?>
+<?php echo $seguimiento_tramites->archivo->EditValue ?>
+<?php } elseif (!in_array($seguimiento_tramites->CurrentAction, array("I", "edit", "gridedit"))) { ?>	
+&nbsp;
+<?php } ?>
+<?php } ?>
+</li>
+<?php
+}
+}
+?></ul>
 </span>
+</span>
+<input type="hidden" data-field="x_archivo" name="x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" id="x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo" value="<?php echo ew_HtmlEncode($seguimiento_tramites->archivo->CurrentValue) ?>">
 <?php } ?>
 </td>
 	<?php } ?>
@@ -563,7 +576,7 @@ fseguimiento_tramitesgrid.UpdateOpts(<?php echo $seguimiento_tramites_grid->RowI
 $seguimiento_tramites_grid->ListOptions->Render("body", "left", $seguimiento_tramites_grid->RowIndex);
 ?>
 	<?php if ($seguimiento_tramites->id_tramite->Visible) { // id_tramite ?>
-		<td data-name="id_tramite">
+		<td>
 <?php if ($seguimiento_tramites->CurrentAction <> "F") { ?>
 <?php if ($seguimiento_tramites->id_tramite->getSessionValue() <> "") { ?>
 <span id="el$rowindex$_seguimiento_tramites_id_tramite" class="form-group seguimiento_tramites_id_tramite">
@@ -627,7 +640,7 @@ if (@$emptywrk) $seguimiento_tramites->id_tramite->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($seguimiento_tramites->fecha->Visible) { // fecha ?>
-		<td data-name="fecha">
+		<td>
 <?php if ($seguimiento_tramites->CurrentAction <> "F") { ?>
 <?php } else { ?>
 <span id="el$rowindex$_seguimiento_tramites_fecha" class="form-group seguimiento_tramites_fecha">
@@ -640,7 +653,7 @@ if (@$emptywrk) $seguimiento_tramites->id_tramite->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($seguimiento_tramites->hora->Visible) { // hora ?>
-		<td data-name="hora">
+		<td>
 <?php if ($seguimiento_tramites->CurrentAction <> "F") { ?>
 <?php } else { ?>
 <span id="el$rowindex$_seguimiento_tramites_hora" class="form-group seguimiento_tramites_hora">
@@ -653,7 +666,7 @@ if (@$emptywrk) $seguimiento_tramites->id_tramite->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($seguimiento_tramites->titulo->Visible) { // titulo ?>
-		<td data-name="titulo">
+		<td>
 <?php if ($seguimiento_tramites->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_seguimiento_tramites_titulo" class="form-group seguimiento_tramites_titulo">
 <input type="text" data-field="x_titulo" name="x<?php echo $seguimiento_tramites_grid->RowIndex ?>_titulo" id="x<?php echo $seguimiento_tramites_grid->RowIndex ?>_titulo" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($seguimiento_tramites->titulo->PlaceHolder) ?>" value="<?php echo $seguimiento_tramites->titulo->EditValue ?>"<?php echo $seguimiento_tramites->titulo->EditAttributes() ?>>
@@ -669,7 +682,7 @@ if (@$emptywrk) $seguimiento_tramites->id_tramite->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($seguimiento_tramites->archivo->Visible) { // archivo ?>
-		<td data-name="archivo">
+		<td>
 <span id="el$rowindex$_seguimiento_tramites_archivo" class="form-group seguimiento_tramites_archivo">
 <div id="fd_x<?php echo $seguimiento_tramites_grid->RowIndex ?>_archivo">
 <span title="<?php echo $seguimiento_tramites->archivo->FldTitle() ? $seguimiento_tramites->archivo->FldTitle() : $Language->Phrase("ChooseFiles") ?>" class="btn btn-default btn-sm fileinput-button ewTooltip<?php if ($seguimiento_tramites->archivo->ReadOnly || $seguimiento_tramites->archivo->Disabled) echo " hide"; ?>">

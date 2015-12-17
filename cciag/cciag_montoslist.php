@@ -1,14 +1,15 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_montosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_socios_cuotasgridcls.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_montosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_socios_cuotasgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -636,14 +637,12 @@ class cmontos_list extends cmontos {
 		}
 
 		// Load record count first
-		if (!$this->IsAddOrEdit()) {
-			$bSelectLimit = EW_SELECT_LIMIT;
-			if ($bSelectLimit) {
-				$this->TotalRecs = $this->SelectRecordCount();
-			} else {
-				if ($this->Recordset = $this->LoadRecordset())
-					$this->TotalRecs = $this->Recordset->RecordCount();
-			}
+		$bSelectLimit = EW_SELECT_LIMIT;
+		if ($bSelectLimit) {
+			$this->TotalRecs = $this->SelectRecordCount();
+		} else {
+			if ($this->Recordset = $this->LoadRecordset())
+				$this->TotalRecs = $this->Recordset->RecordCount();
 		}
 
 		// Search options
@@ -1118,7 +1117,7 @@ class cmontos_list extends cmontos {
 		$oListOpt = &$this->ListOptions->Items["detail_socios_cuotas"];
 		if ($Security->AllowList(CurrentProjectID() . 'socios_cuotas') && $this->ShowOptionLink()) {
 			$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("socios_cuotas", "TblCaption");
-			$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_socios_cuotaslist.php?" . EW_TABLE_SHOW_MASTER . "=montos&fk_id=" . urlencode(strval($this->id->CurrentValue)) . "") . "\">" . $body . "</a>";
+			$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_socios_cuotaslist.php?" . EW_TABLE_SHOW_MASTER . "=montos&fk_id=" . strval($this->id->CurrentValue) . "") . "\">" . $body . "</a>";
 			$links = "";
 			if ($GLOBALS["socios_cuotas_grid"]->DetailView && $Security->CanView() && $this->ShowOptionLink('view') && $Security->AllowView(CurrentProjectID() . 'socios_cuotas')) {
 				$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=socios_cuotas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
@@ -1260,7 +1259,7 @@ class cmontos_list extends cmontos {
 		if ($sFilter <> "" && $UserAction <> "") {
 			$this->CurrentFilter = $sFilter;
 			$sSql = $this->SQL();
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 			$rs = $conn->Execute($sSql);
 			$conn->raiseErrorFn = '';
 			$rsuser = ($rs) ? $rs->GetRows() : array();
@@ -1312,7 +1311,7 @@ class cmontos_list extends cmontos {
 		// Show all button
 		$item = &$this->SearchOptions->Add("showall");
 		$item->Body = "<a class=\"btn btn-default ewShowAll\" title=\"" . $Language->Phrase("ShowAll") . "\" data-caption=\"" . $Language->Phrase("ShowAll") . "\" href=\"" . $this->PageUrl() . "cmd=reset\">" . $Language->Phrase("ShowAllBtn") . "</a>";
-		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere && $this->SearchWhere <> "0=101");
+		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere);
 
 		// Advanced search button
 		$item = &$this->SearchOptions->Add("advancedsearch");
@@ -1434,7 +1433,7 @@ class cmontos_list extends cmontos {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -1721,10 +1720,7 @@ class cmontos_list extends cmontos {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -1866,17 +1862,10 @@ class cmontos_list extends cmontos {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -1945,7 +1934,7 @@ class cmontos_list extends cmontos {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
+		$url = ew_CurrentUrl();
 		$url = preg_replace('/\?cmd=reset(all){0,1}$/i', '', $url); // Remove cmd=reset / cmd=resetall
 		$Breadcrumb->Add("list", $this->TableVar, $url, "", $this->TableVar, TRUE);
 	}
@@ -2095,7 +2084,7 @@ Page_Rendering();
 // Page Rendering event
 $montos_list->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($montos->Export == "") { ?>
 <script type="text/javascript">
 
@@ -2153,10 +2142,9 @@ var fmontoslistsrch = new ew_Form("fmontoslistsrch");
 <?php
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
-		if ($montos_list->TotalRecs <= 0)
-			$montos_list->TotalRecs = $montos->SelectRecordCount();
+		$montos_list->TotalRecs = $montos->SelectRecordCount();
 	} else {
-		if (!$montos_list->Recordset && ($montos_list->Recordset = $montos_list->LoadRecordset()))
+		if ($montos_list->Recordset = $montos_list->LoadRecordset())
 			$montos_list->TotalRecs = $montos_list->Recordset->RecordCount();
 	}
 	$montos_list->StartRec = 1;
@@ -2283,9 +2271,6 @@ $montos_list->ShowMessage();
 <thead><!-- Table header -->
 	<tr class="ewTableHeader">
 <?php
-
-// Header row
-$montos->RowType = EW_ROWTYPE_HEADER;
 
 // Render list options
 $montos_list->RenderListOptions();
@@ -2506,7 +2491,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $montos_list->Page_Terminate();
 ?>

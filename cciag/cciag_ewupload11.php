@@ -1,10 +1,11 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
 <?php
 require('uploadhandler.php');
 
@@ -38,16 +39,6 @@ class cUploadHandler extends UploadHandler {
 		}
 		$name = ew_Convert("UTF-8", EW_FILE_SYSTEM_ENCODING, $name);
 		return parent::get_unique_filename($file_path, $name, $size, $type, $error, $index, $content_range);
-	}
-
-	// Override get_singular_param_name()
-	protected function get_singular_param_name() {
-		return $this->options['param_name'];
-	}
-
-	// Override get_file_names_params()
-	protected function get_file_names_params() {
-		return array(); // Not used
 	}
 
 	// Override handle_file_upload()

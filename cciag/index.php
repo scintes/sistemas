@@ -1,12 +1,13 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -227,7 +228,6 @@ class cdefault {
 	function Page_Main() {
 		global $Security, $Language;
 		if (!$Security->IsLoggedIn()) $Security->AutoLogin();
-		if ($Security->AllowList(CurrentProjectID() . 'inicio.php'))
 		$this->Page_Terminate("inicio/inicio.php"); // Exit and go to default page
 		if ($Security->AllowList(CurrentProjectID() . 'actividad'))
 			$this->Page_Terminate("cciag_actividadlist.php");
@@ -257,7 +257,6 @@ class cdefault {
 			$this->Page_Terminate("cciag_detalleslist.php");
 		if ($Security->AllowList(CurrentProjectID() . 'socios_detalles'))
 			$this->Page_Terminate("cciag_socios_detalleslist.php");
-		if ($Security->AllowList(CurrentProjectID() . 'acerca_de.php'))
 			$this->Page_Terminate("acerca_de.php");
 		if ($Security->AllowList(CurrentProjectID() . 'backup_v1.php'))
 			$this->Page_Terminate("backup_v1.php");
@@ -316,11 +315,11 @@ $default->Page_Init();
 // Page main
 $default->Page_Main();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php
 $default->ShowMessage();
 ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $default->Page_Terminate();
 ?>

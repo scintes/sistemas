@@ -741,7 +741,7 @@
 </table>
 <table id="v__configuracion_deuda"/>
 <table id="v_deuda_adquirida"/>
-<table id="seguimiento_tramites"><phrase id="tblcaption" value="seguimiento tramites"/>
+<table id="seguimiento_tramites"><phrase id="tblcaption" value="Seguimiento de Tramites"/>
 <field id="id_tramite"><phrase id="fldcaption" value="id tramite"/>
 </field>
 <field id="fecha"><phrase id="fldcaption" value="Fecha"/>

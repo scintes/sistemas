@@ -1,14 +1,15 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_tramitesinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_seguimiento_tramitesgridcls.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_tramitesinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_seguimiento_tramitesgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -804,7 +805,7 @@ class ctramites_add extends ctramites {
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
 		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
 		if ($bInsertRow) {
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 			$AddRow = $this->Insert($rsnew);
 			$conn->raiseErrorFn = '';
 			if ($AddRow) {
@@ -921,10 +922,9 @@ class ctramites_add extends ctramites {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_tramiteslist.php", "", $this->TableVar, TRUE);
 		$PageId = ($this->CurrentAction == "C") ? "Copy" : "Add";
-		$Breadcrumb->Add("add", $PageId, $url);
+		$Breadcrumb->Add("add", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -1013,7 +1013,7 @@ Page_Rendering();
 // Page Rendering event
 $tramites_add->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -1120,8 +1120,7 @@ $tramites_add->ShowMessage();
 		<label id="elh_tramites_Descripcion" class="col-sm-2 control-label ewLabel"><?php echo $tramites->Descripcion->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $tramites->Descripcion->CellAttributes() ?>>
 <span id="el_tramites_Descripcion">
-<?php ew_AppendClass($tramites->Descripcion->EditAttrs["class"], "editor"); ?>
-<textarea data-field="x_Descripcion" name="x_Descripcion" id="x_Descripcion" cols="35" rows="4" placeholder="<?php echo ew_HtmlEncode($tramites->Descripcion->PlaceHolder) ?>"<?php echo $tramites->Descripcion->EditAttributes() ?>><?php echo $tramites->Descripcion->EditValue ?></textarea>
+<textarea data-field="x_Descripcion" class="editor" name="x_Descripcion" id="x_Descripcion" cols="35" rows="4" placeholder="<?php echo ew_HtmlEncode($tramites->Descripcion->PlaceHolder) ?>"<?php echo $tramites->Descripcion->EditAttributes() ?>><?php echo $tramites->Descripcion->EditValue ?></textarea>
 <script type="text/javascript">
 ew_CreateEditor("ftramitesadd", "x_Descripcion", 35, 4, <?php echo ($tramites->Descripcion->ReadOnly || FALSE) ? "true" : "false" ?>);
 </script>
@@ -1210,7 +1209,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $tramites_add->Page_Terminate();
 ?>

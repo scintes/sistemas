@@ -1,15 +1,16 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_pagosinfo.php" ?>
-<?php include_once "cciag_deudasinfo.php" ?>
-<?php include_once "cciag_sociosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_pagosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_deudasinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -407,7 +408,7 @@ class cpagos_delete extends cpagos {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -564,7 +565,7 @@ class cpagos_delete extends cpagos {
 		}
 		$DeleteRows = TRUE;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE) {
@@ -601,7 +602,7 @@ class cpagos_delete extends cpagos {
 				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
 				$sThisKey .= $row['id'];
 				$this->LoadDbValues($row);
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				$DeleteRows = $this->Delete($row); // Delete
 				$conn->raiseErrorFn = '';
 				if ($DeleteRows === FALSE)
@@ -697,10 +698,9 @@ class cpagos_delete extends cpagos {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_pagoslist.php", "", $this->TableVar, TRUE);
 		$PageId = "delete";
-		$Breadcrumb->Add("delete", $PageId, $url);
+		$Breadcrumb->Add("delete", $PageId, ew_CurrentUrl());
 	}
 
 	// Write Audit Trail start/end for grid update
@@ -821,7 +821,7 @@ Page_Rendering();
 // Page Rendering event
 $pagos_delete->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -927,7 +927,7 @@ while (!$pagos_delete->Recordset->EOF) {
 	<tr<?php echo $pagos->RowAttributes() ?>>
 <?php if ($pagos->id->Visible) { // id ?>
 		<td<?php echo $pagos->id->CellAttributes() ?>>
-<span id="el<?php echo $pagos_delete->RowCnt ?>_pagos_id" class="pagos_id">
+<span id="el<?php echo $pagos_delete->RowCnt ?>_pagos_id" class="form-group pagos_id">
 <span<?php echo $pagos->id->ViewAttributes() ?>>
 <?php echo $pagos->id->ListViewValue() ?></span>
 </span>
@@ -935,7 +935,7 @@ while (!$pagos_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($pagos->id_deuda->Visible) { // id_deuda ?>
 		<td<?php echo $pagos->id_deuda->CellAttributes() ?>>
-<span id="el<?php echo $pagos_delete->RowCnt ?>_pagos_id_deuda" class="pagos_id_deuda">
+<span id="el<?php echo $pagos_delete->RowCnt ?>_pagos_id_deuda" class="form-group pagos_id_deuda">
 <span<?php echo $pagos->id_deuda->ViewAttributes() ?>>
 <?php echo $pagos->id_deuda->ListViewValue() ?></span>
 </span>
@@ -943,7 +943,7 @@ while (!$pagos_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($pagos->fecha->Visible) { // fecha ?>
 		<td<?php echo $pagos->fecha->CellAttributes() ?>>
-<span id="el<?php echo $pagos_delete->RowCnt ?>_pagos_fecha" class="pagos_fecha">
+<span id="el<?php echo $pagos_delete->RowCnt ?>_pagos_fecha" class="form-group pagos_fecha">
 <span<?php echo $pagos->fecha->ViewAttributes() ?>>
 <?php echo $pagos->fecha->ListViewValue() ?></span>
 </span>
@@ -951,7 +951,7 @@ while (!$pagos_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($pagos->monto->Visible) { // monto ?>
 		<td<?php echo $pagos->monto->CellAttributes() ?>>
-<span id="el<?php echo $pagos_delete->RowCnt ?>_pagos_monto" class="pagos_monto">
+<span id="el<?php echo $pagos_delete->RowCnt ?>_pagos_monto" class="form-group pagos_monto">
 <span<?php echo $pagos->monto->ViewAttributes() ?>>
 <?php echo $pagos->monto->ListViewValue() ?></span>
 </span>
@@ -985,7 +985,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $pagos_delete->Page_Terminate();
 ?>

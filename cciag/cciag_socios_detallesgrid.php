@@ -1,5 +1,5 @@
-<?php include_once "cciag_sociosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
 <?php
 
 // Create page object
@@ -124,10 +124,9 @@ if ($socios_detalles->CurrentAction == "gridadd") {
 } else {
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
-		if ($socios_detalles_grid->TotalRecs <= 0)
-			$socios_detalles_grid->TotalRecs = $socios_detalles->SelectRecordCount();
+		$socios_detalles_grid->TotalRecs = $socios_detalles->SelectRecordCount();
 	} else {
-		if (!$socios_detalles_grid->Recordset && ($socios_detalles_grid->Recordset = $socios_detalles_grid->LoadRecordset()))
+		if ($socios_detalles_grid->Recordset = $socios_detalles_grid->LoadRecordset())
 			$socios_detalles_grid->TotalRecs = $socios_detalles_grid->Recordset->RecordCount();
 	}
 	$socios_detalles_grid->StartRec = 1;
@@ -169,9 +168,6 @@ $socios_detalles_grid->ShowMessage();
 <thead><!-- Table header -->
 	<tr class="ewTableHeader">
 <?php
-
-// Header row
-$socios_detalles->RowType = EW_ROWTYPE_HEADER;
 
 // Render list options
 $socios_detalles_grid->RenderListOptions();
@@ -539,7 +535,7 @@ if (@$emptywrk) $socios_detalles->id_detalles->OldValue = "";
 <?php if ($socios_detalles->RowType == EW_ROWTYPE_ADD) { // Add record ?>
 <span id="el<?php echo $socios_detalles_grid->RowCnt ?>_socios_detalles_fecha_alta" class="form-group socios_detalles_fecha_alta">
 <input type="text" data-field="x_fecha_alta" name="x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_alta" id="x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_alta" placeholder="<?php echo ew_HtmlEncode($socios_detalles->fecha_alta->PlaceHolder) ?>" value="<?php echo $socios_detalles->fecha_alta->EditValue ?>"<?php echo $socios_detalles->fecha_alta->EditAttributes() ?>>
-<?php if (!$socios_detalles->fecha_alta->ReadOnly && !$socios_detalles->fecha_alta->Disabled && !isset($socios_detalles->fecha_alta->EditAttrs["readonly"]) && !isset($socios_detalles->fecha_alta->EditAttrs["disabled"])) { ?>
+<?php if (!$socios_detalles->fecha_alta->ReadOnly && !$socios_detalles->fecha_alta->Disabled && @$socios_detalles->fecha_alta->EditAttrs["readonly"] == "" && @$socios_detalles->fecha_alta->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fsocios_detallesgrid", "x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_alta", "%d/%m/%Y");
 </script>
@@ -550,7 +546,7 @@ ew_CreateCalendar("fsocios_detallesgrid", "x<?php echo $socios_detalles_grid->Ro
 <?php if ($socios_detalles->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
 <span id="el<?php echo $socios_detalles_grid->RowCnt ?>_socios_detalles_fecha_alta" class="form-group socios_detalles_fecha_alta">
 <input type="text" data-field="x_fecha_alta" name="x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_alta" id="x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_alta" placeholder="<?php echo ew_HtmlEncode($socios_detalles->fecha_alta->PlaceHolder) ?>" value="<?php echo $socios_detalles->fecha_alta->EditValue ?>"<?php echo $socios_detalles->fecha_alta->EditAttributes() ?>>
-<?php if (!$socios_detalles->fecha_alta->ReadOnly && !$socios_detalles->fecha_alta->Disabled && !isset($socios_detalles->fecha_alta->EditAttrs["readonly"]) && !isset($socios_detalles->fecha_alta->EditAttrs["disabled"])) { ?>
+<?php if (!$socios_detalles->fecha_alta->ReadOnly && !$socios_detalles->fecha_alta->Disabled && @$socios_detalles->fecha_alta->EditAttrs["readonly"] == "" && @$socios_detalles->fecha_alta->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fsocios_detallesgrid", "x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_alta", "%d/%m/%Y");
 </script>
@@ -570,7 +566,7 @@ ew_CreateCalendar("fsocios_detallesgrid", "x<?php echo $socios_detalles_grid->Ro
 <?php if ($socios_detalles->RowType == EW_ROWTYPE_ADD) { // Add record ?>
 <span id="el<?php echo $socios_detalles_grid->RowCnt ?>_socios_detalles_fecha_baja" class="form-group socios_detalles_fecha_baja">
 <input type="text" data-field="x_fecha_baja" name="x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_baja" id="x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_baja" placeholder="<?php echo ew_HtmlEncode($socios_detalles->fecha_baja->PlaceHolder) ?>" value="<?php echo $socios_detalles->fecha_baja->EditValue ?>"<?php echo $socios_detalles->fecha_baja->EditAttributes() ?>>
-<?php if (!$socios_detalles->fecha_baja->ReadOnly && !$socios_detalles->fecha_baja->Disabled && !isset($socios_detalles->fecha_baja->EditAttrs["readonly"]) && !isset($socios_detalles->fecha_baja->EditAttrs["disabled"])) { ?>
+<?php if (!$socios_detalles->fecha_baja->ReadOnly && !$socios_detalles->fecha_baja->Disabled && @$socios_detalles->fecha_baja->EditAttrs["readonly"] == "" && @$socios_detalles->fecha_baja->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fsocios_detallesgrid", "x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_baja", "%d/%m/%Y");
 </script>
@@ -581,7 +577,7 @@ ew_CreateCalendar("fsocios_detallesgrid", "x<?php echo $socios_detalles_grid->Ro
 <?php if ($socios_detalles->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
 <span id="el<?php echo $socios_detalles_grid->RowCnt ?>_socios_detalles_fecha_baja" class="form-group socios_detalles_fecha_baja">
 <input type="text" data-field="x_fecha_baja" name="x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_baja" id="x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_baja" placeholder="<?php echo ew_HtmlEncode($socios_detalles->fecha_baja->PlaceHolder) ?>" value="<?php echo $socios_detalles->fecha_baja->EditValue ?>"<?php echo $socios_detalles->fecha_baja->EditAttributes() ?>>
-<?php if (!$socios_detalles->fecha_baja->ReadOnly && !$socios_detalles->fecha_baja->Disabled && !isset($socios_detalles->fecha_baja->EditAttrs["readonly"]) && !isset($socios_detalles->fecha_baja->EditAttrs["disabled"])) { ?>
+<?php if (!$socios_detalles->fecha_baja->ReadOnly && !$socios_detalles->fecha_baja->Disabled && @$socios_detalles->fecha_baja->EditAttrs["readonly"] == "" && @$socios_detalles->fecha_baja->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fsocios_detallesgrid", "x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_baja", "%d/%m/%Y");
 </script>
@@ -639,7 +635,7 @@ fsocios_detallesgrid.UpdateOpts(<?php echo $socios_detalles_grid->RowIndex ?>);
 $socios_detalles_grid->ListOptions->Render("body", "left", $socios_detalles_grid->RowIndex);
 ?>
 	<?php if ($socios_detalles->id_socio->Visible) { // id_socio ?>
-		<td data-name="id_socio">
+		<td>
 <?php if ($socios_detalles->CurrentAction <> "F") { ?>
 <?php if ($socios_detalles->id_socio->getSessionValue() <> "") { ?>
 <span id="el$rowindex$_socios_detalles_id_socio" class="form-group socios_detalles_id_socio">
@@ -699,7 +695,7 @@ if (@$emptywrk) $socios_detalles->id_socio->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($socios_detalles->id_detalles->Visible) { // id_detalles ?>
-		<td data-name="id_detalles">
+		<td>
 <?php if ($socios_detalles->CurrentAction <> "F") { ?>
 <?php if ($socios_detalles->id_detalles->getSessionValue() <> "") { ?>
 <span id="el$rowindex$_socios_detalles_id_detalles" class="form-group socios_detalles_id_detalles">
@@ -755,11 +751,11 @@ if (@$emptywrk) $socios_detalles->id_detalles->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($socios_detalles->fecha_alta->Visible) { // fecha_alta ?>
-		<td data-name="fecha_alta">
+		<td>
 <?php if ($socios_detalles->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_socios_detalles_fecha_alta" class="form-group socios_detalles_fecha_alta">
 <input type="text" data-field="x_fecha_alta" name="x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_alta" id="x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_alta" placeholder="<?php echo ew_HtmlEncode($socios_detalles->fecha_alta->PlaceHolder) ?>" value="<?php echo $socios_detalles->fecha_alta->EditValue ?>"<?php echo $socios_detalles->fecha_alta->EditAttributes() ?>>
-<?php if (!$socios_detalles->fecha_alta->ReadOnly && !$socios_detalles->fecha_alta->Disabled && !isset($socios_detalles->fecha_alta->EditAttrs["readonly"]) && !isset($socios_detalles->fecha_alta->EditAttrs["disabled"])) { ?>
+<?php if (!$socios_detalles->fecha_alta->ReadOnly && !$socios_detalles->fecha_alta->Disabled && @$socios_detalles->fecha_alta->EditAttrs["readonly"] == "" && @$socios_detalles->fecha_alta->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fsocios_detallesgrid", "x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_alta", "%d/%m/%Y");
 </script>
@@ -776,11 +772,11 @@ ew_CreateCalendar("fsocios_detallesgrid", "x<?php echo $socios_detalles_grid->Ro
 </td>
 	<?php } ?>
 	<?php if ($socios_detalles->fecha_baja->Visible) { // fecha_baja ?>
-		<td data-name="fecha_baja">
+		<td>
 <?php if ($socios_detalles->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_socios_detalles_fecha_baja" class="form-group socios_detalles_fecha_baja">
 <input type="text" data-field="x_fecha_baja" name="x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_baja" id="x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_baja" placeholder="<?php echo ew_HtmlEncode($socios_detalles->fecha_baja->PlaceHolder) ?>" value="<?php echo $socios_detalles->fecha_baja->EditValue ?>"<?php echo $socios_detalles->fecha_baja->EditAttributes() ?>>
-<?php if (!$socios_detalles->fecha_baja->ReadOnly && !$socios_detalles->fecha_baja->Disabled && !isset($socios_detalles->fecha_baja->EditAttrs["readonly"]) && !isset($socios_detalles->fecha_baja->EditAttrs["disabled"])) { ?>
+<?php if (!$socios_detalles->fecha_baja->ReadOnly && !$socios_detalles->fecha_baja->Disabled && @$socios_detalles->fecha_baja->EditAttrs["readonly"] == "" && @$socios_detalles->fecha_baja->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fsocios_detallesgrid", "x<?php echo $socios_detalles_grid->RowIndex ?>_fecha_baja", "%d/%m/%Y");
 </script>

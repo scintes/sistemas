@@ -1,13 +1,14 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_sociosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -420,7 +421,7 @@ class csocios_delete extends csocios {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -638,7 +639,7 @@ class csocios_delete extends csocios {
 		}
 		$DeleteRows = TRUE;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE) {
@@ -675,7 +676,7 @@ class csocios_delete extends csocios {
 				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
 				$sThisKey .= $row['socio_nro'];
 				$this->LoadDbValues($row);
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				$DeleteRows = $this->Delete($row); // Delete
 				$conn->raiseErrorFn = '';
 				if ($DeleteRows === FALSE)
@@ -729,10 +730,9 @@ class csocios_delete extends csocios {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_socioslist.php", "", $this->TableVar, TRUE);
 		$PageId = "delete";
-		$Breadcrumb->Add("delete", $PageId, $url);
+		$Breadcrumb->Add("delete", $PageId, ew_CurrentUrl());
 	}
 
 	// Write Audit Trail start/end for grid update
@@ -853,7 +853,7 @@ Page_Rendering();
 // Page Rendering event
 $socios_delete->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -973,7 +973,7 @@ while (!$socios_delete->Recordset->EOF) {
 	<tr<?php echo $socios->RowAttributes() ?>>
 <?php if ($socios->socio_nro->Visible) { // socio_nro ?>
 		<td<?php echo $socios->socio_nro->CellAttributes() ?>>
-<span id="el<?php echo $socios_delete->RowCnt ?>_socios_socio_nro" class="socios_socio_nro">
+<span id="el<?php echo $socios_delete->RowCnt ?>_socios_socio_nro" class="form-group socios_socio_nro">
 <span<?php echo $socios->socio_nro->ViewAttributes() ?>>
 <?php echo $socios->socio_nro->ListViewValue() ?></span>
 </span>
@@ -981,7 +981,7 @@ while (!$socios_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($socios->propietario->Visible) { // propietario ?>
 		<td<?php echo $socios->propietario->CellAttributes() ?>>
-<span id="el<?php echo $socios_delete->RowCnt ?>_socios_propietario" class="socios_propietario">
+<span id="el<?php echo $socios_delete->RowCnt ?>_socios_propietario" class="form-group socios_propietario">
 <span<?php echo $socios->propietario->ViewAttributes() ?>>
 <?php echo $socios->propietario->ListViewValue() ?></span>
 </span>
@@ -989,7 +989,7 @@ while (!$socios_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($socios->comercio->Visible) { // comercio ?>
 		<td<?php echo $socios->comercio->CellAttributes() ?>>
-<span id="el<?php echo $socios_delete->RowCnt ?>_socios_comercio" class="socios_comercio">
+<span id="el<?php echo $socios_delete->RowCnt ?>_socios_comercio" class="form-group socios_comercio">
 <span<?php echo $socios->comercio->ViewAttributes() ?>>
 <?php echo $socios->comercio->ListViewValue() ?></span>
 </span>
@@ -997,7 +997,7 @@ while (!$socios_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($socios->direccion_comercio->Visible) { // direccion_comercio ?>
 		<td<?php echo $socios->direccion_comercio->CellAttributes() ?>>
-<span id="el<?php echo $socios_delete->RowCnt ?>_socios_direccion_comercio" class="socios_direccion_comercio">
+<span id="el<?php echo $socios_delete->RowCnt ?>_socios_direccion_comercio" class="form-group socios_direccion_comercio">
 <span<?php echo $socios->direccion_comercio->ViewAttributes() ?>>
 <?php echo $socios->direccion_comercio->ListViewValue() ?></span>
 </span>
@@ -1005,7 +1005,7 @@ while (!$socios_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($socios->activo->Visible) { // activo ?>
 		<td<?php echo $socios->activo->CellAttributes() ?>>
-<span id="el<?php echo $socios_delete->RowCnt ?>_socios_activo" class="socios_activo">
+<span id="el<?php echo $socios_delete->RowCnt ?>_socios_activo" class="form-group socios_activo">
 <span<?php echo $socios->activo->ViewAttributes() ?>>
 <?php echo $socios->activo->ListViewValue() ?></span>
 </span>
@@ -1013,7 +1013,7 @@ while (!$socios_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($socios->mail->Visible) { // mail ?>
 		<td<?php echo $socios->mail->CellAttributes() ?>>
-<span id="el<?php echo $socios_delete->RowCnt ?>_socios_mail" class="socios_mail">
+<span id="el<?php echo $socios_delete->RowCnt ?>_socios_mail" class="form-group socios_mail">
 <span<?php echo $socios->mail->ViewAttributes() ?>>
 <?php echo $socios->mail->ListViewValue() ?></span>
 </span>
@@ -1021,7 +1021,7 @@ while (!$socios_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($socios->tel->Visible) { // tel ?>
 		<td<?php echo $socios->tel->CellAttributes() ?>>
-<span id="el<?php echo $socios_delete->RowCnt ?>_socios_tel" class="socios_tel">
+<span id="el<?php echo $socios_delete->RowCnt ?>_socios_tel" class="form-group socios_tel">
 <span<?php echo $socios->tel->ViewAttributes() ?>>
 <?php echo $socios->tel->ListViewValue() ?></span>
 </span>
@@ -1029,7 +1029,7 @@ while (!$socios_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($socios->cel->Visible) { // cel ?>
 		<td<?php echo $socios->cel->CellAttributes() ?>>
-<span id="el<?php echo $socios_delete->RowCnt ?>_socios_cel" class="socios_cel">
+<span id="el<?php echo $socios_delete->RowCnt ?>_socios_cel" class="form-group socios_cel">
 <span<?php echo $socios->cel->ViewAttributes() ?>>
 <?php echo $socios->cel->ListViewValue() ?></span>
 </span>
@@ -1037,7 +1037,7 @@ while (!$socios_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
 		<td<?php echo $socios->cuit_cuil->CellAttributes() ?>>
-<span id="el<?php echo $socios_delete->RowCnt ?>_socios_cuit_cuil" class="socios_cuit_cuil">
+<span id="el<?php echo $socios_delete->RowCnt ?>_socios_cuit_cuil" class="form-group socios_cuit_cuil">
 <span<?php echo $socios->cuit_cuil->ViewAttributes() ?>>
 <?php echo $socios->cuit_cuil->ListViewValue() ?></span>
 </span>
@@ -1071,7 +1071,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $socios_delete->Page_Terminate();
 ?>

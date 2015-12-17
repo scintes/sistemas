@@ -197,9 +197,6 @@ class cbackup_v1_php {
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
 
-		// Global Page Loading event (in userfn*.php)
-		Page_Loading();
-
 		// Check token
 		if (!$this->ValidPost()) {
 			echo $Language->Phrase("InvalidPostRequest");
@@ -216,9 +213,6 @@ class cbackup_v1_php {
 	//
 	function Page_Terminate($url = "") {
 		global $conn, $gsExportFile, $gTmpImages;
-
-		// Global Page Unloaded event (in userfn*.php)
-		Page_Unloaded();
 
 		// Export
 		 // Close connection
@@ -247,7 +241,7 @@ class cbackup_v1_php {
 	function SetupBreadcrumb() {
 		global $Breadcrumb;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
+		$url = ew_CurrentUrl();
 		$Breadcrumb->Add("custom", "backup_v1_php", $url, "", "backup_v1_php", TRUE);
 	}
 }
@@ -263,9 +257,6 @@ $backup_v1_php->Page_Init();
 
 // Page main
 $backup_v1_php->Page_Main();
-
-// Global Page Rendering event (in userfn*.php)
-Page_Rendering();
 ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if (!@$gbSkipHeaderFooter) { ?>
@@ -296,7 +287,7 @@ Page_Rendering();
 					<p align="center">		  	
 						Escriba un comentario:<br>
 						<textarea name="comentarios" rows="10" cols="40">
-							Escribe aquÃ­ tus comentarios
+							Escribe aquí tus comentarios
 						</textarea><br>
 					</p>
 					<p align="center">		  							
@@ -308,11 +299,10 @@ Page_Rendering();
 	</table>
 	</div>
 <p align="center">CintesSoft Sistemas...</p>
-<p align="center">Copyrigth Octubre 2015 - VersiÃ³n Desarrollo</p>		
-<p align="center">VersiÃ³n de modulos: 1.0</p>
+<p align="center">Copyrigth Octubre 2015 - Versión Desarrollo</p>		
+<p align="center">Versión de modulos: 1.0</p>
 </div>
 </div>
-<?php if (EW_DEBUG_ENABLED) echo ew_DebugMsg(); ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $backup_v1_php->Page_Terminate();

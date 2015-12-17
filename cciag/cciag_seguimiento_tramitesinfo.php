@@ -30,8 +30,6 @@ class cseguimiento_tramites extends cTable {
 		$this->ExportPageBreakCount = 0; // Page break per every n record (PDF only)
 		$this->ExportPageOrientation = "portrait"; // Page orientation (PDF only)
 		$this->ExportPageSize = "a4"; // Page size (PDF only)
-		$this->ExportExcelPageOrientation = ""; // Page orientation (PHPExcel only)
-		$this->ExportExcelPageSize = ""; // Page size (PHPExcel only)
 		$this->DetailAdd = TRUE; // Allow detail add
 		$this->DetailEdit = TRUE; // Allow detail edit
 		$this->DetailView = TRUE; // Allow detail view
@@ -853,14 +851,14 @@ class cseguimiento_tramites extends cTable {
 
 		$this->titulo->EditAttrs["class"] = "form-control";
 		$this->titulo->EditCustomAttributes = "";
-		$this->titulo->EditValue = ew_HtmlEncode($this->titulo->CurrentValue);
-		$this->titulo->PlaceHolder = ew_RemoveHtml($this->titulo->FldCaption());
+		$this->titulo->EditValue = $this->titulo->CurrentValue;
+		$this->titulo->ViewCustomAttributes = "";
 
 		// descripcion
 		$this->descripcion->EditAttrs["class"] = "form-control";
 		$this->descripcion->EditCustomAttributes = "";
-		$this->descripcion->EditValue = ew_HtmlEncode($this->descripcion->CurrentValue);
-		$this->descripcion->PlaceHolder = ew_RemoveHtml($this->descripcion->FldCaption());
+		$this->descripcion->EditValue = $this->descripcion->CurrentValue;
+		$this->descripcion->ViewCustomAttributes = "";
 
 		// id_usuario
 		// archivo
@@ -872,8 +870,7 @@ class cseguimiento_tramites extends cTable {
 		} else {
 			$this->archivo->EditValue = "";
 		}
-		if (!ew_Empty($this->archivo->CurrentValue))
-			$this->archivo->Upload->FileName = $this->archivo->CurrentValue;
+		$this->archivo->ViewCustomAttributes = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -885,9 +882,6 @@ class cseguimiento_tramites extends cTable {
 
 	// Aggregate list row (for rendering)
 	function AggregateListRow() {
-
-		// Call Row Rendered event
-		$this->Row_Rendered();
 	}
 	var $ExportDoc;
 

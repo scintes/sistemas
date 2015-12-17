@@ -1,5 +1,5 @@
-<?php include_once "cciag_seguimiento_tramitesinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_seguimiento_tramitesinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
 <?php
 
 //
@@ -467,14 +467,12 @@ class cseguimiento_tramites_grid extends cseguimiento_tramites {
 		$this->CurrentFilter = "";
 
 		// Load record count first
-		if (!$this->IsAddOrEdit()) {
-			$bSelectLimit = EW_SELECT_LIMIT;
-			if ($bSelectLimit) {
-				$this->TotalRecs = $this->SelectRecordCount();
-			} else {
-				if ($this->Recordset = $this->LoadRecordset())
-					$this->TotalRecs = $this->Recordset->RecordCount();
-			}
+		$bSelectLimit = EW_SELECT_LIMIT;
+		if ($bSelectLimit) {
+			$this->TotalRecs = $this->SelectRecordCount();
+		} else {
+			if ($this->Recordset = $this->LoadRecordset())
+				$this->TotalRecs = $this->Recordset->RecordCount();
 		}
 	}
 
@@ -1078,7 +1076,7 @@ class cseguimiento_tramites_grid extends cseguimiento_tramites {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -1440,8 +1438,8 @@ class cseguimiento_tramites_grid extends cseguimiento_tramites {
 
 			$this->titulo->EditAttrs["class"] = "form-control";
 			$this->titulo->EditCustomAttributes = "";
-			$this->titulo->EditValue = ew_HtmlEncode($this->titulo->CurrentValue);
-			$this->titulo->PlaceHolder = ew_RemoveHtml($this->titulo->FldCaption());
+			$this->titulo->EditValue = $this->titulo->CurrentValue;
+			$this->titulo->ViewCustomAttributes = "";
 
 			// archivo
 			$this->archivo->EditAttrs["class"] = "form-control";
@@ -1451,9 +1449,7 @@ class cseguimiento_tramites_grid extends cseguimiento_tramites {
 			} else {
 				$this->archivo->EditValue = "";
 			}
-			if (!ew_Empty($this->archivo->CurrentValue))
-				$this->archivo->Upload->FileName = $this->archivo->CurrentValue;
-			if (is_numeric($this->RowIndex) && !$this->EventCancelled) ew_RenderUploadField($this->archivo, $this->RowIndex);
+			$this->archivo->ViewCustomAttributes = "";
 
 			// Edit refer script
 			// id_tramite
@@ -1518,7 +1514,7 @@ class cseguimiento_tramites_grid extends cseguimiento_tramites {
 		}
 		$DeleteRows = TRUE;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE) {
@@ -1562,7 +1558,7 @@ class cseguimiento_tramites_grid extends cseguimiento_tramites {
 				for ($i = 0; $i < $FileCount; $i++) {
 					@unlink(ew_UploadPathEx(TRUE, $this->archivo->OldUploadPath) . $OldFiles[$i]);
 				}
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				$DeleteRows = $this->Delete($row); // Delete
 				$conn->raiseErrorFn = '';
 				if ($DeleteRows === FALSE)
@@ -1602,7 +1598,7 @@ class cseguimiento_tramites_grid extends cseguimiento_tramites {
 		$sFilter = $this->KeyFilter();
 		$this->CurrentFilter = $sFilter;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE)
@@ -1617,21 +1613,8 @@ class cseguimiento_tramites_grid extends cseguimiento_tramites {
 			$rsnew = array();
 
 			// id_tramite
-			// titulo
-
-			$this->titulo->SetDbValueDef($rsnew, $this->titulo->CurrentValue, NULL, $this->titulo->ReadOnly);
-
-			// archivo
-			if (!($this->archivo->ReadOnly) && !$this->archivo->Upload->KeepFile) {
-				$this->archivo->Upload->DbValue = $rsold['archivo']; // Get original value
-				if ($this->archivo->Upload->FileName == "") {
-					$rsnew['archivo'] = NULL;
-				} else {
-					$rsnew['archivo'] = $this->archivo->Upload->FileName;
-				}
-			}
-
 			// Check referential integrity for master table 'tramites'
+
 			$bValidMasterRecord = TRUE;
 			$sMasterFilter = $this->SqlMasterFilter_tramites();
 			$KeyValue = isset($rsnew['id_tramite']) ? $rsnew['id_tramite'] : $rsold['id_tramite'];
@@ -1651,69 +1634,17 @@ class cseguimiento_tramites_grid extends cseguimiento_tramites {
 				$rs->Close();
 				return FALSE;
 			}
-			if (!$this->archivo->Upload->KeepFile) {
-				$OldFiles = explode(EW_MULTIPLE_UPLOAD_SEPARATOR, $this->archivo->Upload->DbValue);
-				if (!ew_Empty($this->archivo->Upload->FileName)) {
-					$NewFiles = explode(EW_MULTIPLE_UPLOAD_SEPARATOR, $this->archivo->Upload->FileName);
-					$FileCount = count($NewFiles);
-					for ($i = 0; $i < $FileCount; $i++) {
-						$fldvar = ($this->archivo->Upload->Index < 0) ? $this->archivo->FldVar : substr($this->archivo->FldVar, 0, 1) . $this->archivo->Upload->Index . substr($this->archivo->FldVar, 1);
-						if ($NewFiles[$i] <> "") {
-							$file = $NewFiles[$i];
-							if (file_exists(ew_UploadTempPath($fldvar) . EW_PATH_DELIMITER . $file)) {
-								if (!in_array($file, $OldFiles)) {
-									$file1 = ew_UploadFileNameEx(ew_UploadPathEx(TRUE, $this->archivo->UploadPath), $file); // Get new file name
-									if ($file1 <> $file) { // Rename temp file
-										while (file_exists(ew_UploadTempPath($fldvar) . EW_PATH_DELIMITER . $file1)) // Make sure did not clash with existing upload file
-											$file1 = ew_UniqueFilename(ew_UploadPathEx(TRUE, $this->archivo->UploadPath), $file1, TRUE); // Use indexed name
-										rename(ew_UploadTempPath($fldvar) . EW_PATH_DELIMITER . $file, ew_UploadTempPath($fldvar) . EW_PATH_DELIMITER . $file1);
-										$NewFiles[$i] = $file1;
-									}
-								}
-							}
-						}
-					}
-					$this->archivo->Upload->FileName = implode(EW_MULTIPLE_UPLOAD_SEPARATOR, $NewFiles);
-					$rsnew['archivo'] = $this->archivo->Upload->FileName;
-				} else {
-					$NewFiles = array();
-				}
-			}
 
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
 			if ($bUpdateRow) {
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				if (count($rsnew) > 0)
 					$EditRow = $this->Update($rsnew, "", $rsold);
 				else
 					$EditRow = TRUE; // No field to update
 				$conn->raiseErrorFn = '';
 				if ($EditRow) {
-					if (!$this->archivo->Upload->KeepFile) {
-						$OldFiles = explode(EW_MULTIPLE_UPLOAD_SEPARATOR, $this->archivo->Upload->DbValue);
-						if (!ew_Empty($this->archivo->Upload->FileName)) {
-							$NewFiles = explode(EW_MULTIPLE_UPLOAD_SEPARATOR, $this->archivo->Upload->FileName);
-							$NewFiles2 = explode(EW_MULTIPLE_UPLOAD_SEPARATOR, $rsnew['archivo']);
-							$FileCount = count($NewFiles);
-							for ($i = 0; $i < $FileCount; $i++) {
-								$fldvar = ($this->archivo->Upload->Index < 0) ? $this->archivo->FldVar : substr($this->archivo->FldVar, 0, 1) . $this->archivo->Upload->Index . substr($this->archivo->FldVar, 1);
-								if ($NewFiles[$i] <> "") {
-									$file = ew_UploadTempPath($fldvar) . EW_PATH_DELIMITER . $NewFiles[$i];
-									if (file_exists($file)) {
-										$this->archivo->Upload->SaveToFile($this->archivo->UploadPath, (@$NewFiles2[$i] <> "") ? $NewFiles2[$i] : $NewFiles[$i], TRUE, $i); // Just replace
-									}
-								}
-							}
-						} else {
-							$NewFiles = array();
-						}
-						$FileCount = count($OldFiles);
-						for ($i = 0; $i < $FileCount; $i++) {
-							if ($OldFiles[$i] <> "" && !in_array($OldFiles[$i], $NewFiles))
-								@unlink(ew_UploadPathEx(TRUE, $this->archivo->OldUploadPath) . $OldFiles[$i]);
-						}
-					}
 				}
 			} else {
 				if ($this->getSuccessMessage() <> "" || $this->getFailureMessage() <> "") {
@@ -1733,9 +1664,6 @@ class cseguimiento_tramites_grid extends cseguimiento_tramites {
 		if ($EditRow)
 			$this->Row_Updated($rsold, $rsnew);
 		$rs->Close();
-
-		// archivo
-		ew_CleanUploadTempPath($this->archivo, $this->archivo->Upload->Index);
 		return $EditRow;
 	}
 
@@ -1859,7 +1787,7 @@ class cseguimiento_tramites_grid extends cseguimiento_tramites {
 			}
 		}
 		if ($bInsertRow) {
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 			$AddRow = $this->Insert($rsnew);
 			$conn->raiseErrorFn = '';
 			if ($AddRow) {

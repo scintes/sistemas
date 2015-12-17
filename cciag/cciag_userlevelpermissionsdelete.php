@@ -1,13 +1,14 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_userlevelpermissionsinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userlevelpermissionsinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -373,7 +374,7 @@ class cuserlevelpermissions_delete extends cuserlevelpermissions {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -506,7 +507,7 @@ class cuserlevelpermissions_delete extends cuserlevelpermissions {
 		}
 		$DeleteRows = TRUE;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE) {
@@ -545,7 +546,7 @@ class cuserlevelpermissions_delete extends cuserlevelpermissions {
 				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
 				$sThisKey .= $row['tablename'];
 				$this->LoadDbValues($row);
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				$DeleteRows = $this->Delete($row); // Delete
 				$conn->raiseErrorFn = '';
 				if ($DeleteRows === FALSE)
@@ -591,10 +592,9 @@ class cuserlevelpermissions_delete extends cuserlevelpermissions {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_userlevelpermissionslist.php", "", $this->TableVar, TRUE);
 		$PageId = "delete";
-		$Breadcrumb->Add("delete", $PageId, $url);
+		$Breadcrumb->Add("delete", $PageId, ew_CurrentUrl());
 	}
 
 	// Write Audit Trail start/end for grid update
@@ -718,7 +718,7 @@ Page_Rendering();
 // Page Rendering event
 $userlevelpermissions_delete->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -821,7 +821,7 @@ while (!$userlevelpermissions_delete->Recordset->EOF) {
 	<tr<?php echo $userlevelpermissions->RowAttributes() ?>>
 <?php if ($userlevelpermissions->userlevelid->Visible) { // userlevelid ?>
 		<td<?php echo $userlevelpermissions->userlevelid->CellAttributes() ?>>
-<span id="el<?php echo $userlevelpermissions_delete->RowCnt ?>_userlevelpermissions_userlevelid" class="userlevelpermissions_userlevelid">
+<span id="el<?php echo $userlevelpermissions_delete->RowCnt ?>_userlevelpermissions_userlevelid" class="form-group userlevelpermissions_userlevelid">
 <span<?php echo $userlevelpermissions->userlevelid->ViewAttributes() ?>>
 <?php echo $userlevelpermissions->userlevelid->ListViewValue() ?></span>
 </span>
@@ -829,7 +829,7 @@ while (!$userlevelpermissions_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($userlevelpermissions->_tablename->Visible) { // tablename ?>
 		<td<?php echo $userlevelpermissions->_tablename->CellAttributes() ?>>
-<span id="el<?php echo $userlevelpermissions_delete->RowCnt ?>_userlevelpermissions__tablename" class="userlevelpermissions__tablename">
+<span id="el<?php echo $userlevelpermissions_delete->RowCnt ?>_userlevelpermissions__tablename" class="form-group userlevelpermissions__tablename">
 <span<?php echo $userlevelpermissions->_tablename->ViewAttributes() ?>>
 <?php echo $userlevelpermissions->_tablename->ListViewValue() ?></span>
 </span>
@@ -837,7 +837,7 @@ while (!$userlevelpermissions_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($userlevelpermissions->permission->Visible) { // permission ?>
 		<td<?php echo $userlevelpermissions->permission->CellAttributes() ?>>
-<span id="el<?php echo $userlevelpermissions_delete->RowCnt ?>_userlevelpermissions_permission" class="userlevelpermissions_permission">
+<span id="el<?php echo $userlevelpermissions_delete->RowCnt ?>_userlevelpermissions_permission" class="form-group userlevelpermissions_permission">
 <span<?php echo $userlevelpermissions->permission->ViewAttributes() ?>>
 <?php echo $userlevelpermissions->permission->ListViewValue() ?></span>
 </span>
@@ -871,7 +871,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $userlevelpermissions_delete->Page_Terminate();
 ?>

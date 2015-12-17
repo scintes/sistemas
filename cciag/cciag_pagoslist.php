@@ -1,15 +1,16 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_pagosinfo.php" ?>
-<?php include_once "cciag_deudasinfo.php" ?>
-<?php include_once "cciag_sociosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_pagosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_deudasinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -650,14 +651,12 @@ class cpagos_list extends cpagos {
 		}
 
 		// Load record count first
-		if (!$this->IsAddOrEdit()) {
-			$bSelectLimit = EW_SELECT_LIMIT;
-			if ($bSelectLimit) {
-				$this->TotalRecs = $this->SelectRecordCount();
-			} else {
-				if ($this->Recordset = $this->LoadRecordset())
-					$this->TotalRecs = $this->Recordset->RecordCount();
-			}
+		$bSelectLimit = EW_SELECT_LIMIT;
+		if ($bSelectLimit) {
+			$this->TotalRecs = $this->SelectRecordCount();
+		} else {
+			if ($this->Recordset = $this->LoadRecordset())
+				$this->TotalRecs = $this->Recordset->RecordCount();
 		}
 
 		// Search options
@@ -1047,7 +1046,7 @@ class cpagos_list extends cpagos {
 		if ($sFilter <> "" && $UserAction <> "") {
 			$this->CurrentFilter = $sFilter;
 			$sSql = $this->SQL();
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 			$rs = $conn->Execute($sSql);
 			$conn->raiseErrorFn = '';
 			$rsuser = ($rs) ? $rs->GetRows() : array();
@@ -1093,7 +1092,7 @@ class cpagos_list extends cpagos {
 		// Show all button
 		$item = &$this->SearchOptions->Add("showall");
 		$item->Body = "<a class=\"btn btn-default ewShowAll\" title=\"" . $Language->Phrase("ShowAll") . "\" data-caption=\"" . $Language->Phrase("ShowAll") . "\" href=\"" . $this->PageUrl() . "cmd=reset\">" . $Language->Phrase("ShowAllBtn") . "</a>";
-		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere && $this->SearchWhere <> "0=101");
+		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere);
 
 		// Advanced search button
 		$item = &$this->SearchOptions->Add("advancedsearch");
@@ -1203,7 +1202,7 @@ class cpagos_list extends cpagos {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -1476,10 +1475,7 @@ class cpagos_list extends cpagos {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -1532,10 +1528,8 @@ class cpagos_list extends cpagos {
 				$ExportStyle = $Doc->Style;
 				$Doc->SetStyle("v"); // Change to vertical
 				if ($this->Export <> "csv" || EW_EXPORT_MASTER_RECORD_FOR_CSV) {
-					$Doc->Table = &$deudas;
 					$deudas->ExportDocument($Doc, $rsmaster, 1, 1);
 					$Doc->ExportEmptyRow();
-					$Doc->Table = &$this;
 				}
 				$Doc->SetStyle($ExportStyle); // Restore
 				$rsmaster->Close();
@@ -1640,17 +1634,10 @@ class cpagos_list extends cpagos {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -1757,7 +1744,7 @@ class cpagos_list extends cpagos {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
+		$url = ew_CurrentUrl();
 		$url = preg_replace('/\?cmd=reset(all){0,1}$/i', '', $url); // Remove cmd=reset / cmd=resetall
 		$Breadcrumb->Add("list", $this->TableVar, $url, "", $this->TableVar, TRUE);
 	}
@@ -1907,7 +1894,7 @@ Page_Rendering();
 // Page Rendering event
 $pagos_list->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($pagos->Export == "") { ?>
 <script type="text/javascript">
 
@@ -1951,7 +1938,7 @@ var fpagoslistsrch = new ew_Form("fpagoslistsrch");
 <?php if ($pagos->Export == "") { ?>
 <?php $Breadcrumb->Render(); ?>
 <?php } ?>
-<?php if ($pagos_list->TotalRecs > 0 && $pagos_list->ExportOptions->Visible()) { ?>
+<?php if ($pagos_list->TotalRecs > 0 && $pagos->getCurrentMasterTable() == "" && $pagos_list->ExportOptions->Visible()) { ?>
 <?php $pagos_list->ExportOptions->Render("body") ?>
 <?php } ?>
 <?php if ($pagos_list->SearchOptions->Visible()) { ?>
@@ -1970,7 +1957,10 @@ if ($pagos_list->DbMasterFilter <> "" && $pagos->getCurrentMasterTable() == "deu
 	if ($pagos_list->MasterRecordExists) {
 		if ($pagos->getCurrentMasterTable() == $pagos->TableVar) $gsMasterReturnUrl .= "?" . EW_TABLE_SHOW_MASTER . "=";
 ?>
-<?php include_once "cciag_deudasmaster.php" ?>
+<?php if ($pagos_list->ExportOptions->Visible()) { ?>
+<div class="ewListExportOptions"><?php $pagos_list->ExportOptions->Render("body") ?></div>
+<?php } ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_deudasmaster.php" ?>
 <?php
 	}
 }
@@ -1979,10 +1969,9 @@ if ($pagos_list->DbMasterFilter <> "" && $pagos->getCurrentMasterTable() == "deu
 <?php
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
-		if ($pagos_list->TotalRecs <= 0)
-			$pagos_list->TotalRecs = $pagos->SelectRecordCount();
+		$pagos_list->TotalRecs = $pagos->SelectRecordCount();
 	} else {
-		if (!$pagos_list->Recordset && ($pagos_list->Recordset = $pagos_list->LoadRecordset()))
+		if ($pagos_list->Recordset = $pagos_list->LoadRecordset())
 			$pagos_list->TotalRecs = $pagos_list->Recordset->RecordCount();
 	}
 	$pagos_list->StartRec = 1;
@@ -2080,9 +2069,6 @@ $pagos_list->ShowMessage();
 <thead><!-- Table header -->
 	<tr class="ewTableHeader">
 <?php
-
-// Header row
-$pagos->RowType = EW_ROWTYPE_HEADER;
 
 // Render list options
 $pagos_list->RenderListOptions();
@@ -2273,7 +2259,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $pagos_list->Page_Terminate();
 ?>

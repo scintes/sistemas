@@ -1,12 +1,13 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -449,9 +450,6 @@ class cusuario_view extends cusuario {
 			if (@$_GET["id"] <> "") {
 				$this->id->setQueryStringValue($_GET["id"]);
 				$this->RecKey["id"] = $this->id->QueryStringValue;
-			} elseif (@$_POST["id"] <> "") {
-				$this->id->setFormValue($_POST["id"]);
-				$this->RecKey["id"] = $this->id->FormValue;
 			} else {
 				$sReturnUrl = "cciag_usuariolist.php"; // Return to list
 			}
@@ -566,7 +564,7 @@ class cusuario_view extends cusuario {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -809,10 +807,7 @@ class cusuario_view extends cusuario {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -944,17 +939,10 @@ class cusuario_view extends cusuario {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -997,10 +985,9 @@ class cusuario_view extends cusuario {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_usuariolist.php", "", $this->TableVar, TRUE);
 		$PageId = "view";
-		$Breadcrumb->Add("view", $PageId, $url);
+		$Breadcrumb->Add("view", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -1108,7 +1095,7 @@ Page_Rendering();
 // Page Rendering event
 $usuario_view->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($usuario->Export == "") { ?>
 <script type="text/javascript">
 
@@ -1174,7 +1161,7 @@ $usuario_view->ShowMessage();
 	<tr id="r_id">
 		<td><span id="elh_usuario_id"><?php echo $usuario->id->FldCaption() ?></span></td>
 		<td<?php echo $usuario->id->CellAttributes() ?>>
-<span id="el_usuario_id">
+<span id="el_usuario_id" class="form-group">
 <span<?php echo $usuario->id->ViewAttributes() ?>>
 <?php echo $usuario->id->ViewValue ?></span>
 </span>
@@ -1185,7 +1172,7 @@ $usuario_view->ShowMessage();
 	<tr id="r_usuario">
 		<td><span id="elh_usuario_usuario"><?php echo $usuario->usuario->FldCaption() ?></span></td>
 		<td<?php echo $usuario->usuario->CellAttributes() ?>>
-<span id="el_usuario_usuario">
+<span id="el_usuario_usuario" class="form-group">
 <span<?php echo $usuario->usuario->ViewAttributes() ?>>
 <?php echo $usuario->usuario->ViewValue ?></span>
 </span>
@@ -1196,7 +1183,7 @@ $usuario_view->ShowMessage();
 	<tr id="r_contrasenia">
 		<td><span id="elh_usuario_contrasenia"><?php echo $usuario->contrasenia->FldCaption() ?></span></td>
 		<td<?php echo $usuario->contrasenia->CellAttributes() ?>>
-<span id="el_usuario_contrasenia">
+<span id="el_usuario_contrasenia" class="form-group">
 <span<?php echo $usuario->contrasenia->ViewAttributes() ?>>
 <?php echo $usuario->contrasenia->ViewValue ?></span>
 </span>
@@ -1207,7 +1194,7 @@ $usuario_view->ShowMessage();
 	<tr id="r_nombre">
 		<td><span id="elh_usuario_nombre"><?php echo $usuario->nombre->FldCaption() ?></span></td>
 		<td<?php echo $usuario->nombre->CellAttributes() ?>>
-<span id="el_usuario_nombre">
+<span id="el_usuario_nombre" class="form-group">
 <span<?php echo $usuario->nombre->ViewAttributes() ?>>
 <?php echo $usuario->nombre->ViewValue ?></span>
 </span>
@@ -1218,7 +1205,7 @@ $usuario_view->ShowMessage();
 	<tr id="r__email">
 		<td><span id="elh_usuario__email"><?php echo $usuario->_email->FldCaption() ?></span></td>
 		<td<?php echo $usuario->_email->CellAttributes() ?>>
-<span id="el_usuario__email">
+<span id="el_usuario__email" class="form-group">
 <span<?php echo $usuario->_email->ViewAttributes() ?>>
 <?php echo $usuario->_email->ViewValue ?></span>
 </span>
@@ -1229,7 +1216,7 @@ $usuario_view->ShowMessage();
 	<tr id="r_cel">
 		<td><span id="elh_usuario_cel"><?php echo $usuario->cel->FldCaption() ?></span></td>
 		<td<?php echo $usuario->cel->CellAttributes() ?>>
-<span id="el_usuario_cel">
+<span id="el_usuario_cel" class="form-group">
 <span<?php echo $usuario->cel->ViewAttributes() ?>>
 <?php echo $usuario->cel->ViewValue ?></span>
 </span>
@@ -1240,7 +1227,7 @@ $usuario_view->ShowMessage();
 	<tr id="r_activo">
 		<td><span id="elh_usuario_activo"><?php echo $usuario->activo->FldCaption() ?></span></td>
 		<td<?php echo $usuario->activo->CellAttributes() ?>>
-<span id="el_usuario_activo">
+<span id="el_usuario_activo" class="form-group">
 <span<?php echo $usuario->activo->ViewAttributes() ?>>
 <?php echo $usuario->activo->ViewValue ?></span>
 </span>
@@ -1265,7 +1252,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $usuario_view->Page_Terminate();
 ?>

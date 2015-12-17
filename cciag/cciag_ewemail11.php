@@ -27,7 +27,6 @@
 		<label class="col-sm-2 control-label ewLabel" for="message"><?php echo $Language->Phrase("EmailFormMessage") ?></label>
 		<div class="col-sm-10"><textarea class="form-control ewControl" rows="6" name="message" id="message"></textarea></div>
 	</div>
-<!--
 	<div class="form-group">
 		<label class="col-sm-2 control-label ewLabel"><?php echo $Language->Phrase("EmailFormContentType") ?></label>
 		<div class="col-sm-10">
@@ -35,6 +34,4 @@
 		<label class="radio-inline ewRadio" style="white-space: nowrap;"><input type="radio" name="contenttype" value="url"><?php echo $Language->Phrase("EmailFormContentTypeUrl") ?></label>
 		</div>
 	</div>
--->
-	<input type="hidden" name="contenttype" value="html">
 </form>

@@ -16,7 +16,7 @@
 		<tr id="r_id">
 			<td><?php echo $montos->id->FldCaption() ?></td>
 			<td<?php echo $montos->id->CellAttributes() ?>>
-<span id="el_montos_id">
+<span id="el_montos_id" class="form-group">
 <span<?php echo $montos->id->ViewAttributes() ?>>
 <?php echo $montos->id->ListViewValue() ?></span>
 </span>
@@ -27,7 +27,7 @@
 		<tr id="r_descripcion">
 			<td><?php echo $montos->descripcion->FldCaption() ?></td>
 			<td<?php echo $montos->descripcion->CellAttributes() ?>>
-<span id="el_montos_descripcion">
+<span id="el_montos_descripcion" class="form-group">
 <span<?php echo $montos->descripcion->ViewAttributes() ?>>
 <?php echo $montos->descripcion->ListViewValue() ?></span>
 </span>
@@ -38,7 +38,7 @@
 		<tr id="r_importe">
 			<td><?php echo $montos->importe->FldCaption() ?></td>
 			<td<?php echo $montos->importe->CellAttributes() ?>>
-<span id="el_montos_importe">
+<span id="el_montos_importe" class="form-group">
 <span<?php echo $montos->importe->ViewAttributes() ?>>
 <?php echo $montos->importe->ListViewValue() ?></span>
 </span>
@@ -49,7 +49,7 @@
 		<tr id="r_fecha_creacion">
 			<td><?php echo $montos->fecha_creacion->FldCaption() ?></td>
 			<td<?php echo $montos->fecha_creacion->CellAttributes() ?>>
-<span id="el_montos_fecha_creacion">
+<span id="el_montos_fecha_creacion" class="form-group">
 <span<?php echo $montos->fecha_creacion->ViewAttributes() ?>>
 <?php echo $montos->fecha_creacion->ListViewValue() ?></span>
 </span>
@@ -60,7 +60,7 @@
 		<tr id="r_activa">
 			<td><?php echo $montos->activa->FldCaption() ?></td>
 			<td<?php echo $montos->activa->CellAttributes() ?>>
-<span id="el_montos_activa">
+<span id="el_montos_activa" class="form-group">
 <span<?php echo $montos->activa->ViewAttributes() ?>>
 <?php echo $montos->activa->ListViewValue() ?></span>
 </span>
@@ -71,7 +71,7 @@
 		<tr id="r_id_usuario">
 			<td><?php echo $montos->id_usuario->FldCaption() ?></td>
 			<td<?php echo $montos->id_usuario->CellAttributes() ?>>
-<span id="el_montos_id_usuario">
+<span id="el_montos_id_usuario" class="form-group">
 <span<?php echo $montos->id_usuario->ViewAttributes() ?>>
 <?php echo $montos->id_usuario->ListViewValue() ?></span>
 </span>

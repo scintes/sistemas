@@ -1,16 +1,17 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_sociosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_socios_detallesgridcls.php" ?>
-<?php include_once "cciag_deudasgridcls.php" ?>
-<?php include_once "cciag_socios_cuotasgridcls.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_socios_detallesgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_deudasgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_socios_cuotasgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -480,9 +481,6 @@ class csocios_view extends csocios {
 			if (@$_GET["socio_nro"] <> "") {
 				$this->socio_nro->setQueryStringValue($_GET["socio_nro"]);
 				$this->RecKey["socio_nro"] = $this->socio_nro->QueryStringValue;
-			} elseif (@$_POST["socio_nro"] <> "") {
-				$this->socio_nro->setFormValue($_POST["socio_nro"]);
-				$this->RecKey["socio_nro"] = $this->socio_nro->FormValue;
 			} else {
 				$sReturnUrl = "cciag_socioslist.php"; // Return to list
 			}
@@ -544,6 +542,20 @@ class csocios_view extends csocios {
 		$item = &$option->Add("delete");
 		$item->Body = "<a class=\"ewAction ewDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("ViewPageDeleteLink") . "</a>";
 		$item->Visible = ($this->DeleteUrl <> "" && $Security->CanDelete() && $this->ShowOptionLink('delete'));
+
+		// Show detail edit/copy
+		if ($this->getCurrentDetailTable() <> "") {
+
+			// Detail Edit
+			$item = &$option->Add("detailedit");
+			$item->Body = "<a class=\"ewAction ewDetailEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=" . $this->getCurrentDetailTable())) . "\">" . $Language->Phrase("MasterDetailEditLink") . "</a>";
+			$item->Visible = ($Security->CanEdit() && $this->ShowOptionLink('delete'));
+
+			// Detail Copy
+			$item = &$option->Add("detailcopy");
+			$item->Body = "<a class=\"ewAction ewDetailCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=" . $this->getCurrentDetailTable())) . "\">" . $Language->Phrase("MasterDetailCopyLink") . "</a>";
+			$item->Visible = ($Security->CanAdd() && $this->ShowOptionLink('delete'));
+		}
 		$option = &$options["detail"];
 		$DetailTableLink = "";
 		$DetailViewTblVar = "";
@@ -552,20 +564,20 @@ class csocios_view extends csocios {
 
 		// "detail_socios_detalles"
 		$item = &$option->Add("detail_socios_detalles");
-		$body = $Language->Phrase("ViewPageDetailLink") . $Language->TablePhrase("socios_detalles", "TblCaption");
-		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_socios_detalleslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . urlencode(strval($this->socio_nro->CurrentValue)) . "") . "\">" . $body . "</a>";
+		$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("socios_detalles", "TblCaption");
+		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_socios_detalleslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . strval($this->socio_nro->CurrentValue) . "") . "\">" . $body . "</a>";
 		$links = "";
-		if ($GLOBALS["socios_detalles_grid"] && $GLOBALS["socios_detalles_grid"]->DetailView && $Security->CanView() && $Security->AllowView(CurrentProjectID() . 'socios_detalles')) {
+		if ($GLOBALS["socios_detalles_grid"] && $GLOBALS["socios_detalles_grid"]->DetailView && $Security->CanView() && $this->ShowOptionLink('view') && $Security->AllowView(CurrentProjectID() . 'socios_detalles')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=socios_detalles")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
 			if ($DetailViewTblVar <> "") $DetailViewTblVar .= ",";
 			$DetailViewTblVar .= "socios_detalles";
 		}
-		if ($GLOBALS["socios_detalles_grid"] && $GLOBALS["socios_detalles_grid"]->DetailEdit && $Security->CanEdit() && $Security->AllowEdit(CurrentProjectID() . 'socios_detalles')) {
+		if ($GLOBALS["socios_detalles_grid"] && $GLOBALS["socios_detalles_grid"]->DetailEdit && $Security->CanEdit() && $this->ShowOptionLink('edit') && $Security->AllowEdit(CurrentProjectID() . 'socios_detalles')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailEdit\" data-action=\"edit\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=socios_detalles")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailEditLink")) . "</a></li>";
 			if ($DetailEditTblVar <> "") $DetailEditTblVar .= ",";
 			$DetailEditTblVar .= "socios_detalles";
 		}
-		if ($GLOBALS["socios_detalles_grid"] && $GLOBALS["socios_detalles_grid"]->DetailAdd && $Security->CanAdd() && $Security->AllowAdd(CurrentProjectID() . 'socios_detalles')) {
+		if ($GLOBALS["socios_detalles_grid"] && $GLOBALS["socios_detalles_grid"]->DetailAdd && $Security->CanAdd() && $this->ShowOptionLink('add') && $Security->AllowAdd(CurrentProjectID() . 'socios_detalles')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailCopy\" data-action=\"add\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=socios_detalles")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailCopyLink")) . "</a></li>";
 			if ($DetailCopyTblVar <> "") $DetailCopyTblVar .= ",";
 			$DetailCopyTblVar .= "socios_detalles";
@@ -576,7 +588,7 @@ class csocios_view extends csocios {
 		}
 		$body = "<div class=\"btn-group\">" . $body . "</div>";
 		$item->Body = $body;
-		$item->Visible = $Security->AllowList(CurrentProjectID() . 'socios_detalles');
+		$item->Visible = $Security->AllowList(CurrentProjectID() . 'socios_cuotas') && $this->ShowOptionLink();
 		if ($item->Visible) {
 			if ($DetailTableLink <> "") $DetailTableLink .= ",";
 			$DetailTableLink .= "socios_detalles";
@@ -585,20 +597,20 @@ class csocios_view extends csocios {
 
 		// "detail_deudas"
 		$item = &$option->Add("detail_deudas");
-		$body = $Language->Phrase("ViewPageDetailLink") . $Language->TablePhrase("deudas", "TblCaption");
-		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_deudaslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . urlencode(strval($this->socio_nro->CurrentValue)) . "") . "\">" . $body . "</a>";
+		$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("deudas", "TblCaption");
+		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_deudaslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . strval($this->socio_nro->CurrentValue) . "") . "\">" . $body . "</a>";
 		$links = "";
-		if ($GLOBALS["deudas_grid"] && $GLOBALS["deudas_grid"]->DetailView && $Security->CanView() && $Security->AllowView(CurrentProjectID() . 'deudas')) {
+		if ($GLOBALS["deudas_grid"] && $GLOBALS["deudas_grid"]->DetailView && $Security->CanView() && $this->ShowOptionLink('view') && $Security->AllowView(CurrentProjectID() . 'deudas')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
 			if ($DetailViewTblVar <> "") $DetailViewTblVar .= ",";
 			$DetailViewTblVar .= "deudas";
 		}
-		if ($GLOBALS["deudas_grid"] && $GLOBALS["deudas_grid"]->DetailEdit && $Security->CanEdit() && $Security->AllowEdit(CurrentProjectID() . 'deudas')) {
+		if ($GLOBALS["deudas_grid"] && $GLOBALS["deudas_grid"]->DetailEdit && $Security->CanEdit() && $this->ShowOptionLink('edit') && $Security->AllowEdit(CurrentProjectID() . 'deudas')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailEdit\" data-action=\"edit\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailEditLink")) . "</a></li>";
 			if ($DetailEditTblVar <> "") $DetailEditTblVar .= ",";
 			$DetailEditTblVar .= "deudas";
 		}
-		if ($GLOBALS["deudas_grid"] && $GLOBALS["deudas_grid"]->DetailAdd && $Security->CanAdd() && $Security->AllowAdd(CurrentProjectID() . 'deudas')) {
+		if ($GLOBALS["deudas_grid"] && $GLOBALS["deudas_grid"]->DetailAdd && $Security->CanAdd() && $this->ShowOptionLink('add') && $Security->AllowAdd(CurrentProjectID() . 'deudas')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailCopy\" data-action=\"add\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailCopyLink")) . "</a></li>";
 			if ($DetailCopyTblVar <> "") $DetailCopyTblVar .= ",";
 			$DetailCopyTblVar .= "deudas";
@@ -609,7 +621,7 @@ class csocios_view extends csocios {
 		}
 		$body = "<div class=\"btn-group\">" . $body . "</div>";
 		$item->Body = $body;
-		$item->Visible = $Security->AllowList(CurrentProjectID() . 'deudas');
+		$item->Visible = $Security->AllowList(CurrentProjectID() . 'socios_cuotas') && $this->ShowOptionLink();
 		if ($item->Visible) {
 			if ($DetailTableLink <> "") $DetailTableLink .= ",";
 			$DetailTableLink .= "deudas";
@@ -618,20 +630,20 @@ class csocios_view extends csocios {
 
 		// "detail_socios_cuotas"
 		$item = &$option->Add("detail_socios_cuotas");
-		$body = $Language->Phrase("ViewPageDetailLink") . $Language->TablePhrase("socios_cuotas", "TblCaption");
-		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_socios_cuotaslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . urlencode(strval($this->socio_nro->CurrentValue)) . "") . "\">" . $body . "</a>";
+		$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("socios_cuotas", "TblCaption");
+		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_socios_cuotaslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . strval($this->socio_nro->CurrentValue) . "") . "\">" . $body . "</a>";
 		$links = "";
-		if ($GLOBALS["socios_cuotas_grid"] && $GLOBALS["socios_cuotas_grid"]->DetailView && $Security->CanView() && $Security->AllowView(CurrentProjectID() . 'socios_cuotas')) {
+		if ($GLOBALS["socios_cuotas_grid"] && $GLOBALS["socios_cuotas_grid"]->DetailView && $Security->CanView() && $this->ShowOptionLink('view') && $Security->AllowView(CurrentProjectID() . 'socios_cuotas')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=socios_cuotas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
 			if ($DetailViewTblVar <> "") $DetailViewTblVar .= ",";
 			$DetailViewTblVar .= "socios_cuotas";
 		}
-		if ($GLOBALS["socios_cuotas_grid"] && $GLOBALS["socios_cuotas_grid"]->DetailEdit && $Security->CanEdit() && $Security->AllowEdit(CurrentProjectID() . 'socios_cuotas')) {
+		if ($GLOBALS["socios_cuotas_grid"] && $GLOBALS["socios_cuotas_grid"]->DetailEdit && $Security->CanEdit() && $this->ShowOptionLink('edit') && $Security->AllowEdit(CurrentProjectID() . 'socios_cuotas')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailEdit\" data-action=\"edit\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=socios_cuotas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailEditLink")) . "</a></li>";
 			if ($DetailEditTblVar <> "") $DetailEditTblVar .= ",";
 			$DetailEditTblVar .= "socios_cuotas";
 		}
-		if ($GLOBALS["socios_cuotas_grid"] && $GLOBALS["socios_cuotas_grid"]->DetailAdd && $Security->CanAdd() && $Security->AllowAdd(CurrentProjectID() . 'socios_cuotas')) {
+		if ($GLOBALS["socios_cuotas_grid"] && $GLOBALS["socios_cuotas_grid"]->DetailAdd && $Security->CanAdd() && $this->ShowOptionLink('add') && $Security->AllowAdd(CurrentProjectID() . 'socios_cuotas')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailCopy\" data-action=\"add\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=socios_cuotas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailCopyLink")) . "</a></li>";
 			if ($DetailCopyTblVar <> "") $DetailCopyTblVar .= ",";
 			$DetailCopyTblVar .= "socios_cuotas";
@@ -642,7 +654,7 @@ class csocios_view extends csocios {
 		}
 		$body = "<div class=\"btn-group\">" . $body . "</div>";
 		$item->Body = $body;
-		$item->Visible = $Security->AllowList(CurrentProjectID() . 'socios_cuotas');
+		$item->Visible = $Security->AllowList(CurrentProjectID() . 'socios_cuotas') && $this->ShowOptionLink();
 		if ($item->Visible) {
 			if ($DetailTableLink <> "") $DetailTableLink .= ",";
 			$DetailTableLink .= "socios_cuotas";
@@ -741,7 +753,7 @@ class csocios_view extends csocios {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -1021,10 +1033,7 @@ class csocios_view extends csocios {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -1210,17 +1219,10 @@ class csocios_view extends csocios {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -1320,10 +1322,9 @@ class csocios_view extends csocios {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_socioslist.php", "", $this->TableVar, TRUE);
 		$PageId = "view";
-		$Breadcrumb->Add("view", $PageId, $url);
+		$Breadcrumb->Add("view", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -1431,7 +1432,7 @@ Page_Rendering();
 // Page Rendering event
 $socios_view->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($socios->Export == "") { ?>
 <script type="text/javascript">
 
@@ -1497,7 +1498,7 @@ $socios_view->ShowMessage();
 	<tr id="r_socio_nro">
 		<td><span id="elh_socios_socio_nro"><?php echo $socios->socio_nro->FldCaption() ?></span></td>
 		<td<?php echo $socios->socio_nro->CellAttributes() ?>>
-<span id="el_socios_socio_nro">
+<span id="el_socios_socio_nro" class="form-group">
 <span<?php echo $socios->socio_nro->ViewAttributes() ?>>
 <?php echo $socios->socio_nro->ViewValue ?></span>
 </span>
@@ -1508,7 +1509,7 @@ $socios_view->ShowMessage();
 	<tr id="r_propietario">
 		<td><span id="elh_socios_propietario"><?php echo $socios->propietario->FldCaption() ?></span></td>
 		<td<?php echo $socios->propietario->CellAttributes() ?>>
-<span id="el_socios_propietario">
+<span id="el_socios_propietario" class="form-group">
 <span<?php echo $socios->propietario->ViewAttributes() ?>>
 <?php echo $socios->propietario->ViewValue ?></span>
 </span>
@@ -1519,7 +1520,7 @@ $socios_view->ShowMessage();
 	<tr id="r_comercio">
 		<td><span id="elh_socios_comercio"><?php echo $socios->comercio->FldCaption() ?></span></td>
 		<td<?php echo $socios->comercio->CellAttributes() ?>>
-<span id="el_socios_comercio">
+<span id="el_socios_comercio" class="form-group">
 <span<?php echo $socios->comercio->ViewAttributes() ?>>
 <?php echo $socios->comercio->ViewValue ?></span>
 </span>
@@ -1530,7 +1531,7 @@ $socios_view->ShowMessage();
 	<tr id="r_direccion_comercio">
 		<td><span id="elh_socios_direccion_comercio"><?php echo $socios->direccion_comercio->FldCaption() ?></span></td>
 		<td<?php echo $socios->direccion_comercio->CellAttributes() ?>>
-<span id="el_socios_direccion_comercio">
+<span id="el_socios_direccion_comercio" class="form-group">
 <span<?php echo $socios->direccion_comercio->ViewAttributes() ?>>
 <?php echo $socios->direccion_comercio->ViewValue ?></span>
 </span>
@@ -1541,7 +1542,7 @@ $socios_view->ShowMessage();
 	<tr id="r_activo">
 		<td><span id="elh_socios_activo"><?php echo $socios->activo->FldCaption() ?></span></td>
 		<td<?php echo $socios->activo->CellAttributes() ?>>
-<span id="el_socios_activo">
+<span id="el_socios_activo" class="form-group">
 <span<?php echo $socios->activo->ViewAttributes() ?>>
 <?php echo $socios->activo->ViewValue ?></span>
 </span>
@@ -1552,7 +1553,7 @@ $socios_view->ShowMessage();
 	<tr id="r_mail">
 		<td><span id="elh_socios_mail"><?php echo $socios->mail->FldCaption() ?></span></td>
 		<td<?php echo $socios->mail->CellAttributes() ?>>
-<span id="el_socios_mail">
+<span id="el_socios_mail" class="form-group">
 <span<?php echo $socios->mail->ViewAttributes() ?>>
 <?php echo $socios->mail->ViewValue ?></span>
 </span>
@@ -1563,7 +1564,7 @@ $socios_view->ShowMessage();
 	<tr id="r_tel">
 		<td><span id="elh_socios_tel"><?php echo $socios->tel->FldCaption() ?></span></td>
 		<td<?php echo $socios->tel->CellAttributes() ?>>
-<span id="el_socios_tel">
+<span id="el_socios_tel" class="form-group">
 <span<?php echo $socios->tel->ViewAttributes() ?>>
 <?php echo $socios->tel->ViewValue ?></span>
 </span>
@@ -1574,7 +1575,7 @@ $socios_view->ShowMessage();
 	<tr id="r_cel">
 		<td><span id="elh_socios_cel"><?php echo $socios->cel->FldCaption() ?></span></td>
 		<td<?php echo $socios->cel->CellAttributes() ?>>
-<span id="el_socios_cel">
+<span id="el_socios_cel" class="form-group">
 <span<?php echo $socios->cel->ViewAttributes() ?>>
 <?php echo $socios->cel->ViewValue ?></span>
 </span>
@@ -1585,7 +1586,7 @@ $socios_view->ShowMessage();
 	<tr id="r_cuit_cuil">
 		<td><span id="elh_socios_cuit_cuil"><?php echo $socios->cuit_cuil->FldCaption() ?></span></td>
 		<td<?php echo $socios->cuit_cuil->CellAttributes() ?>>
-<span id="el_socios_cuit_cuil">
+<span id="el_socios_cuit_cuil" class="form-group">
 <span<?php echo $socios->cuit_cuil->ViewAttributes() ?>>
 <?php echo $socios->cuit_cuil->ViewValue ?></span>
 </span>
@@ -1703,7 +1704,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $socios_view->Page_Terminate();
 ?>

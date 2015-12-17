@@ -13,7 +13,7 @@
 		<tr id="r_id">
 			<td><?php echo $rubros->id->FldCaption() ?></td>
 			<td<?php echo $rubros->id->CellAttributes() ?>>
-<span id="el_rubros_id">
+<span id="el_rubros_id" class="form-group">
 <span<?php echo $rubros->id->ViewAttributes() ?>>
 <?php echo $rubros->id->ListViewValue() ?></span>
 </span>
@@ -24,7 +24,7 @@
 		<tr id="r_rubro">
 			<td><?php echo $rubros->rubro->FldCaption() ?></td>
 			<td<?php echo $rubros->rubro->CellAttributes() ?>>
-<span id="el_rubros_rubro">
+<span id="el_rubros_rubro" class="form-group">
 <span<?php echo $rubros->rubro->ViewAttributes() ?>>
 <?php echo $rubros->rubro->ListViewValue() ?></span>
 </span>
@@ -35,7 +35,7 @@
 		<tr id="r_activa">
 			<td><?php echo $rubros->activa->FldCaption() ?></td>
 			<td<?php echo $rubros->activa->CellAttributes() ?>>
-<span id="el_rubros_activa">
+<span id="el_rubros_activa" class="form-group">
 <span<?php echo $rubros->activa->ViewAttributes() ?>>
 <?php echo $rubros->activa->ListViewValue() ?></span>
 </span>

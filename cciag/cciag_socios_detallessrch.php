@@ -1,15 +1,16 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_socios_detallesinfo.php" ?>
-<?php include_once "cciag_sociosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_detallesinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_socios_detallesinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_detallesinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -705,10 +706,9 @@ class csocios_detalles_search extends csocios_detalles {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_socios_detalleslist.php", "", $this->TableVar, TRUE);
 		$PageId = "search";
-		$Breadcrumb->Add("search", $PageId, $url);
+		$Breadcrumb->Add("search", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -797,7 +797,7 @@ Page_Rendering();
 // Page Rendering event
 $socios_detalles_search->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -975,7 +975,7 @@ $sSqlWrk .= " ORDER BY `nombre` DESC";
 		<div class="<?php echo $socios_detalles_search->SearchRightColumnClass ?>"><div<?php echo $socios_detalles->fecha_alta->CellAttributes() ?>>
 			<span id="el_socios_detalles_fecha_alta">
 <input type="text" data-field="x_fecha_alta" name="x_fecha_alta" id="x_fecha_alta" placeholder="<?php echo ew_HtmlEncode($socios_detalles->fecha_alta->PlaceHolder) ?>" value="<?php echo $socios_detalles->fecha_alta->EditValue ?>"<?php echo $socios_detalles->fecha_alta->EditAttributes() ?>>
-<?php if (!$socios_detalles->fecha_alta->ReadOnly && !$socios_detalles->fecha_alta->Disabled && !isset($socios_detalles->fecha_alta->EditAttrs["readonly"]) && !isset($socios_detalles->fecha_alta->EditAttrs["disabled"])) { ?>
+<?php if (!$socios_detalles->fecha_alta->ReadOnly && !$socios_detalles->fecha_alta->Disabled && @$socios_detalles->fecha_alta->EditAttrs["readonly"] == "" && @$socios_detalles->fecha_alta->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fsocios_detallessearch", "x_fecha_alta", "%d/%m/%Y");
 </script>
@@ -992,7 +992,7 @@ ew_CreateCalendar("fsocios_detallessearch", "x_fecha_alta", "%d/%m/%Y");
 		<div class="<?php echo $socios_detalles_search->SearchRightColumnClass ?>"><div<?php echo $socios_detalles->fecha_baja->CellAttributes() ?>>
 			<span id="el_socios_detalles_fecha_baja">
 <input type="text" data-field="x_fecha_baja" name="x_fecha_baja" id="x_fecha_baja" placeholder="<?php echo ew_HtmlEncode($socios_detalles->fecha_baja->PlaceHolder) ?>" value="<?php echo $socios_detalles->fecha_baja->EditValue ?>"<?php echo $socios_detalles->fecha_baja->EditAttributes() ?>>
-<?php if (!$socios_detalles->fecha_baja->ReadOnly && !$socios_detalles->fecha_baja->Disabled && !isset($socios_detalles->fecha_baja->EditAttrs["readonly"]) && !isset($socios_detalles->fecha_baja->EditAttrs["disabled"])) { ?>
+<?php if (!$socios_detalles->fecha_baja->ReadOnly && !$socios_detalles->fecha_baja->Disabled && @$socios_detalles->fecha_baja->EditAttrs["readonly"] == "" && @$socios_detalles->fecha_baja->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fsocios_detallessearch", "x_fecha_baja", "%d/%m/%Y");
 </script>
@@ -1025,7 +1025,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $socios_detalles_search->Page_Terminate();
 ?>

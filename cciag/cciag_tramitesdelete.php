@@ -1,13 +1,14 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_tramitesinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_tramitesinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -381,7 +382,7 @@ class ctramites_delete extends ctramites {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -553,7 +554,7 @@ class ctramites_delete extends ctramites {
 		}
 		$DeleteRows = TRUE;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE) {
@@ -594,7 +595,7 @@ class ctramites_delete extends ctramites {
 				for ($i = 0; $i < $FileCount; $i++) {
 					@unlink(ew_UploadPathEx(TRUE, $this->archivo->OldUploadPath) . $OldFiles[$i]);
 				}
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				$DeleteRows = $this->Delete($row); // Delete
 				$conn->raiseErrorFn = '';
 				if ($DeleteRows === FALSE)
@@ -634,10 +635,9 @@ class ctramites_delete extends ctramites {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_tramiteslist.php", "", $this->TableVar, TRUE);
 		$PageId = "delete";
-		$Breadcrumb->Add("delete", $PageId, $url);
+		$Breadcrumb->Add("delete", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -719,7 +719,7 @@ Page_Rendering();
 // Page Rendering event
 $tramites_delete->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -827,7 +827,7 @@ while (!$tramites_delete->Recordset->EOF) {
 	<tr<?php echo $tramites->RowAttributes() ?>>
 <?php if ($tramites->codigo->Visible) { // codigo ?>
 		<td<?php echo $tramites->codigo->CellAttributes() ?>>
-<span id="el<?php echo $tramites_delete->RowCnt ?>_tramites_codigo" class="tramites_codigo">
+<span id="el<?php echo $tramites_delete->RowCnt ?>_tramites_codigo" class="form-group tramites_codigo">
 <span<?php echo $tramites->codigo->ViewAttributes() ?>>
 <?php echo $tramites->codigo->ListViewValue() ?></span>
 </span>
@@ -835,7 +835,7 @@ while (!$tramites_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($tramites->Titulo->Visible) { // Titulo ?>
 		<td<?php echo $tramites->Titulo->CellAttributes() ?>>
-<span id="el<?php echo $tramites_delete->RowCnt ?>_tramites_Titulo" class="tramites_Titulo">
+<span id="el<?php echo $tramites_delete->RowCnt ?>_tramites_Titulo" class="form-group tramites_Titulo">
 <span<?php echo $tramites->Titulo->ViewAttributes() ?>>
 <?php echo $tramites->Titulo->ListViewValue() ?></span>
 </span>
@@ -843,7 +843,7 @@ while (!$tramites_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($tramites->fecha->Visible) { // fecha ?>
 		<td<?php echo $tramites->fecha->CellAttributes() ?>>
-<span id="el<?php echo $tramites_delete->RowCnt ?>_tramites_fecha" class="tramites_fecha">
+<span id="el<?php echo $tramites_delete->RowCnt ?>_tramites_fecha" class="form-group tramites_fecha">
 <span<?php echo $tramites->fecha->ViewAttributes() ?>>
 <?php echo $tramites->fecha->ListViewValue() ?></span>
 </span>
@@ -851,7 +851,7 @@ while (!$tramites_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($tramites->archivo->Visible) { // archivo ?>
 		<td<?php echo $tramites->archivo->CellAttributes() ?>>
-<span id="el<?php echo $tramites_delete->RowCnt ?>_tramites_archivo" class="tramites_archivo">
+<span id="el<?php echo $tramites_delete->RowCnt ?>_tramites_archivo" class="form-group tramites_archivo">
 <span<?php echo $tramites->archivo->ViewAttributes() ?>>
 <ul class="list-inline"><?php
 $Files = explode(EW_MULTIPLE_UPLOAD_SEPARATOR, $tramites->archivo->Upload->DbValue);
@@ -888,7 +888,7 @@ $Files[$i] = str_replace("%f", ew_HtmlEncode(ew_UploadPathEx(FALSE, $tramites->a
 <?php } ?>
 <?php if ($tramites->estado->Visible) { // estado ?>
 		<td<?php echo $tramites->estado->CellAttributes() ?>>
-<span id="el<?php echo $tramites_delete->RowCnt ?>_tramites_estado" class="tramites_estado">
+<span id="el<?php echo $tramites_delete->RowCnt ?>_tramites_estado" class="form-group tramites_estado">
 <span<?php echo $tramites->estado->ViewAttributes() ?>>
 <?php echo $tramites->estado->ListViewValue() ?></span>
 </span>
@@ -922,7 +922,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $tramites_delete->Page_Terminate();
 ?>

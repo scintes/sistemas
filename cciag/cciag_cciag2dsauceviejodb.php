@@ -1,7 +1,3 @@
-<?php
-if (!isset($EW_RELATIVE_PATH)) $EW_RELATIVE_PATH = "";
-if (!isset($EW_ERROR_FN)) $EW_ERROR_FN = "ew_ErrorFn";
-?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
 <?php
 
@@ -41,12 +37,6 @@ class ccciag2dsauceviejo_db {
 
 	// Constructor
 	function __construct($langfolder = "", $langid = "", $info = NULL) {
-		$args = func_get_args();
-		if (count($args) == 1 && is_array($args[0])) { // $info only
-			$langfolder = "";
-			$langid = "";
-			$info = $args[0];
-		}
 
 		// Debug
 		if (defined("EW_DEBUG_ENABLED"))
@@ -74,7 +64,7 @@ class ccciag2dsauceviejo_db {
 		}
 		$conn->port = intval($info["port"]);
 		if ($this->Debug)
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 		$conn->Connect($info["host"], $info["user"], $info["pass"], $info["db"]);
 		if ($this->MySqlCharset <> "")
 			$conn->Execute("SET NAMES '" . $this->MySqlCharset . "'");
@@ -103,7 +93,7 @@ class ccciag2dsauceviejo_db {
 	function Execute($SQL, $fn = NULL) {
 		$conn = &$this->Connection;
 		if ($this->Debug)
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($SQL);
 		$conn->raiseErrorFn = '';
 		if (is_callable($fn) && $rs) {
@@ -142,7 +132,7 @@ class ccciag2dsauceviejo_db {
 	function &LoadRecordset($SQL) {
 		$conn = &$this->Connection;
 		if ($this->Debug)
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($SQL);
 		$conn->raiseErrorFn = '';
 		return $rs;
@@ -236,7 +226,7 @@ if (!function_exists("ew_ErrorFn")) {
 				$msg = "Failed to connect to $Param2 at $Param1. Error: " . $ErrorMsg;
 			}
 		} elseif ($ErrorType == 'EXECUTE') {
-			if (defined("EW_DEBUG_ENABLED") && EW_DEBUG_ENABLED) {
+			if (EW_DEBUG_ENABLED) {
 				$msg = "Failed to execute SQL: $Param1. Error: " . $ErrorMsg;
 			} else {
 				$msg = "Failed to execute SQL. Error: " . $ErrorMsg;
@@ -245,7 +235,7 @@ if (!function_exists("ew_ErrorFn")) {
 		if (function_exists("ew_AddMessage") && defined("EW_SESSION_FAILURE_MESSAGE"))
 			ew_AddMessage($_SESSION[EW_SESSION_FAILURE_MESSAGE], $msg);
 		else
-			echo "<div class=\"alert alert-danger ewError\">" . $msg . "</div>";
+			echo $msg;
 	}
 }
 ?>

@@ -1,14 +1,15 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_tramitesinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_seguimiento_tramitesgridcls.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_tramitesinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_seguimiento_tramitesgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -459,9 +460,6 @@ class ctramites_view extends ctramites {
 			if (@$_GET["codigo"] <> "") {
 				$this->codigo->setQueryStringValue($_GET["codigo"]);
 				$this->RecKey["codigo"] = $this->codigo->QueryStringValue;
-			} elseif (@$_POST["codigo"] <> "") {
-				$this->codigo->setFormValue($_POST["codigo"]);
-				$this->RecKey["codigo"] = $this->codigo->FormValue;
 			} else {
 				$sReturnUrl = "cciag_tramiteslist.php"; // Return to list
 			}
@@ -523,6 +521,20 @@ class ctramites_view extends ctramites {
 		$item = &$option->Add("delete");
 		$item->Body = "<a class=\"ewAction ewDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("ViewPageDeleteLink") . "</a>";
 		$item->Visible = ($this->DeleteUrl <> "" && $Security->CanDelete());
+
+		// Show detail edit/copy
+		if ($this->getCurrentDetailTable() <> "") {
+
+			// Detail Edit
+			$item = &$option->Add("detailedit");
+			$item->Body = "<a class=\"ewAction ewDetailEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=" . $this->getCurrentDetailTable())) . "\">" . $Language->Phrase("MasterDetailEditLink") . "</a>";
+			$item->Visible = ($Security->CanEdit());
+
+			// Detail Copy
+			$item = &$option->Add("detailcopy");
+			$item->Body = "<a class=\"ewAction ewDetailCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=" . $this->getCurrentDetailTable())) . "\">" . $Language->Phrase("MasterDetailCopyLink") . "</a>";
+			$item->Visible = ($Security->CanAdd());
+		}
 		$option = &$options["detail"];
 		$DetailTableLink = "";
 		$DetailViewTblVar = "";
@@ -531,9 +543,9 @@ class ctramites_view extends ctramites {
 
 		// "detail_seguimiento_tramites"
 		$item = &$option->Add("detail_seguimiento_tramites");
-		$body = $Language->Phrase("ViewPageDetailLink") . $Language->TablePhrase("seguimiento_tramites", "TblCaption");
+		$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("seguimiento_tramites", "TblCaption");
 		$body .= str_replace("%c", $this->seguimiento_tramites_Count, $Language->Phrase("DetailCount"));
-		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_seguimiento_tramiteslist.php?" . EW_TABLE_SHOW_MASTER . "=tramites&fk_codigo=" . urlencode(strval($this->codigo->CurrentValue)) . "") . "\">" . $body . "</a>";
+		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_seguimiento_tramiteslist.php?" . EW_TABLE_SHOW_MASTER . "=tramites&fk_codigo=" . strval($this->codigo->CurrentValue) . "") . "\">" . $body . "</a>";
 		$links = "";
 		if ($GLOBALS["seguimiento_tramites_grid"] && $GLOBALS["seguimiento_tramites_grid"]->DetailView && $Security->CanView() && $Security->AllowView(CurrentProjectID() . 'seguimiento_tramites')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=seguimiento_tramites")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
@@ -655,7 +667,7 @@ class ctramites_view extends ctramites {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -918,10 +930,7 @@ class ctramites_view extends ctramites {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -1071,17 +1080,10 @@ class ctramites_view extends ctramites {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -1145,10 +1147,9 @@ class ctramites_view extends ctramites {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_tramiteslist.php", "", $this->TableVar, TRUE);
 		$PageId = "view";
-		$Breadcrumb->Add("view", $PageId, $url);
+		$Breadcrumb->Add("view", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -1256,7 +1257,7 @@ Page_Rendering();
 // Page Rendering event
 $tramites_view->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($tramites->Export == "") { ?>
 <script type="text/javascript">
 
@@ -1322,7 +1323,7 @@ $tramites_view->ShowMessage();
 	<tr id="r_codigo">
 		<td><span id="elh_tramites_codigo"><?php echo $tramites->codigo->FldCaption() ?></span></td>
 		<td<?php echo $tramites->codigo->CellAttributes() ?>>
-<span id="el_tramites_codigo">
+<span id="el_tramites_codigo" class="form-group">
 <span<?php echo $tramites->codigo->ViewAttributes() ?>>
 <?php echo $tramites->codigo->ViewValue ?></span>
 </span>
@@ -1333,7 +1334,7 @@ $tramites_view->ShowMessage();
 	<tr id="r_Titulo">
 		<td><span id="elh_tramites_Titulo"><?php echo $tramites->Titulo->FldCaption() ?></span></td>
 		<td<?php echo $tramites->Titulo->CellAttributes() ?>>
-<span id="el_tramites_Titulo">
+<span id="el_tramites_Titulo" class="form-group">
 <span<?php echo $tramites->Titulo->ViewAttributes() ?>>
 <?php echo $tramites->Titulo->ViewValue ?></span>
 </span>
@@ -1344,7 +1345,7 @@ $tramites_view->ShowMessage();
 	<tr id="r_Descripcion">
 		<td><span id="elh_tramites_Descripcion"><?php echo $tramites->Descripcion->FldCaption() ?></span></td>
 		<td<?php echo $tramites->Descripcion->CellAttributes() ?>>
-<span id="el_tramites_Descripcion">
+<span id="el_tramites_Descripcion" class="form-group">
 <span<?php echo $tramites->Descripcion->ViewAttributes() ?>>
 <?php echo $tramites->Descripcion->ViewValue ?></span>
 </span>
@@ -1355,7 +1356,7 @@ $tramites_view->ShowMessage();
 	<tr id="r_fecha">
 		<td><span id="elh_tramites_fecha"><?php echo $tramites->fecha->FldCaption() ?></span></td>
 		<td<?php echo $tramites->fecha->CellAttributes() ?>>
-<span id="el_tramites_fecha">
+<span id="el_tramites_fecha" class="form-group">
 <span<?php echo $tramites->fecha->ViewAttributes() ?>>
 <?php echo $tramites->fecha->ViewValue ?></span>
 </span>
@@ -1366,7 +1367,7 @@ $tramites_view->ShowMessage();
 	<tr id="r_id_usuario">
 		<td><span id="elh_tramites_id_usuario"><?php echo $tramites->id_usuario->FldCaption() ?></span></td>
 		<td<?php echo $tramites->id_usuario->CellAttributes() ?>>
-<span id="el_tramites_id_usuario">
+<span id="el_tramites_id_usuario" class="form-group">
 <span<?php echo $tramites->id_usuario->ViewAttributes() ?>>
 <?php echo $tramites->id_usuario->ViewValue ?></span>
 </span>
@@ -1377,7 +1378,7 @@ $tramites_view->ShowMessage();
 	<tr id="r_archivo">
 		<td><span id="elh_tramites_archivo"><?php echo $tramites->archivo->FldCaption() ?></span></td>
 		<td<?php echo $tramites->archivo->CellAttributes() ?>>
-<span id="el_tramites_archivo">
+<span id="el_tramites_archivo" class="form-group">
 <span<?php echo $tramites->archivo->ViewAttributes() ?>>
 <ul class="list-inline"><?php
 $Files = explode(EW_MULTIPLE_UPLOAD_SEPARATOR, $tramites->archivo->Upload->DbValue);
@@ -1417,7 +1418,7 @@ $Files[$i] = str_replace("%f", ew_HtmlEncode(ew_UploadPathEx(FALSE, $tramites->a
 	<tr id="r_estado">
 		<td><span id="elh_tramites_estado"><?php echo $tramites->estado->FldCaption() ?></span></td>
 		<td<?php echo $tramites->estado->CellAttributes() ?>>
-<span id="el_tramites_estado">
+<span id="el_tramites_estado" class="form-group">
 <span<?php echo $tramites->estado->ViewAttributes() ?>>
 <?php echo $tramites->estado->ViewValue ?></span>
 </span>
@@ -1450,7 +1451,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $tramites_view->Page_Terminate();
 ?>

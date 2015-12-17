@@ -1,15 +1,16 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_socios_cuotasinfo.php" ?>
-<?php include_once "cciag_montosinfo.php" ?>
-<?php include_once "cciag_sociosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_socios_cuotasinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_montosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -670,10 +671,9 @@ class csocios_cuotas_search extends csocios_cuotas {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_socios_cuotaslist.php", "", $this->TableVar, TRUE);
 		$PageId = "search";
-		$Breadcrumb->Add("search", $PageId, $url);
+		$Breadcrumb->Add("search", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -762,7 +762,7 @@ Page_Rendering();
 // Page Rendering event
 $socios_cuotas_search->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -931,7 +931,7 @@ if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
 		<div class="<?php echo $socios_cuotas_search->SearchRightColumnClass ?>"><div<?php echo $socios_cuotas->fecha->CellAttributes() ?>>
 			<span id="el_socios_cuotas_fecha">
 <input type="text" data-field="x_fecha" name="x_fecha" id="x_fecha" placeholder="<?php echo ew_HtmlEncode($socios_cuotas->fecha->PlaceHolder) ?>" value="<?php echo $socios_cuotas->fecha->EditValue ?>"<?php echo $socios_cuotas->fecha->EditAttributes() ?>>
-<?php if (!$socios_cuotas->fecha->ReadOnly && !$socios_cuotas->fecha->Disabled && !isset($socios_cuotas->fecha->EditAttrs["readonly"]) && !isset($socios_cuotas->fecha->EditAttrs["disabled"])) { ?>
+<?php if (!$socios_cuotas->fecha->ReadOnly && !$socios_cuotas->fecha->Disabled && @$socios_cuotas->fecha->EditAttrs["readonly"] == "" && @$socios_cuotas->fecha->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fsocios_cuotassearch", "x_fecha", "%d/%m/%Y");
 </script>
@@ -964,7 +964,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $socios_cuotas_search->Page_Terminate();
 ?>

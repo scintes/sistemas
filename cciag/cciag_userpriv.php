@@ -1,13 +1,14 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_userlevelsinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userlevelsinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -284,10 +285,9 @@ class cuserpriv extends cuserlevels {
 		global $Security, $Language;
 		global $EW_RELATED_LANGUAGE_FOLDER;
 		global $Breadcrumb;
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb = new cBreadcrumb;
 		$Breadcrumb->Add("list", "userlevels", "cciag_userlevelslist.php", "", "userlevels");
-		$Breadcrumb->Add("userpriv", "UserLevelPermission", $url);
+		$Breadcrumb->Add("userpriv", "UserLevelPermission", ew_CurrentUrl());
 
 		// Try to load PHP Report Maker language file
 		// Note: The langauge IDs must be the same in both projects
@@ -475,7 +475,7 @@ Page_Rendering();
 // Page Rendering event
 $userpriv->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -584,7 +584,7 @@ fuserpriv.Init();
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $userpriv->Page_Terminate();
 ?>

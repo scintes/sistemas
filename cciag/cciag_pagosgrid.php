@@ -1,5 +1,5 @@
-<?php include_once "cciag_deudasinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_deudasinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
 <?php
 
 // Create page object
@@ -119,10 +119,9 @@ if ($pagos->CurrentAction == "gridadd") {
 } else {
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
-		if ($pagos_grid->TotalRecs <= 0)
-			$pagos_grid->TotalRecs = $pagos->SelectRecordCount();
+		$pagos_grid->TotalRecs = $pagos->SelectRecordCount();
 	} else {
-		if (!$pagos_grid->Recordset && ($pagos_grid->Recordset = $pagos_grid->LoadRecordset()))
+		if ($pagos_grid->Recordset = $pagos_grid->LoadRecordset())
 			$pagos_grid->TotalRecs = $pagos_grid->Recordset->RecordCount();
 	}
 	$pagos_grid->StartRec = 1;
@@ -164,9 +163,6 @@ $pagos_grid->ShowMessage();
 <thead><!-- Table header -->
 	<tr class="ewTableHeader">
 <?php
-
-// Header row
-$pagos->RowType = EW_ROWTYPE_HEADER;
 
 // Render list options
 $pagos_grid->RenderListOptions();
@@ -449,7 +445,7 @@ if (@$emptywrk) $pagos->id_deuda->OldValue = "";
 <?php if ($pagos->RowType == EW_ROWTYPE_ADD) { // Add record ?>
 <span id="el<?php echo $pagos_grid->RowCnt ?>_pagos_fecha" class="form-group pagos_fecha">
 <input type="text" data-field="x_fecha" name="x<?php echo $pagos_grid->RowIndex ?>_fecha" id="x<?php echo $pagos_grid->RowIndex ?>_fecha" placeholder="<?php echo ew_HtmlEncode($pagos->fecha->PlaceHolder) ?>" value="<?php echo $pagos->fecha->EditValue ?>"<?php echo $pagos->fecha->EditAttributes() ?>>
-<?php if (!$pagos->fecha->ReadOnly && !$pagos->fecha->Disabled && !isset($pagos->fecha->EditAttrs["readonly"]) && !isset($pagos->fecha->EditAttrs["disabled"])) { ?>
+<?php if (!$pagos->fecha->ReadOnly && !$pagos->fecha->Disabled && @$pagos->fecha->EditAttrs["readonly"] == "" && @$pagos->fecha->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fpagosgrid", "x<?php echo $pagos_grid->RowIndex ?>_fecha", "%d/%m/%Y");
 </script>
@@ -460,7 +456,7 @@ ew_CreateCalendar("fpagosgrid", "x<?php echo $pagos_grid->RowIndex ?>_fecha", "%
 <?php if ($pagos->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
 <span id="el<?php echo $pagos_grid->RowCnt ?>_pagos_fecha" class="form-group pagos_fecha">
 <input type="text" data-field="x_fecha" name="x<?php echo $pagos_grid->RowIndex ?>_fecha" id="x<?php echo $pagos_grid->RowIndex ?>_fecha" placeholder="<?php echo ew_HtmlEncode($pagos->fecha->PlaceHolder) ?>" value="<?php echo $pagos->fecha->EditValue ?>"<?php echo $pagos->fecha->EditAttributes() ?>>
-<?php if (!$pagos->fecha->ReadOnly && !$pagos->fecha->Disabled && !isset($pagos->fecha->EditAttrs["readonly"]) && !isset($pagos->fecha->EditAttrs["disabled"])) { ?>
+<?php if (!$pagos->fecha->ReadOnly && !$pagos->fecha->Disabled && @$pagos->fecha->EditAttrs["readonly"] == "" && @$pagos->fecha->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fpagosgrid", "x<?php echo $pagos_grid->RowIndex ?>_fecha", "%d/%m/%Y");
 </script>
@@ -539,7 +535,7 @@ fpagosgrid.UpdateOpts(<?php echo $pagos_grid->RowIndex ?>);
 $pagos_grid->ListOptions->Render("body", "left", $pagos_grid->RowIndex);
 ?>
 	<?php if ($pagos->id->Visible) { // id ?>
-		<td data-name="id">
+		<td>
 <?php if ($pagos->CurrentAction <> "F") { ?>
 <?php } else { ?>
 <span id="el$rowindex$_pagos_id" class="form-group pagos_id">
@@ -552,7 +548,7 @@ $pagos_grid->ListOptions->Render("body", "left", $pagos_grid->RowIndex);
 </td>
 	<?php } ?>
 	<?php if ($pagos->id_deuda->Visible) { // id_deuda ?>
-		<td data-name="id_deuda">
+		<td>
 <?php if ($pagos->CurrentAction <> "F") { ?>
 <?php if ($pagos->id_deuda->getSessionValue() <> "") { ?>
 <span id="el$rowindex$_pagos_id_deuda" class="form-group pagos_id_deuda">
@@ -610,11 +606,11 @@ if (@$emptywrk) $pagos->id_deuda->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($pagos->fecha->Visible) { // fecha ?>
-		<td data-name="fecha">
+		<td>
 <?php if ($pagos->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_pagos_fecha" class="form-group pagos_fecha">
 <input type="text" data-field="x_fecha" name="x<?php echo $pagos_grid->RowIndex ?>_fecha" id="x<?php echo $pagos_grid->RowIndex ?>_fecha" placeholder="<?php echo ew_HtmlEncode($pagos->fecha->PlaceHolder) ?>" value="<?php echo $pagos->fecha->EditValue ?>"<?php echo $pagos->fecha->EditAttributes() ?>>
-<?php if (!$pagos->fecha->ReadOnly && !$pagos->fecha->Disabled && !isset($pagos->fecha->EditAttrs["readonly"]) && !isset($pagos->fecha->EditAttrs["disabled"])) { ?>
+<?php if (!$pagos->fecha->ReadOnly && !$pagos->fecha->Disabled && @$pagos->fecha->EditAttrs["readonly"] == "" && @$pagos->fecha->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fpagosgrid", "x<?php echo $pagos_grid->RowIndex ?>_fecha", "%d/%m/%Y");
 </script>
@@ -631,7 +627,7 @@ ew_CreateCalendar("fpagosgrid", "x<?php echo $pagos_grid->RowIndex ?>_fecha", "%
 </td>
 	<?php } ?>
 	<?php if ($pagos->monto->Visible) { // monto ?>
-		<td data-name="monto">
+		<td>
 <?php if ($pagos->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_pagos_monto" class="form-group pagos_monto">
 <input type="text" data-field="x_monto" name="x<?php echo $pagos_grid->RowIndex ?>_monto" id="x<?php echo $pagos_grid->RowIndex ?>_monto" size="30" placeholder="<?php echo ew_HtmlEncode($pagos->monto->PlaceHolder) ?>" value="<?php echo $pagos->monto->EditValue ?>"<?php echo $pagos->monto->EditAttributes() ?>>

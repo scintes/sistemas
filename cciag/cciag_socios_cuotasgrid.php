@@ -1,6 +1,6 @@
-<?php include_once "cciag_montosinfo.php" ?>
-<?php include_once "cciag_sociosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_montosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
 <?php
 
 // Create page object
@@ -118,10 +118,9 @@ if ($socios_cuotas->CurrentAction == "gridadd") {
 } else {
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
-		if ($socios_cuotas_grid->TotalRecs <= 0)
-			$socios_cuotas_grid->TotalRecs = $socios_cuotas->SelectRecordCount();
+		$socios_cuotas_grid->TotalRecs = $socios_cuotas->SelectRecordCount();
 	} else {
-		if (!$socios_cuotas_grid->Recordset && ($socios_cuotas_grid->Recordset = $socios_cuotas_grid->LoadRecordset()))
+		if ($socios_cuotas_grid->Recordset = $socios_cuotas_grid->LoadRecordset())
 			$socios_cuotas_grid->TotalRecs = $socios_cuotas_grid->Recordset->RecordCount();
 	}
 	$socios_cuotas_grid->StartRec = 1;
@@ -163,9 +162,6 @@ $socios_cuotas_grid->ShowMessage();
 <thead><!-- Table header -->
 	<tr class="ewTableHeader">
 <?php
-
-// Header row
-$socios_cuotas->RowType = EW_ROWTYPE_HEADER;
 
 // Render list options
 $socios_cuotas_grid->RenderListOptions();
@@ -512,7 +508,7 @@ if (@$emptywrk) $socios_cuotas->id_montos->OldValue = "";
 <?php if ($socios_cuotas->RowType == EW_ROWTYPE_ADD) { // Add record ?>
 <span id="el<?php echo $socios_cuotas_grid->RowCnt ?>_socios_cuotas_fecha" class="form-group socios_cuotas_fecha">
 <input type="text" data-field="x_fecha" name="x<?php echo $socios_cuotas_grid->RowIndex ?>_fecha" id="x<?php echo $socios_cuotas_grid->RowIndex ?>_fecha" placeholder="<?php echo ew_HtmlEncode($socios_cuotas->fecha->PlaceHolder) ?>" value="<?php echo $socios_cuotas->fecha->EditValue ?>"<?php echo $socios_cuotas->fecha->EditAttributes() ?>>
-<?php if (!$socios_cuotas->fecha->ReadOnly && !$socios_cuotas->fecha->Disabled && !isset($socios_cuotas->fecha->EditAttrs["readonly"]) && !isset($socios_cuotas->fecha->EditAttrs["disabled"])) { ?>
+<?php if (!$socios_cuotas->fecha->ReadOnly && !$socios_cuotas->fecha->Disabled && @$socios_cuotas->fecha->EditAttrs["readonly"] == "" && @$socios_cuotas->fecha->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fsocios_cuotasgrid", "x<?php echo $socios_cuotas_grid->RowIndex ?>_fecha", "%d/%m/%Y");
 </script>
@@ -523,7 +519,7 @@ ew_CreateCalendar("fsocios_cuotasgrid", "x<?php echo $socios_cuotas_grid->RowInd
 <?php if ($socios_cuotas->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
 <span id="el<?php echo $socios_cuotas_grid->RowCnt ?>_socios_cuotas_fecha" class="form-group socios_cuotas_fecha">
 <input type="text" data-field="x_fecha" name="x<?php echo $socios_cuotas_grid->RowIndex ?>_fecha" id="x<?php echo $socios_cuotas_grid->RowIndex ?>_fecha" placeholder="<?php echo ew_HtmlEncode($socios_cuotas->fecha->PlaceHolder) ?>" value="<?php echo $socios_cuotas->fecha->EditValue ?>"<?php echo $socios_cuotas->fecha->EditAttributes() ?>>
-<?php if (!$socios_cuotas->fecha->ReadOnly && !$socios_cuotas->fecha->Disabled && !isset($socios_cuotas->fecha->EditAttrs["readonly"]) && !isset($socios_cuotas->fecha->EditAttrs["disabled"])) { ?>
+<?php if (!$socios_cuotas->fecha->ReadOnly && !$socios_cuotas->fecha->Disabled && @$socios_cuotas->fecha->EditAttrs["readonly"] == "" && @$socios_cuotas->fecha->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fsocios_cuotasgrid", "x<?php echo $socios_cuotas_grid->RowIndex ?>_fecha", "%d/%m/%Y");
 </script>
@@ -581,7 +577,7 @@ fsocios_cuotasgrid.UpdateOpts(<?php echo $socios_cuotas_grid->RowIndex ?>);
 $socios_cuotas_grid->ListOptions->Render("body", "left", $socios_cuotas_grid->RowIndex);
 ?>
 	<?php if ($socios_cuotas->id_socio->Visible) { // id_socio ?>
-		<td data-name="id_socio">
+		<td>
 <?php if ($socios_cuotas->CurrentAction <> "F") { ?>
 <?php if ($socios_cuotas->id_socio->getSessionValue() <> "") { ?>
 <span id="el$rowindex$_socios_cuotas_id_socio" class="form-group socios_cuotas_id_socio">
@@ -636,7 +632,7 @@ if (@$emptywrk) $socios_cuotas->id_socio->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($socios_cuotas->id_montos->Visible) { // id_montos ?>
-		<td data-name="id_montos">
+		<td>
 <?php if ($socios_cuotas->CurrentAction <> "F") { ?>
 <?php if ($socios_cuotas->id_montos->getSessionValue() <> "") { ?>
 <span id="el$rowindex$_socios_cuotas_id_montos" class="form-group socios_cuotas_id_montos">
@@ -691,11 +687,11 @@ if (@$emptywrk) $socios_cuotas->id_montos->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($socios_cuotas->fecha->Visible) { // fecha ?>
-		<td data-name="fecha">
+		<td>
 <?php if ($socios_cuotas->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_socios_cuotas_fecha" class="form-group socios_cuotas_fecha">
 <input type="text" data-field="x_fecha" name="x<?php echo $socios_cuotas_grid->RowIndex ?>_fecha" id="x<?php echo $socios_cuotas_grid->RowIndex ?>_fecha" placeholder="<?php echo ew_HtmlEncode($socios_cuotas->fecha->PlaceHolder) ?>" value="<?php echo $socios_cuotas->fecha->EditValue ?>"<?php echo $socios_cuotas->fecha->EditAttributes() ?>>
-<?php if (!$socios_cuotas->fecha->ReadOnly && !$socios_cuotas->fecha->Disabled && !isset($socios_cuotas->fecha->EditAttrs["readonly"]) && !isset($socios_cuotas->fecha->EditAttrs["disabled"])) { ?>
+<?php if (!$socios_cuotas->fecha->ReadOnly && !$socios_cuotas->fecha->Disabled && @$socios_cuotas->fecha->EditAttrs["readonly"] == "" && @$socios_cuotas->fecha->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fsocios_cuotasgrid", "x<?php echo $socios_cuotas_grid->RowIndex ?>_fecha", "%d/%m/%Y");
 </script>

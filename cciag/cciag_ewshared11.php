@@ -484,7 +484,7 @@ class cXMLDocument {
 			if ($this->XmlTbl)
 				$this->XmlTbl->appendChild($this->XmlRow);
 		} else {
-			if ($this->SubTblName == '' || $this->SubTblName != $tabletagname) {
+			if ($this->SubTblName == '') {
 				$this->SubTblName = ew_XmlTagName($tabletagname);
 				$this->XmlSubTbl = $this->XmlDoc->createElement($this->SubTblName);
 				$this->XmlTbl->appendChild($this->XmlSubTbl);
@@ -1184,7 +1184,7 @@ function ew_jQueryHost() {
 
 // Get jQuery version
 function ew_jQueryFile($f) {
-	$v = "1.11.2"; // Get jQuery version
+	$v = "1.11.1"; // Get jQuery version
 	return str_replace("%v", $v, ew_jQueryHost() . $f);
 }
 
@@ -1237,15 +1237,8 @@ function ew_ConvertFullUrl($url) {
 // Get relative url
 function ew_GetUrl($url) {
 	global $EW_RELATIVE_PATH;
-	if ($url != "" && strpos($url, "://") === FALSE && strpos($url, "\\") === FALSE && strpos($url, "javascript:") === FALSE) {
-		$path = "";
-		if (strrpos($url, "/") !== FALSE) {
-			$path = substr($url, 0, strrpos($url, "/"));
-			$url = substr($url, strrpos($url, "/")+1); 
-		}
-		$path = ew_PathCombine($EW_RELATIVE_PATH, $path, FALSE);
-		if ($path <> "") $path = ew_IncludeTrailingDelimiter($path, FALSE);
-		return $path . $url;
+	if (strpos($url, "://") === FALSE && strpos($url, "\\") === FALSE) {
+		return $EW_RELATIVE_PATH . $url;
 	} else {
 		return $url;
 	}
@@ -1272,7 +1265,7 @@ if (!function_exists('ew_Execute')) {
 
 	function ew_Execute($SQL, $fn = NULL) {
 		global $conn;
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($SQL);
 		$conn->raiseErrorFn = '';
 		if (is_callable($fn) && $rs) {
@@ -1398,7 +1391,7 @@ if (!function_exists('ew_LoadRecordset')) {
 
 	function &ew_LoadRecordset($SQL) {
 		global $conn;
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($SQL);
 		$conn->raiseErrorFn = '';
 		return $rs;
@@ -1431,57 +1424,5 @@ function ew_AppendClass(&$attr, $classname) {
 function ew_LocaleConv() {
 	$info = defined("EW_DEFAULT_LOCALE") ? json_decode(EW_DEFAULT_LOCALE, TRUE) : NULL;
 	return ($info) ? $info : localeconv();
-}
-
-// Get path relative to a base path
-function ew_PathCombine($BasePath, $RelPath, $PhyPath) {
-	if (preg_match('/^(http|ftp)s?\:\/\//i', $RelPath)) // Allow remote file
-		return $RelPath;
-	$Delimiter = ($PhyPath) ? EW_PATH_DELIMITER : '/';
-	if ($BasePath <> $Delimiter) // If BasePath = root, do not remove delimiter
-		$BasePath = ew_RemoveTrailingDelimiter($BasePath, $PhyPath);
-	$RelPath = ($PhyPath) ? str_replace(array('/', '\\'), EW_PATH_DELIMITER, $RelPath) : str_replace('\\', '/', $RelPath);
-	$RelPath = ew_IncludeTrailingDelimiter($RelPath, $PhyPath);
-	$p1 = strpos($RelPath, $Delimiter);
-	$Path2 = "";
-	while ($p1 !== FALSE) {
-		$Path = substr($RelPath, 0, $p1 + 1);
-		if ($Path == $Delimiter || $Path == '.' . $Delimiter) {
-
-			// Skip
-		} elseif ($Path == '..' . $Delimiter) {
-			$p2 = strrpos($BasePath, $Delimiter);
-			if ($p2 === 0) { // BasePath = "/xxx", cannot move up
-				$BasePath = $Delimiter;
-			} elseif ($p2 !== FALSE && substr($BasePath, -2) <> "..")
-				$BasePath = substr($BasePath, 0, $p2);
-			elseif ($BasePath <> "" && $BasePath <> "..")
-				$BasePath = "";
-			else
-				$Path2 .= ".." . $Delimiter;
-		} else {
-			$Path2 .= $Path;
-		}
-		$RelPath = substr($RelPath, $p1+1);
-		if ($RelPath === FALSE)
-			$RelPath = "";
-		$p1 = strpos($RelPath, $Delimiter);
-	}
-	return (($BasePath === "") ? "" : ew_IncludeTrailingDelimiter($BasePath, $PhyPath)) . $Path2 . $RelPath;
-}
-
-// Remove the last delimiter for a path
-function ew_RemoveTrailingDelimiter($Path, $PhyPath) {
-	$Delimiter = ($PhyPath) ? EW_PATH_DELIMITER : '/';
-	while (substr($Path, -1) == $Delimiter)
-		$Path = substr($Path, 0, strlen($Path)-1);
-	return $Path;
-}
-
-// Include the last delimiter for a path
-function ew_IncludeTrailingDelimiter($Path, $PhyPath) {
-	$Path = ew_RemoveTrailingDelimiter($Path, $PhyPath);
-	$Delimiter = ($PhyPath) ? EW_PATH_DELIMITER : '/';
-	return $Path . $Delimiter;
 }
 ?>

@@ -162,10 +162,8 @@ class TCPDF_Adapter implements Canvas {
 	    else
 	      $size = self::$PAPER_SIZES["letter"];
 	
-	    $ori = 'P'; // ***
 	    if ( mb_strtolower($orientation) === "landscape" ) {
 	      list($size[2], $size[3]) = array($size[3], $size[2]);
-	      $ori = 'L'; // ***
 	    }
 
 		$this->_width = $size[2] - $size[0];
@@ -173,8 +171,7 @@ class TCPDF_Adapter implements Canvas {
 		
 		$this->_dompdf = $dompdf;
 
-		//***$this->_pdf = new My_TCPDF('P', 'pt', $paper, true, 'UTF-8', false);
-		$this->_pdf = new My_TCPDF($ori, 'pt', $paper, true, 'UTF-8', false); // ***
+		$this->_pdf = new My_TCPDF('P', 'pt', $paper, true, 'UTF-8', false);
 		$this->_pdf->SetCreator("DOMPDF Converter");
 
 		// CreationDate and ModDate info are added by TCPDF itself
@@ -1206,7 +1203,7 @@ $this->_page_text = array ();
 
 		$this->_pdf->SetCompression($compress);
 
-		$this->_pdf->Output($filename, $options["Attachment"] ? "D" : "I"); // ***
+		$this->_pdf->Output($filename);
 	}
 
 	/**

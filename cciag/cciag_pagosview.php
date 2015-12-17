@@ -1,15 +1,16 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_pagosinfo.php" ?>
-<?php include_once "cciag_deudasinfo.php" ?>
-<?php include_once "cciag_sociosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_pagosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_deudasinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -464,9 +465,6 @@ class cpagos_view extends cpagos {
 			if (@$_GET["id"] <> "") {
 				$this->id->setQueryStringValue($_GET["id"]);
 				$this->RecKey["id"] = $this->id->QueryStringValue;
-			} elseif (@$_POST["id"] <> "") {
-				$this->id->setFormValue($_POST["id"]);
-				$this->RecKey["id"] = $this->id->FormValue;
 			} else {
 				$sReturnUrl = "cciag_pagoslist.php"; // Return to list
 			}
@@ -581,7 +579,7 @@ class cpagos_view extends cpagos {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -804,10 +802,7 @@ class cpagos_view extends cpagos {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -939,17 +934,10 @@ class cpagos_view extends cpagos {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -1035,10 +1023,9 @@ class cpagos_view extends cpagos {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_pagoslist.php", "", $this->TableVar, TRUE);
 		$PageId = "view";
-		$Breadcrumb->Add("view", $PageId, $url);
+		$Breadcrumb->Add("view", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -1146,7 +1133,7 @@ Page_Rendering();
 // Page Rendering event
 $pagos_view->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($pagos->Export == "") { ?>
 <script type="text/javascript">
 
@@ -1213,7 +1200,7 @@ $pagos_view->ShowMessage();
 	<tr id="r_id">
 		<td><span id="elh_pagos_id"><?php echo $pagos->id->FldCaption() ?></span></td>
 		<td<?php echo $pagos->id->CellAttributes() ?>>
-<span id="el_pagos_id">
+<span id="el_pagos_id" class="form-group">
 <span<?php echo $pagos->id->ViewAttributes() ?>>
 <?php echo $pagos->id->ViewValue ?></span>
 </span>
@@ -1224,7 +1211,7 @@ $pagos_view->ShowMessage();
 	<tr id="r_id_deuda">
 		<td><span id="elh_pagos_id_deuda"><?php echo $pagos->id_deuda->FldCaption() ?></span></td>
 		<td<?php echo $pagos->id_deuda->CellAttributes() ?>>
-<span id="el_pagos_id_deuda">
+<span id="el_pagos_id_deuda" class="form-group">
 <span<?php echo $pagos->id_deuda->ViewAttributes() ?>>
 <?php echo $pagos->id_deuda->ViewValue ?></span>
 </span>
@@ -1235,7 +1222,7 @@ $pagos_view->ShowMessage();
 	<tr id="r_fecha">
 		<td><span id="elh_pagos_fecha"><?php echo $pagos->fecha->FldCaption() ?></span></td>
 		<td<?php echo $pagos->fecha->CellAttributes() ?>>
-<span id="el_pagos_fecha">
+<span id="el_pagos_fecha" class="form-group">
 <span<?php echo $pagos->fecha->ViewAttributes() ?>>
 <?php echo $pagos->fecha->ViewValue ?></span>
 </span>
@@ -1246,7 +1233,7 @@ $pagos_view->ShowMessage();
 	<tr id="r_monto">
 		<td><span id="elh_pagos_monto"><?php echo $pagos->monto->FldCaption() ?></span></td>
 		<td<?php echo $pagos->monto->CellAttributes() ?>>
-<span id="el_pagos_monto">
+<span id="el_pagos_monto" class="form-group">
 <span<?php echo $pagos->monto->ViewAttributes() ?>>
 <?php echo $pagos->monto->ViewValue ?></span>
 </span>
@@ -1271,7 +1258,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $pagos_view->Page_Terminate();
 ?>

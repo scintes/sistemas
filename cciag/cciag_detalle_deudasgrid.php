@@ -1,5 +1,5 @@
-<?php include_once "cciag_deudasinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_deudasinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
 <?php
 
 // Create page object
@@ -116,10 +116,9 @@ if ($detalle_deudas->CurrentAction == "gridadd") {
 } else {
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
-		if ($detalle_deudas_grid->TotalRecs <= 0)
-			$detalle_deudas_grid->TotalRecs = $detalle_deudas->SelectRecordCount();
+		$detalle_deudas_grid->TotalRecs = $detalle_deudas->SelectRecordCount();
 	} else {
-		if (!$detalle_deudas_grid->Recordset && ($detalle_deudas_grid->Recordset = $detalle_deudas_grid->LoadRecordset()))
+		if ($detalle_deudas_grid->Recordset = $detalle_deudas_grid->LoadRecordset())
 			$detalle_deudas_grid->TotalRecs = $detalle_deudas_grid->Recordset->RecordCount();
 	}
 	$detalle_deudas_grid->StartRec = 1;
@@ -161,9 +160,6 @@ $detalle_deudas_grid->ShowMessage();
 <thead><!-- Table header -->
 	<tr class="ewTableHeader">
 <?php
-
-// Header row
-$detalle_deudas->RowType = EW_ROWTYPE_HEADER;
 
 // Render list options
 $detalle_deudas_grid->RenderListOptions();
@@ -497,7 +493,7 @@ fdetalle_deudasgrid.UpdateOpts(<?php echo $detalle_deudas_grid->RowIndex ?>);
 $detalle_deudas_grid->ListOptions->Render("body", "left", $detalle_deudas_grid->RowIndex);
 ?>
 	<?php if ($detalle_deudas->id_deuda->Visible) { // id_deuda ?>
-		<td data-name="id_deuda">
+		<td>
 <?php if ($detalle_deudas->CurrentAction <> "F") { ?>
 <?php if ($detalle_deudas->id_deuda->getSessionValue() <> "") { ?>
 <span id="el$rowindex$_detalle_deudas_id_deuda" class="form-group detalle_deudas_id_deuda">
@@ -555,7 +551,7 @@ if (@$emptywrk) $detalle_deudas->id_deuda->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($detalle_deudas->detalle->Visible) { // detalle ?>
-		<td data-name="detalle">
+		<td>
 <?php if ($detalle_deudas->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_detalle_deudas_detalle" class="form-group detalle_deudas_detalle">
 <input type="text" data-field="x_detalle" name="x<?php echo $detalle_deudas_grid->RowIndex ?>_detalle" id="x<?php echo $detalle_deudas_grid->RowIndex ?>_detalle" size="30" maxlength="100" placeholder="<?php echo ew_HtmlEncode($detalle_deudas->detalle->PlaceHolder) ?>" value="<?php echo $detalle_deudas->detalle->EditValue ?>"<?php echo $detalle_deudas->detalle->EditAttributes() ?>>
@@ -571,7 +567,7 @@ if (@$emptywrk) $detalle_deudas->id_deuda->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($detalle_deudas->importe->Visible) { // importe ?>
-		<td data-name="importe">
+		<td>
 <?php if ($detalle_deudas->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_detalle_deudas_importe" class="form-group detalle_deudas_importe">
 <input type="text" data-field="x_importe" name="x<?php echo $detalle_deudas_grid->RowIndex ?>_importe" id="x<?php echo $detalle_deudas_grid->RowIndex ?>_importe" size="30" placeholder="<?php echo ew_HtmlEncode($detalle_deudas->importe->PlaceHolder) ?>" value="<?php echo $detalle_deudas->importe->EditValue ?>"<?php echo $detalle_deudas->importe->EditAttributes() ?>>

@@ -186,19 +186,12 @@ class cacerca_de_php {
 		// Security
 		$Security = new cAdvancedSecurity();
 		if (!$Security->IsLoggedIn()) $Security->AutoLogin();
-		if (!$Security->IsLoggedIn()) {
-			$Security->SaveLastUrl();
-			$this->Page_Terminate(ew_GetUrl("cciag_login.php"));
-		}
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
-
-		// Global Page Loading event (in userfn*.php)
-		Page_Loading();
 
 		// Check token
 		if (!$this->ValidPost()) {
@@ -216,9 +209,6 @@ class cacerca_de_php {
 	//
 	function Page_Terminate($url = "") {
 		global $conn, $gsExportFile, $gTmpImages;
-
-		// Global Page Unloaded event (in userfn*.php)
-		Page_Unloaded();
 
 		// Export
 		 // Close connection
@@ -247,7 +237,7 @@ class cacerca_de_php {
 	function SetupBreadcrumb() {
 		global $Breadcrumb;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
+		$url = ew_CurrentUrl();
 		$Breadcrumb->Add("custom", "acerca_de_php", $url, "", "acerca_de_php", TRUE);
 	}
 }
@@ -263,9 +253,6 @@ $acerca_de_php->Page_Init();
 
 // Page main
 $acerca_de_php->Page_Main();
-
-// Global Page Rendering event (in userfn*.php)
-Page_Rendering();
 ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if (!@$gbSkipHeaderFooter) { ?>
@@ -289,16 +276,16 @@ table, td, th {
 <table align="center">
   <tr>
 	<th width='350' align='center'>Etapas</th>
-	<th align='center' >Descripci贸n</th>
+	<th align='center' >Descripci髇</th>
   </tr>
   <tr>
-	<td>  1 - Administraci贸n de CCIAG</td>
+	<td>  1 - Administraci髇 de CCIAG</td>
 	<td> Administracion de HOJA de RUTA.</p>
-		Esta etapa, trata de dar soluci贸n al seguimiento de la cargas y el tipo de carga</td>
+		Esta etapa, trata de dar soluci髇 al seguimiento de la cargas y el tipo de carga</td>
   </tr>
   <tr>
-	<td>  2 - Administraci贸n de HOJA de MANTENIEMINTO</td>
-	<td>Esta etapa trata de dar soluci贸n al seguimiento de los mantenimiento decada vehiculo</td>
+	<td>  2 - Administraci髇 de HOJA de MANTENIEMINTO</td>
+	<td>Esta etapa trata de dar soluci髇 al seguimiento de los mantenimiento decada vehiculo</td>
   </tr>
   <tr>
 	<td>  3 - Administracion de CUENTAS</td>
@@ -306,8 +293,8 @@ table, td, th {
   </tr>
 </table>		
 		<p align="center">CintesSoft Sistemas...</p><br>
-		<p align="center">Copyrigth Noviembre 2015 - Versi贸n Desarrollo</p>		
-		<p align="center">Versi贸n de modulos:</p>
+		<p align="center">Copyrigth Noviembre 2015 - Versi髇 Desarrollo</p>		
+		<p align="center">Versi髇 de modulos:</p>
 		<table align="center">
 			<tr><td>ABM - Choferes</td><td width='30'>1.0</td></tr>
 			<tr><td>ABM - Clientes</td><td>1.0</td></tr>
@@ -318,7 +305,7 @@ table, td, th {
 			<tr><td>ABM - Tipo de Cargas</td><td>1.0</td></tr>
 			<tr><td>ABM - Tipo de Gastos</td><td>1.0</td></tr>
 			<tr><td>ABM - Tipo de Mantenimientos</td><td>1.0</td></tr>
-			<tr><td>ABM - Veh铆culos</td><td>1.0</td></tr>
+			<tr><td>ABM - Veh韈ulos</td><td>1.0</td></tr>
 			<tr><td>ABM - Usuarios</td><td>1.0</td></tr>
 			<tr><td>Hoja de Mantenimiento</td><td>1.0</td></tr>
 			<tr><td>Hoja de Ruta</td><td>1.0</td></tr>
@@ -327,7 +314,6 @@ table, td, th {
 		</table>
 	</div>
 </div>
-<?php if (EW_DEBUG_ENABLED) echo ew_DebugMsg(); ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $acerca_de_php->Page_Terminate();

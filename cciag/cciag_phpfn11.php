@@ -719,7 +719,6 @@ class cEmail {
 	var $Charset = ""; // Charset
 	var $SendErrDescription; // Send error description
 	var $SmtpSecure = EW_SMTP_SECURE_OPTION; // Send secure option
-	var $Mailer = NULL; // PHPMailer object
 
 	// Method to load email from template
 	function Load($fn) {
@@ -830,7 +829,7 @@ class cEmail {
 		global $gsEmailErrDesc;
 		$result = ew_SendEmail($this->Sender, $this->Recipient, $this->Cc, $this->Bcc,
 			$this->Subject, $this->Content, $this->Format, $this->Charset, $this->SmtpSecure,
-			$this->Attachments, $this->EmbeddedImages, $this->Mailer);
+			$this->Attachments, $this->EmbeddedImages);
 		$this->SendErrDescription = $gsEmailErrDesc;
 		return $result;
 	}
@@ -1159,8 +1158,6 @@ class cTableBase {
 	var $ExportPageBreakCount; // Page break per every n record (PDF only)
 	var $ExportPageOrientation; // Page orientation (PDF only)
 	var $ExportPageSize; // Page size (PDF only)
-	var $ExportExcelPageOrientation; // Page orientation (PHPExcel only)
-	var $ExportExcelPageSize; // Page size (PHPExcel only)
 	var $SendEmail; // Send email
 	var $TableCustomInnerHtml; // Custom inner HTML
 	var $BasicSearch; // Basic search
@@ -3736,7 +3733,7 @@ function &ew_Connect($info = NULL) {
 	// Database connecting event
 	Database_Connecting($info);
 	$conn->port = intval($info["port"]);
-	$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+	$conn->raiseErrorFn = 'ew_ErrorFn';
 	$conn->Connect($info["host"], $info["user"], $info["pass"], $info["db"]);
 	if (EW_MYSQL_CHARSET <> "")
 		$conn->Execute("SET NAMES '" . EW_MYSQL_CHARSET . "'");
@@ -3777,7 +3774,7 @@ function ew_AllowAddDeleteRow() {
 function ew_IsHttpPost() {
 	$ct = ew_ServerVar("CONTENT_TYPE");
 	if (empty($ct)) $ct = ew_ServerVar("HTTP_CONTENT_TYPE");
-	return strpos($ct, "application/x-www-form-urlencoded") !== FALSE;
+	return ($ct == "application/x-www-form-urlencoded");
 }
 
 // Append like operator
@@ -5016,18 +5013,16 @@ function ew_ExtractScript(&$html, $class = "") {
 include_once($EW_RELATIVE_PATH . "phpmailer527/class.phpmailer.php");
 
 // Function to send email
-function ew_SendEmail($sFrEmail, $sToEmail, $sCcEmail, $sBccEmail, $sSubject, $sMail, $sFormat, $sCharset, $sSmtpSecure = "", $arAttachments = array(), $arImages = array(), $mail = NULL) {
+function ew_SendEmail($sFrEmail, $sToEmail, $sCcEmail, $sBccEmail, $sSubject, $sMail, $sFormat, $sCharset, $sSmtpSecure = "", $arAttachments = array(), $arImages = array()) {
 	global $Language, $gsEmailErrDesc;
 	$res = FALSE;
-	if (is_null($mail)) {
-		$mail = new PHPMailer();
-		$mail->IsSMTP(); 
-		$mail->Host = EW_SMTP_SERVER;
-		$mail->SMTPAuth = (EW_SMTP_SERVER_USERNAME <> "" && EW_SMTP_SERVER_PASSWORD <> "");
-		$mail->Username = EW_SMTP_SERVER_USERNAME;
-		$mail->Password = EW_SMTP_SERVER_PASSWORD;
-		$mail->Port = EW_SMTP_SERVER_PORT;
-	}
+	$mail = new PHPMailer();
+	$mail->IsSMTP(); 
+	$mail->Host = EW_SMTP_SERVER;
+	$mail->SMTPAuth = (EW_SMTP_SERVER_USERNAME <> "" && EW_SMTP_SERVER_PASSWORD <> "");
+	$mail->Username = EW_SMTP_SERVER_USERNAME;
+	$mail->Password = EW_SMTP_SERVER_PASSWORD;
+	$mail->Port = EW_SMTP_SERVER_PORT;
 	if ($sSmtpSecure <> "") $mail->SMTPSecure = $sSmtpSecure;
 	if (preg_match('/^(.+)<([\w.%+-]+@[\w.-]+\.[A-Z]{2,6})>$/i', trim($sFrEmail), $m)) {
 		$mail->From = $m[2];
@@ -5091,14 +5086,6 @@ function ew_SendEmail($sFrEmail, $sToEmail, $sCcEmail, $sBccEmail, $sSubject, $s
 	return $res;
 }
 
-// Clean email content
-function ew_CleanEmailContent($Content) {
-	$Content = str_replace("class=\"ewGrid\"", "", $Content);
-	$Content = str_replace("class=\"table-responsive ewGridMiddlePanel\"", "", $Content);
-	$Content = str_replace("table ewTable", "ewExportTable", $Content);
-	return $Content;
-}
-
 // Field data type
 function ew_FieldDataType($fldtype) {
 	switch ($fldtype) {
@@ -5155,8 +5142,6 @@ function ew_AppRoot() {
 	if ($EW_ROOT_RELATIVE_PATH <> "") {
 		$Path = realpath($EW_ROOT_RELATIVE_PATH);
 		$Path = str_replace("\\\\", EW_PATH_DELIMITER, $Path);
-	} else {
-		$Path = realpath(".");
 	}
 
 	// 2. if empty, use the document root if available
@@ -5181,6 +5166,56 @@ function ew_AppRoot() {
 // Get path relative to application root
 function ew_ServerMapPath($Path) {
 	return ew_PathCombine(ew_AppRoot(), $Path, TRUE);
+}
+
+// Get path relative to a base path
+function ew_PathCombine($BasePath, $RelPath, $PhyPath) {
+	if (preg_match('/^(http|ftp)s?\:\/\//i', $RelPath)) // Allow remote file
+		return $RelPath;
+	$BasePath = ew_RemoveTrailingDelimiter($BasePath, $PhyPath);
+	if ($PhyPath) {
+		$Delimiter = EW_PATH_DELIMITER;
+		$RelPath = str_replace(array('/', '\\'), EW_PATH_DELIMITER, $RelPath);
+	} else {
+		$Delimiter = '/';
+		$RelPath = str_replace('\\', '/', $RelPath);
+	}
+	$RelPath = ew_IncludeTrailingDelimiter($RelPath, $PhyPath);
+	$p1 = strpos($RelPath, $Delimiter);
+	$Path2 = "";
+	while ($p1 !== FALSE) {
+		$Path = substr($RelPath, 0, $p1 + 1);
+		if ($Path == $Delimiter || $Path == '.' . $Delimiter) {
+
+			// Skip
+		} elseif ($Path == '..' . $Delimiter) {
+			$p2 = strrpos($BasePath, $Delimiter);
+			if ($p2 !== FALSE)
+				$BasePath = substr($BasePath, 0, $p2);
+		} else {
+			$Path2 .= $Path;
+		}
+		$RelPath = substr($RelPath, $p1+1);
+		if ($RelPath === FALSE)
+			$RelPath = "";
+		$p1 = strpos($RelPath, $Delimiter);
+	}
+	return ew_IncludeTrailingDelimiter($BasePath, $PhyPath) . $Path2 . $RelPath;
+}
+
+// Remove the last delimiter for a path
+function ew_RemoveTrailingDelimiter($Path, $PhyPath) {
+	$Delimiter = ($PhyPath) ? EW_PATH_DELIMITER : '/';
+	while (substr($Path, -1) == $Delimiter)
+		$Path = substr($Path, 0, strlen($Path)-1);
+	return $Path;
+}
+
+// Include the last delimiter for a path
+function ew_IncludeTrailingDelimiter($Path, $PhyPath) {
+	$Path = ew_RemoveTrailingDelimiter($Path, $PhyPath);
+	$Delimiter = ($PhyPath) ? EW_PATH_DELIMITER : '/';
+	return $Path . $Delimiter;
 }
 
 // Write the paths for config/debug only
@@ -5406,8 +5441,6 @@ function ew_TmpImage(&$filedata) {
 		rename($f, $f .= '.jpg'); break;
 	case 3:
 		rename($f, $f .= '.png'); break;
-	case 6:
-		rename($f, $f .= '.bmp'); break;
 	default:
 		return "";
 	}

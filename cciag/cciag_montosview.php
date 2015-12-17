@@ -1,14 +1,15 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_montosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_socios_cuotasgridcls.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_montosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_socios_cuotasgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -462,9 +463,6 @@ class cmontos_view extends cmontos {
 			if (@$_GET["id"] <> "") {
 				$this->id->setQueryStringValue($_GET["id"]);
 				$this->RecKey["id"] = $this->id->QueryStringValue;
-			} elseif (@$_POST["id"] <> "") {
-				$this->id->setFormValue($_POST["id"]);
-				$this->RecKey["id"] = $this->id->FormValue;
 			} else {
 				$sReturnUrl = "cciag_montoslist.php"; // Return to list
 			}
@@ -526,6 +524,20 @@ class cmontos_view extends cmontos {
 		$item = &$option->Add("delete");
 		$item->Body = "<a class=\"ewAction ewDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("ViewPageDeleteLink") . "</a>";
 		$item->Visible = ($this->DeleteUrl <> "" && $Security->CanDelete() && $this->ShowOptionLink('delete'));
+
+		// Show detail edit/copy
+		if ($this->getCurrentDetailTable() <> "") {
+
+			// Detail Edit
+			$item = &$option->Add("detailedit");
+			$item->Body = "<a class=\"ewAction ewDetailEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=" . $this->getCurrentDetailTable())) . "\">" . $Language->Phrase("MasterDetailEditLink") . "</a>";
+			$item->Visible = ($Security->CanEdit() && $this->ShowOptionLink('delete'));
+
+			// Detail Copy
+			$item = &$option->Add("detailcopy");
+			$item->Body = "<a class=\"ewAction ewDetailCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=" . $this->getCurrentDetailTable())) . "\">" . $Language->Phrase("MasterDetailCopyLink") . "</a>";
+			$item->Visible = ($Security->CanAdd() && $this->ShowOptionLink('delete'));
+		}
 		$option = &$options["detail"];
 		$DetailTableLink = "";
 		$DetailViewTblVar = "";
@@ -534,20 +546,20 @@ class cmontos_view extends cmontos {
 
 		// "detail_socios_cuotas"
 		$item = &$option->Add("detail_socios_cuotas");
-		$body = $Language->Phrase("ViewPageDetailLink") . $Language->TablePhrase("socios_cuotas", "TblCaption");
-		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_socios_cuotaslist.php?" . EW_TABLE_SHOW_MASTER . "=montos&fk_id=" . urlencode(strval($this->id->CurrentValue)) . "") . "\">" . $body . "</a>";
+		$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("socios_cuotas", "TblCaption");
+		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_socios_cuotaslist.php?" . EW_TABLE_SHOW_MASTER . "=montos&fk_id=" . strval($this->id->CurrentValue) . "") . "\">" . $body . "</a>";
 		$links = "";
-		if ($GLOBALS["socios_cuotas_grid"] && $GLOBALS["socios_cuotas_grid"]->DetailView && $Security->CanView() && $Security->AllowView(CurrentProjectID() . 'socios_cuotas')) {
+		if ($GLOBALS["socios_cuotas_grid"] && $GLOBALS["socios_cuotas_grid"]->DetailView && $Security->CanView() && $this->ShowOptionLink('view') && $Security->AllowView(CurrentProjectID() . 'socios_cuotas')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=socios_cuotas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
 			if ($DetailViewTblVar <> "") $DetailViewTblVar .= ",";
 			$DetailViewTblVar .= "socios_cuotas";
 		}
-		if ($GLOBALS["socios_cuotas_grid"] && $GLOBALS["socios_cuotas_grid"]->DetailEdit && $Security->CanEdit() && $Security->AllowEdit(CurrentProjectID() . 'socios_cuotas')) {
+		if ($GLOBALS["socios_cuotas_grid"] && $GLOBALS["socios_cuotas_grid"]->DetailEdit && $Security->CanEdit() && $this->ShowOptionLink('edit') && $Security->AllowEdit(CurrentProjectID() . 'socios_cuotas')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailEdit\" data-action=\"edit\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=socios_cuotas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailEditLink")) . "</a></li>";
 			if ($DetailEditTblVar <> "") $DetailEditTblVar .= ",";
 			$DetailEditTblVar .= "socios_cuotas";
 		}
-		if ($GLOBALS["socios_cuotas_grid"] && $GLOBALS["socios_cuotas_grid"]->DetailAdd && $Security->CanAdd() && $Security->AllowAdd(CurrentProjectID() . 'socios_cuotas')) {
+		if ($GLOBALS["socios_cuotas_grid"] && $GLOBALS["socios_cuotas_grid"]->DetailAdd && $Security->CanAdd() && $this->ShowOptionLink('add') && $Security->AllowAdd(CurrentProjectID() . 'socios_cuotas')) {
 			$links .= "<li><a class=\"ewRowLink ewDetailCopy\" data-action=\"add\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=socios_cuotas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailCopyLink")) . "</a></li>";
 			if ($DetailCopyTblVar <> "") $DetailCopyTblVar .= ",";
 			$DetailCopyTblVar .= "socios_cuotas";
@@ -558,7 +570,7 @@ class cmontos_view extends cmontos {
 		}
 		$body = "<div class=\"btn-group\">" . $body . "</div>";
 		$item->Body = $body;
-		$item->Visible = $Security->AllowList(CurrentProjectID() . 'socios_cuotas');
+		$item->Visible = $Security->AllowList(CurrentProjectID() . 'socios_cuotas') && $this->ShowOptionLink();
 		if ($item->Visible) {
 			if ($DetailTableLink <> "") $DetailTableLink .= ",";
 			$DetailTableLink .= "socios_cuotas";
@@ -657,7 +669,7 @@ class cmontos_view extends cmontos {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -883,10 +895,7 @@ class cmontos_view extends cmontos {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -1036,17 +1045,10 @@ class cmontos_view extends cmontos {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -1118,10 +1120,9 @@ class cmontos_view extends cmontos {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_montoslist.php", "", $this->TableVar, TRUE);
 		$PageId = "view";
-		$Breadcrumb->Add("view", $PageId, $url);
+		$Breadcrumb->Add("view", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -1229,7 +1230,7 @@ Page_Rendering();
 // Page Rendering event
 $montos_view->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($montos->Export == "") { ?>
 <script type="text/javascript">
 
@@ -1295,7 +1296,7 @@ $montos_view->ShowMessage();
 	<tr id="r_id">
 		<td><span id="elh_montos_id"><?php echo $montos->id->FldCaption() ?></span></td>
 		<td<?php echo $montos->id->CellAttributes() ?>>
-<span id="el_montos_id">
+<span id="el_montos_id" class="form-group">
 <span<?php echo $montos->id->ViewAttributes() ?>>
 <?php echo $montos->id->ViewValue ?></span>
 </span>
@@ -1306,7 +1307,7 @@ $montos_view->ShowMessage();
 	<tr id="r_descripcion">
 		<td><span id="elh_montos_descripcion"><?php echo $montos->descripcion->FldCaption() ?></span></td>
 		<td<?php echo $montos->descripcion->CellAttributes() ?>>
-<span id="el_montos_descripcion">
+<span id="el_montos_descripcion" class="form-group">
 <span<?php echo $montos->descripcion->ViewAttributes() ?>>
 <?php echo $montos->descripcion->ViewValue ?></span>
 </span>
@@ -1317,7 +1318,7 @@ $montos_view->ShowMessage();
 	<tr id="r_importe">
 		<td><span id="elh_montos_importe"><?php echo $montos->importe->FldCaption() ?></span></td>
 		<td<?php echo $montos->importe->CellAttributes() ?>>
-<span id="el_montos_importe">
+<span id="el_montos_importe" class="form-group">
 <span<?php echo $montos->importe->ViewAttributes() ?>>
 <?php echo $montos->importe->ViewValue ?></span>
 </span>
@@ -1328,7 +1329,7 @@ $montos_view->ShowMessage();
 	<tr id="r_fecha_creacion">
 		<td><span id="elh_montos_fecha_creacion"><?php echo $montos->fecha_creacion->FldCaption() ?></span></td>
 		<td<?php echo $montos->fecha_creacion->CellAttributes() ?>>
-<span id="el_montos_fecha_creacion">
+<span id="el_montos_fecha_creacion" class="form-group">
 <span<?php echo $montos->fecha_creacion->ViewAttributes() ?>>
 <?php echo $montos->fecha_creacion->ViewValue ?></span>
 </span>
@@ -1339,7 +1340,7 @@ $montos_view->ShowMessage();
 	<tr id="r_activa">
 		<td><span id="elh_montos_activa"><?php echo $montos->activa->FldCaption() ?></span></td>
 		<td<?php echo $montos->activa->CellAttributes() ?>>
-<span id="el_montos_activa">
+<span id="el_montos_activa" class="form-group">
 <span<?php echo $montos->activa->ViewAttributes() ?>>
 <?php echo $montos->activa->ViewValue ?></span>
 </span>
@@ -1372,7 +1373,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $montos_view->Page_Terminate();
 ?>

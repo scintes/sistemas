@@ -1,14 +1,15 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_actividadinfo.php" ?>
-<?php include_once "cciag_rubrosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_actividadinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_rubrosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -381,7 +382,7 @@ class cactividad_delete extends cactividad {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -556,7 +557,7 @@ class cactividad_delete extends cactividad {
 		}
 		$DeleteRows = TRUE;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE) {
@@ -593,7 +594,7 @@ class cactividad_delete extends cactividad {
 				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
 				$sThisKey .= $row['id'];
 				$this->LoadDbValues($row);
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				$DeleteRows = $this->Delete($row); // Delete
 				$conn->raiseErrorFn = '';
 				if ($DeleteRows === FALSE)
@@ -681,10 +682,9 @@ class cactividad_delete extends cactividad {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_actividadlist.php", "", $this->TableVar, TRUE);
 		$PageId = "delete";
-		$Breadcrumb->Add("delete", $PageId, $url);
+		$Breadcrumb->Add("delete", $PageId, ew_CurrentUrl());
 	}
 
 	// Write Audit Trail start/end for grid update
@@ -805,7 +805,7 @@ Page_Rendering();
 // Page Rendering event
 $actividad_delete->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -914,7 +914,7 @@ while (!$actividad_delete->Recordset->EOF) {
 	<tr<?php echo $actividad->RowAttributes() ?>>
 <?php if ($actividad->id->Visible) { // id ?>
 		<td<?php echo $actividad->id->CellAttributes() ?>>
-<span id="el<?php echo $actividad_delete->RowCnt ?>_actividad_id" class="actividad_id">
+<span id="el<?php echo $actividad_delete->RowCnt ?>_actividad_id" class="form-group actividad_id">
 <span<?php echo $actividad->id->ViewAttributes() ?>>
 <?php echo $actividad->id->ListViewValue() ?></span>
 </span>
@@ -922,7 +922,7 @@ while (!$actividad_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($actividad->id_rubro->Visible) { // id_rubro ?>
 		<td<?php echo $actividad->id_rubro->CellAttributes() ?>>
-<span id="el<?php echo $actividad_delete->RowCnt ?>_actividad_id_rubro" class="actividad_id_rubro">
+<span id="el<?php echo $actividad_delete->RowCnt ?>_actividad_id_rubro" class="form-group actividad_id_rubro">
 <span<?php echo $actividad->id_rubro->ViewAttributes() ?>>
 <?php echo $actividad->id_rubro->ListViewValue() ?></span>
 </span>
@@ -930,7 +930,7 @@ while (!$actividad_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($actividad->actividad->Visible) { // actividad ?>
 		<td<?php echo $actividad->actividad->CellAttributes() ?>>
-<span id="el<?php echo $actividad_delete->RowCnt ?>_actividad_actividad" class="actividad_actividad">
+<span id="el<?php echo $actividad_delete->RowCnt ?>_actividad_actividad" class="form-group actividad_actividad">
 <span<?php echo $actividad->actividad->ViewAttributes() ?>>
 <?php echo $actividad->actividad->ListViewValue() ?></span>
 </span>
@@ -938,7 +938,7 @@ while (!$actividad_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($actividad->descripcion->Visible) { // descripcion ?>
 		<td<?php echo $actividad->descripcion->CellAttributes() ?>>
-<span id="el<?php echo $actividad_delete->RowCnt ?>_actividad_descripcion" class="actividad_descripcion">
+<span id="el<?php echo $actividad_delete->RowCnt ?>_actividad_descripcion" class="form-group actividad_descripcion">
 <span<?php echo $actividad->descripcion->ViewAttributes() ?>>
 <?php echo $actividad->descripcion->ListViewValue() ?></span>
 </span>
@@ -946,7 +946,7 @@ while (!$actividad_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($actividad->activa->Visible) { // activa ?>
 		<td<?php echo $actividad->activa->CellAttributes() ?>>
-<span id="el<?php echo $actividad_delete->RowCnt ?>_actividad_activa" class="actividad_activa">
+<span id="el<?php echo $actividad_delete->RowCnt ?>_actividad_activa" class="form-group actividad_activa">
 <span<?php echo $actividad->activa->ViewAttributes() ?>>
 <?php echo $actividad->activa->ListViewValue() ?></span>
 </span>
@@ -980,7 +980,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $actividad_delete->Page_Terminate();
 ?>

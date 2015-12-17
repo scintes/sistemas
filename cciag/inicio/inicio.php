@@ -186,19 +186,12 @@ class cinicio_php {
 		// Security
 		$Security = new cAdvancedSecurity();
 		if (!$Security->IsLoggedIn()) $Security->AutoLogin();
-		if (!$Security->IsLoggedIn()) {
-			$Security->SaveLastUrl();
-			$this->Page_Terminate(ew_GetUrl("cciag_login.php"));
-		}
 		$Security->TablePermission_Loading();
 		$Security->LoadCurrentUserLevel($this->ProjectID . $this->TableName);
 		$Security->TablePermission_Loaded();
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
-
-		// Global Page Loading event (in userfn*.php)
-		Page_Loading();
 
 		// Check token
 		if (!$this->ValidPost()) {
@@ -216,9 +209,6 @@ class cinicio_php {
 	//
 	function Page_Terminate($url = "") {
 		global $conn, $gsExportFile, $gTmpImages;
-
-		// Global Page Unloaded event (in userfn*.php)
-		Page_Unloaded();
 
 		// Export
 		 // Close connection
@@ -247,7 +237,7 @@ class cinicio_php {
 	function SetupBreadcrumb() {
 		global $Breadcrumb;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
+		$url = ew_CurrentUrl();
 		$Breadcrumb->Add("custom", "inicio_php", $url, "", "inicio_php", TRUE);
 	}
 }
@@ -263,9 +253,6 @@ $inicio_php->Page_Init();
 
 // Page main
 $inicio_php->Page_Main();
-
-// Global Page Rendering event (in userfn*.php)
-Page_Rendering();
 ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if (!@$gbSkipHeaderFooter) { ?>
@@ -284,7 +271,6 @@ Page_Rendering();
 		<p align="center">CintesSoft Sistemas</p>
 	</div>
 </div>
-<?php if (EW_DEBUG_ENABLED) echo ew_DebugMsg(); ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $inicio_php->Page_Terminate();

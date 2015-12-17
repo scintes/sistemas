@@ -1,14 +1,15 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_tramitesinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_seguimiento_tramitesgridcls.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_tramitesinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_seguimiento_tramitesgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -694,14 +695,12 @@ class ctramites_list extends ctramites {
 		}
 
 		// Load record count first
-		if (!$this->IsAddOrEdit()) {
-			$bSelectLimit = EW_SELECT_LIMIT;
-			if ($bSelectLimit) {
-				$this->TotalRecs = $this->SelectRecordCount();
-			} else {
-				if ($this->Recordset = $this->LoadRecordset())
-					$this->TotalRecs = $this->Recordset->RecordCount();
-			}
+		$bSelectLimit = EW_SELECT_LIMIT;
+		if ($bSelectLimit) {
+			$this->TotalRecs = $this->SelectRecordCount();
+		} else {
+			if ($this->Recordset = $this->LoadRecordset())
+				$this->TotalRecs = $this->Recordset->RecordCount();
 		}
 
 		// Search options
@@ -1546,7 +1545,7 @@ class ctramites_list extends ctramites {
 		if ($Security->AllowList(CurrentProjectID() . 'seguimiento_tramites')) {
 			$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("seguimiento_tramites", "TblCaption");
 			$body .= str_replace("%c", $this->seguimiento_tramites_Count, $Language->Phrase("DetailCount"));
-			$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_seguimiento_tramiteslist.php?" . EW_TABLE_SHOW_MASTER . "=tramites&fk_codigo=" . urlencode(strval($this->codigo->CurrentValue)) . "") . "\">" . $body . "</a>";
+			$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_seguimiento_tramiteslist.php?" . EW_TABLE_SHOW_MASTER . "=tramites&fk_codigo=" . strval($this->codigo->CurrentValue) . "") . "\">" . $body . "</a>";
 			$links = "";
 			if ($GLOBALS["seguimiento_tramites_grid"]->DetailView && $Security->CanView() && $Security->AllowView(CurrentProjectID() . 'seguimiento_tramites')) {
 				$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=seguimiento_tramites")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
@@ -1754,7 +1753,7 @@ class ctramites_list extends ctramites {
 		if ($sFilter <> "" && $UserAction <> "") {
 			$this->CurrentFilter = $sFilter;
 			$sSql = $this->SQL();
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 			$rs = $conn->Execute($sSql);
 			$conn->raiseErrorFn = '';
 			$rsuser = ($rs) ? $rs->GetRows() : array();
@@ -1806,7 +1805,7 @@ class ctramites_list extends ctramites {
 		// Show all button
 		$item = &$this->SearchOptions->Add("showall");
 		$item->Body = "<a class=\"btn btn-default ewShowAll\" title=\"" . $Language->Phrase("ShowAll") . "\" data-caption=\"" . $Language->Phrase("ShowAll") . "\" href=\"" . $this->PageUrl() . "cmd=reset\">" . $Language->Phrase("ShowAllBtn") . "</a>";
-		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere && $this->SearchWhere <> "0=101");
+		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere);
 
 		// Button group for search
 		$this->SearchOptions->UseDropDownButton = FALSE;
@@ -1944,7 +1943,7 @@ class ctramites_list extends ctramites {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -2298,7 +2297,7 @@ class ctramites_list extends ctramites {
 		}
 		$DeleteRows = TRUE;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE) {
@@ -2338,7 +2337,7 @@ class ctramites_list extends ctramites {
 				for ($i = 0; $i < $FileCount; $i++) {
 					@unlink(ew_UploadPathEx(TRUE, $this->archivo->OldUploadPath) . $OldFiles[$i]);
 				}
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				$DeleteRows = $this->Delete($row); // Delete
 				$conn->raiseErrorFn = '';
 				if ($DeleteRows === FALSE)
@@ -2378,7 +2377,7 @@ class ctramites_list extends ctramites {
 		$sFilter = $this->KeyFilter();
 		$this->CurrentFilter = $sFilter;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE)
@@ -2439,7 +2438,7 @@ class ctramites_list extends ctramites {
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
 			if ($bUpdateRow) {
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				if (count($rsnew) > 0)
 					$EditRow = $this->Update($rsnew, "", $rsold);
 				else
@@ -2557,7 +2556,7 @@ class ctramites_list extends ctramites {
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
 		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
 		if ($bInsertRow) {
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 			$AddRow = $this->Insert($rsnew);
 			$conn->raiseErrorFn = '';
 			if ($AddRow) {
@@ -2684,10 +2683,7 @@ class ctramites_list extends ctramites {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -2829,17 +2825,10 @@ class ctramites_list extends ctramites {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -2895,7 +2884,7 @@ class ctramites_list extends ctramites {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
+		$url = ew_CurrentUrl();
 		$url = preg_replace('/\?cmd=reset(all){0,1}$/i', '', $url); // Remove cmd=reset / cmd=resetall
 		$Breadcrumb->Add("list", $this->TableVar, $url, "", $this->TableVar, TRUE);
 	}
@@ -3038,7 +3027,7 @@ Page_Rendering();
 // Page Rendering event
 $tramites_list->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($tramites->Export == "") { ?>
 <script type="text/javascript">
 
@@ -3153,10 +3142,9 @@ if ($tramites->CurrentAction == "gridadd") {
 } else {
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
-		if ($tramites_list->TotalRecs <= 0)
-			$tramites_list->TotalRecs = $tramites->SelectRecordCount();
+		$tramites_list->TotalRecs = $tramites->SelectRecordCount();
 	} else {
-		if (!$tramites_list->Recordset && ($tramites_list->Recordset = $tramites_list->LoadRecordset()))
+		if ($tramites_list->Recordset = $tramites_list->LoadRecordset())
 			$tramites_list->TotalRecs = $tramites_list->Recordset->RecordCount();
 	}
 	$tramites_list->StartRec = 1;
@@ -3285,9 +3273,6 @@ $tramites_list->ShowMessage();
 	<tr class="ewTableHeader">
 <?php
 
-// Header row
-$tramites->RowType = EW_ROWTYPE_HEADER;
-
 // Render list options
 $tramites_list->RenderListOptions();
 
@@ -3377,12 +3362,12 @@ $tramites_list->ListOptions->Render("header", "right");
 $tramites_list->ListOptions->Render("body", "left", $tramites_list->RowCnt);
 ?>
 	<?php if ($tramites->codigo->Visible) { // codigo ?>
-		<td data-name="codigo">
+		<td>
 <input type="hidden" data-field="x_codigo" name="o<?php echo $tramites_list->RowIndex ?>_codigo" id="o<?php echo $tramites_list->RowIndex ?>_codigo" value="<?php echo ew_HtmlEncode($tramites->codigo->OldValue) ?>">
 </td>
 	<?php } ?>
 	<?php if ($tramites->Titulo->Visible) { // Titulo ?>
-		<td data-name="Titulo">
+		<td>
 <span id="el<?php echo $tramites_list->RowCnt ?>_tramites_Titulo" class="form-group tramites_Titulo">
 <input type="text" data-field="x_Titulo" name="x<?php echo $tramites_list->RowIndex ?>_Titulo" id="x<?php echo $tramites_list->RowIndex ?>_Titulo" size="30" maxlength="100" placeholder="<?php echo ew_HtmlEncode($tramites->Titulo->PlaceHolder) ?>" value="<?php echo $tramites->Titulo->EditValue ?>"<?php echo $tramites->Titulo->EditAttributes() ?>>
 </span>
@@ -3390,12 +3375,12 @@ $tramites_list->ListOptions->Render("body", "left", $tramites_list->RowCnt);
 </td>
 	<?php } ?>
 	<?php if ($tramites->fecha->Visible) { // fecha ?>
-		<td data-name="fecha">
+		<td>
 <input type="hidden" data-field="x_fecha" name="o<?php echo $tramites_list->RowIndex ?>_fecha" id="o<?php echo $tramites_list->RowIndex ?>_fecha" value="<?php echo ew_HtmlEncode($tramites->fecha->OldValue) ?>">
 </td>
 	<?php } ?>
 	<?php if ($tramites->archivo->Visible) { // archivo ?>
-		<td data-name="archivo">
+		<td>
 <span id="el<?php echo $tramites_list->RowCnt ?>_tramites_archivo" class="form-group tramites_archivo">
 <div id="fd_x<?php echo $tramites_list->RowIndex ?>_archivo">
 <span title="<?php echo $tramites->archivo->FldTitle() ? $tramites->archivo->FldTitle() : $Language->Phrase("ChooseFiles") ?>" class="btn btn-default btn-sm fileinput-button ewTooltip<?php if ($tramites->archivo->ReadOnly || $tramites->archivo->Disabled) echo " hide"; ?>">
@@ -3415,7 +3400,7 @@ $tramites_list->ListOptions->Render("body", "left", $tramites_list->RowCnt);
 </td>
 	<?php } ?>
 	<?php if ($tramites->estado->Visible) { // estado ?>
-		<td data-name="estado">
+		<td>
 <span id="el<?php echo $tramites_list->RowCnt ?>_tramites_estado" class="form-group tramites_estado">
 <div id="tp_x<?php echo $tramites_list->RowIndex ?>_estado" class="<?php echo EW_ITEM_TEMPLATE_CLASSNAME ?>"><input type="radio" name="x<?php echo $tramites_list->RowIndex ?>_estado" id="x<?php echo $tramites_list->RowIndex ?>_estado" value="{value}"<?php echo $tramites->estado->EditAttributes() ?>></div>
 <div id="dsl_x<?php echo $tramites_list->RowIndex ?>_estado" data-repeatcolumn="5" class="ewItemList">
@@ -3798,12 +3783,12 @@ ftramiteslist.UpdateOpts(<?php echo $tramites_list->RowIndex ?>);
 $tramites_list->ListOptions->Render("body", "left", $tramites_list->RowIndex);
 ?>
 	<?php if ($tramites->codigo->Visible) { // codigo ?>
-		<td data-name="codigo">
+		<td>
 <input type="hidden" data-field="x_codigo" name="o<?php echo $tramites_list->RowIndex ?>_codigo" id="o<?php echo $tramites_list->RowIndex ?>_codigo" value="<?php echo ew_HtmlEncode($tramites->codigo->OldValue) ?>">
 </td>
 	<?php } ?>
 	<?php if ($tramites->Titulo->Visible) { // Titulo ?>
-		<td data-name="Titulo">
+		<td>
 <span id="el$rowindex$_tramites_Titulo" class="form-group tramites_Titulo">
 <input type="text" data-field="x_Titulo" name="x<?php echo $tramites_list->RowIndex ?>_Titulo" id="x<?php echo $tramites_list->RowIndex ?>_Titulo" size="30" maxlength="100" placeholder="<?php echo ew_HtmlEncode($tramites->Titulo->PlaceHolder) ?>" value="<?php echo $tramites->Titulo->EditValue ?>"<?php echo $tramites->Titulo->EditAttributes() ?>>
 </span>
@@ -3811,12 +3796,12 @@ $tramites_list->ListOptions->Render("body", "left", $tramites_list->RowIndex);
 </td>
 	<?php } ?>
 	<?php if ($tramites->fecha->Visible) { // fecha ?>
-		<td data-name="fecha">
+		<td>
 <input type="hidden" data-field="x_fecha" name="o<?php echo $tramites_list->RowIndex ?>_fecha" id="o<?php echo $tramites_list->RowIndex ?>_fecha" value="<?php echo ew_HtmlEncode($tramites->fecha->OldValue) ?>">
 </td>
 	<?php } ?>
 	<?php if ($tramites->archivo->Visible) { // archivo ?>
-		<td data-name="archivo">
+		<td>
 <span id="el$rowindex$_tramites_archivo" class="form-group tramites_archivo">
 <div id="fd_x<?php echo $tramites_list->RowIndex ?>_archivo">
 <span title="<?php echo $tramites->archivo->FldTitle() ? $tramites->archivo->FldTitle() : $Language->Phrase("ChooseFiles") ?>" class="btn btn-default btn-sm fileinput-button ewTooltip<?php if ($tramites->archivo->ReadOnly || $tramites->archivo->Disabled) echo " hide"; ?>">
@@ -3836,7 +3821,7 @@ $tramites_list->ListOptions->Render("body", "left", $tramites_list->RowIndex);
 </td>
 	<?php } ?>
 	<?php if ($tramites->estado->Visible) { // estado ?>
-		<td data-name="estado">
+		<td>
 <span id="el$rowindex$_tramites_estado" class="form-group tramites_estado">
 <div id="tp_x<?php echo $tramites_list->RowIndex ?>_estado" class="<?php echo EW_ITEM_TEMPLATE_CLASSNAME ?>"><input type="radio" name="x<?php echo $tramites_list->RowIndex ?>_estado" id="x<?php echo $tramites_list->RowIndex ?>_estado" value="{value}"<?php echo $tramites->estado->EditAttributes() ?>></div>
 <div id="dsl_x<?php echo $tramites_list->RowIndex ?>_estado" data-repeatcolumn="5" class="ewItemList">
@@ -3938,7 +3923,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $tramites_list->Page_Terminate();
 ?>

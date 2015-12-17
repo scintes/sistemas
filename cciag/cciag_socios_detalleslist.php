@@ -1,15 +1,16 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_socios_detallesinfo.php" ?>
-<?php include_once "cciag_sociosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_detallesinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_socios_detallesinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_detallesinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -663,14 +664,12 @@ class csocios_detalles_list extends csocios_detalles {
 		}
 
 		// Load record count first
-		if (!$this->IsAddOrEdit()) {
-			$bSelectLimit = EW_SELECT_LIMIT;
-			if ($bSelectLimit) {
-				$this->TotalRecs = $this->SelectRecordCount();
-			} else {
-				if ($this->Recordset = $this->LoadRecordset())
-					$this->TotalRecs = $this->Recordset->RecordCount();
-			}
+		$bSelectLimit = EW_SELECT_LIMIT;
+		if ($bSelectLimit) {
+			$this->TotalRecs = $this->SelectRecordCount();
+		} else {
+			if ($this->Recordset = $this->LoadRecordset())
+				$this->TotalRecs = $this->Recordset->RecordCount();
 		}
 
 		// Search options
@@ -997,7 +996,7 @@ class csocios_detalles_list extends csocios_detalles {
 		if ($sFilter <> "" && $UserAction <> "") {
 			$this->CurrentFilter = $sFilter;
 			$sSql = $this->SQL();
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$conn->raiseErrorFn = 'ew_ErrorFn';
 			$rs = $conn->Execute($sSql);
 			$conn->raiseErrorFn = '';
 			$rsuser = ($rs) ? $rs->GetRows() : array();
@@ -1043,7 +1042,7 @@ class csocios_detalles_list extends csocios_detalles {
 		// Show all button
 		$item = &$this->SearchOptions->Add("showall");
 		$item->Body = "<a class=\"btn btn-default ewShowAll\" title=\"" . $Language->Phrase("ShowAll") . "\" data-caption=\"" . $Language->Phrase("ShowAll") . "\" href=\"" . $this->PageUrl() . "cmd=reset\">" . $Language->Phrase("ShowAllBtn") . "</a>";
-		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere && $this->SearchWhere <> "0=101");
+		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere);
 
 		// Advanced search button
 		$item = &$this->SearchOptions->Add("advancedsearch");
@@ -1153,7 +1152,7 @@ class csocios_detalles_list extends csocios_detalles {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -1443,10 +1442,7 @@ class csocios_detalles_list extends csocios_detalles {
 		if ($bSelectLimit) {
 			$this->TotalRecs = $this->SelectRecordCount();
 		} else {
-			if (!$this->Recordset)
-				$this->Recordset = $this->LoadRecordset();
-			$rs = &$this->Recordset;
-			if ($rs)
+			if ($rs = $this->LoadRecordset())
 				$this->TotalRecs = $rs->RecordCount();
 		}
 		$this->StartRec = 1;
@@ -1499,10 +1495,8 @@ class csocios_detalles_list extends csocios_detalles {
 				$ExportStyle = $Doc->Style;
 				$Doc->SetStyle("v"); // Change to vertical
 				if ($this->Export <> "csv" || EW_EXPORT_MASTER_RECORD_FOR_CSV) {
-					$Doc->Table = &$detalles;
 					$detalles->ExportDocument($Doc, $rsmaster, 1, 1);
 					$Doc->ExportEmptyRow();
-					$Doc->Table = &$this;
 				}
 				$Doc->SetStyle($ExportStyle); // Restore
 				$rsmaster->Close();
@@ -1518,10 +1512,8 @@ class csocios_detalles_list extends csocios_detalles {
 				$ExportStyle = $Doc->Style;
 				$Doc->SetStyle("v"); // Change to vertical
 				if ($this->Export <> "csv" || EW_EXPORT_MASTER_RECORD_FOR_CSV) {
-					$Doc->Table = &$socios;
 					$socios->ExportDocument($Doc, $rsmaster, 1, 1);
 					$Doc->ExportEmptyRow();
-					$Doc->Table = &$this;
 				}
 				$Doc->SetStyle($ExportStyle); // Restore
 				$rsmaster->Close();
@@ -1626,17 +1618,10 @@ class csocios_detalles_list extends csocios_detalles {
 		} else {
 			foreach ($gTmpImages as $tmpimage)
 				$Email->AddEmbeddedImage($tmpimage);
-			$sEmailMessage .= ew_CleanEmailContent($EmailContent); // Send HTML
+			$sEmailMessage .= $EmailContent; // Send HTML
 		}
 		$Email->Content = $sEmailMessage; // Content
 		$EventArgs = array();
-		if ($this->Recordset) {
-			$this->RecCnt = $this->StartRec - 1;
-			$this->Recordset->MoveFirst();
-			if ($this->StartRec > 1)
-				$this->Recordset->Move($this->StartRec - 1);
-			$EventArgs["rs"] = &$this->Recordset;
-		}
 		$bEmailSent = FALSE;
 		if ($this->Email_Sending($Email, $EventArgs))
 			$bEmailSent = $Email->Send();
@@ -1749,7 +1734,7 @@ class csocios_detalles_list extends csocios_detalles {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
+		$url = ew_CurrentUrl();
 		$url = preg_replace('/\?cmd=reset(all){0,1}$/i', '', $url); // Remove cmd=reset / cmd=resetall
 		$Breadcrumb->Add("list", $this->TableVar, $url, "", $this->TableVar, TRUE);
 	}
@@ -1892,7 +1877,7 @@ Page_Rendering();
 // Page Rendering event
 $socios_detalles_list->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if ($socios_detalles->Export == "") { ?>
 <script type="text/javascript">
 
@@ -1937,7 +1922,7 @@ var fsocios_detalleslistsrch = new ew_Form("fsocios_detalleslistsrch");
 <?php if ($socios_detalles->Export == "") { ?>
 <?php $Breadcrumb->Render(); ?>
 <?php } ?>
-<?php if ($socios_detalles_list->TotalRecs > 0 && $socios_detalles_list->ExportOptions->Visible()) { ?>
+<?php if ($socios_detalles_list->TotalRecs > 0 && $socios_detalles->getCurrentMasterTable() == "" && $socios_detalles_list->ExportOptions->Visible()) { ?>
 <?php $socios_detalles_list->ExportOptions->Render("body") ?>
 <?php } ?>
 <?php if ($socios_detalles_list->SearchOptions->Visible()) { ?>
@@ -1956,7 +1941,10 @@ if ($socios_detalles_list->DbMasterFilter <> "" && $socios_detalles->getCurrentM
 	if ($socios_detalles_list->MasterRecordExists) {
 		if ($socios_detalles->getCurrentMasterTable() == $socios_detalles->TableVar) $gsMasterReturnUrl .= "?" . EW_TABLE_SHOW_MASTER . "=";
 ?>
-<?php include_once "cciag_detallesmaster.php" ?>
+<?php if ($socios_detalles_list->ExportOptions->Visible()) { ?>
+<div class="ewListExportOptions"><?php $socios_detalles_list->ExportOptions->Render("body") ?></div>
+<?php } ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_detallesmaster.php" ?>
 <?php
 	}
 }
@@ -1967,7 +1955,10 @@ if ($socios_detalles_list->DbMasterFilter <> "" && $socios_detalles->getCurrentM
 	if ($socios_detalles_list->MasterRecordExists) {
 		if ($socios_detalles->getCurrentMasterTable() == $socios_detalles->TableVar) $gsMasterReturnUrl .= "?" . EW_TABLE_SHOW_MASTER . "=";
 ?>
-<?php include_once "cciag_sociosmaster.php" ?>
+<?php if ($socios_detalles_list->ExportOptions->Visible()) { ?>
+<div class="ewListExportOptions"><?php $socios_detalles_list->ExportOptions->Render("body") ?></div>
+<?php } ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosmaster.php" ?>
 <?php
 	}
 }
@@ -1976,10 +1967,9 @@ if ($socios_detalles_list->DbMasterFilter <> "" && $socios_detalles->getCurrentM
 <?php
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
-		if ($socios_detalles_list->TotalRecs <= 0)
-			$socios_detalles_list->TotalRecs = $socios_detalles->SelectRecordCount();
+		$socios_detalles_list->TotalRecs = $socios_detalles->SelectRecordCount();
 	} else {
-		if (!$socios_detalles_list->Recordset && ($socios_detalles_list->Recordset = $socios_detalles_list->LoadRecordset()))
+		if ($socios_detalles_list->Recordset = $socios_detalles_list->LoadRecordset())
 			$socios_detalles_list->TotalRecs = $socios_detalles_list->Recordset->RecordCount();
 	}
 	$socios_detalles_list->StartRec = 1;
@@ -2077,9 +2067,6 @@ $socios_detalles_list->ShowMessage();
 <thead><!-- Table header -->
 	<tr class="ewTableHeader">
 <?php
-
-// Header row
-$socios_detalles->RowType = EW_ROWTYPE_HEADER;
 
 // Render list options
 $socios_detalles_list->RenderListOptions();
@@ -2270,7 +2257,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $socios_detalles_list->Page_Terminate();
 ?>

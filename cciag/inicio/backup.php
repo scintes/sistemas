@@ -197,9 +197,6 @@ class cbackup_php {
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
 
-		// Global Page Loading event (in userfn*.php)
-		Page_Loading();
-
 		// Check token
 		if (!$this->ValidPost()) {
 			echo $Language->Phrase("InvalidPostRequest");
@@ -216,9 +213,6 @@ class cbackup_php {
 	//
 	function Page_Terminate($url = "") {
 		global $conn, $gsExportFile, $gTmpImages;
-
-		// Global Page Unloaded event (in userfn*.php)
-		Page_Unloaded();
 
 		// Export
 		 // Close connection
@@ -247,7 +241,7 @@ class cbackup_php {
 	function SetupBreadcrumb() {
 		global $Breadcrumb;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
+		$url = ew_CurrentUrl();
 		$Breadcrumb->Add("custom", "backup_php", $url, "", "backup_php", TRUE);
 	}
 }
@@ -263,9 +257,6 @@ $backup_php->Page_Init();
 
 // Page main
 $backup_php->Page_Main();
-
-// Global Page Rendering event (in userfn*.php)
-Page_Rendering();
 ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <?php if (!@$gbSkipHeaderFooter) { ?>
@@ -278,14 +269,14 @@ Page_Rendering();
 <?php
 $datos = $_POST["comentarios"];
 
-//aca los parametros de conexion, si tienes aparte la conexiÃ³n , solo incluyuela
+//aca los parametros de conexion, si tienes aparte la conexión , solo incluyuela
 $usuario="root";
 $passwd="";
 $host="localhost";
 $bd="cciag_sauceviejo";
 $nombre="backup.bck"; //Este es el nombre del archivo a generar
 
-/* Determina si la tabla serÃ¡ vaciada (si existe) cuando  restauremos la tabla. */            
+/* Determina si la tabla será vaciada (si existe) cuando  restauremos la tabla. */            
 $drop = false;
 $tablas = false; //tablas de la bd
 
@@ -342,14 +333,14 @@ foreach ($tablas as $tabla) {
 	$create_table_query = "";
 	$insert_into_query = "";
 
-	/* Se halla el query que serÃ¡ capaz vaciar la tabla. */
+	/* Se halla el query que será capaz vaciar la tabla. */
 	if ($drop) {
 		$drop_table_query = "DROP TABLE IF EXISTS `$tabla`;";
 	} else {
 		$drop_table_query = "# No especificado.";
 	}
 
-	/* Se halla el query que serÃ¡ capaz de recrear la estructura de la tabla. */
+	/* Se halla el query que será capaz de recrear la estructura de la tabla. */
 	$create_table_query = "";
 	$consulta = "SHOW CREATE TABLE $tabla;";
 	$respuesta = mysql_query($consulta, $conexion)
@@ -358,7 +349,7 @@ foreach ($tablas as $tabla) {
 			$create_table_query = $fila[1].";";
 	}
 
-	/* Se halla el query que serÃ¡ capaz de insertar los datos. */
+	/* Se halla el query que será capaz de insertar los datos. */
 	$insert_into_query = "";
 	$consulta = "SELECT * FROM $tabla;";
 	$respuesta = mysql_query($consulta, $conexion)
@@ -376,17 +367,12 @@ foreach ($tablas as $tabla) {
 			unset($values);
 	}
 $dump .= <<<EOT
- 
 # | Vaciado de tabla '$tabla'
 # +------------------------------------->
 $drop_table_query
- 
- 
 # | Estructura de la tabla '$tabla'
 # +------------------------------------->
 $create_table_query
- 
- 
 # | Carga de datos de la tabla '$tabla'
 # +------------------------------------->
 $insert_into_query
@@ -420,7 +406,6 @@ if ( !headers_sent() ) {
 	echo "<b>ATENCION: Probablemente ha ocurrido un error</b><br>\n<pre>\n$dump\n</pre>";
 }
 ?>
-<?php if (EW_DEBUG_ENABLED) echo ew_DebugMsg(); ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $backup_php->Page_Terminate();

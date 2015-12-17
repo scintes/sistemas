@@ -1,5 +1,5 @@
-<?php include_once "cciag_sociosinfo.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
 <?php
 
 // Create page object
@@ -127,10 +127,9 @@ if ($deudas->CurrentAction == "gridadd") {
 } else {
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
-		if ($deudas_grid->TotalRecs <= 0)
-			$deudas_grid->TotalRecs = $deudas->SelectRecordCount();
+		$deudas_grid->TotalRecs = $deudas->SelectRecordCount();
 	} else {
-		if (!$deudas_grid->Recordset && ($deudas_grid->Recordset = $deudas_grid->LoadRecordset()))
+		if ($deudas_grid->Recordset = $deudas_grid->LoadRecordset())
 			$deudas_grid->TotalRecs = $deudas_grid->Recordset->RecordCount();
 	}
 	$deudas_grid->StartRec = 1;
@@ -172,9 +171,6 @@ $deudas_grid->ShowMessage();
 <thead><!-- Table header -->
 	<tr class="ewTableHeader">
 <?php
-
-// Header row
-$deudas->RowType = EW_ROWTYPE_HEADER;
 
 // Render list options
 $deudas_grid->RenderListOptions();
@@ -412,7 +408,7 @@ $deudas_grid->ListOptions->Render("body", "left", $deudas_grid->RowCnt);
 <?php if ($deudas->RowType == EW_ROWTYPE_ADD) { // Add record ?>
 <span id="el<?php echo $deudas_grid->RowCnt ?>_deudas_fecha" class="form-group deudas_fecha">
 <input type="text" data-field="x_fecha" name="x<?php echo $deudas_grid->RowIndex ?>_fecha" id="x<?php echo $deudas_grid->RowIndex ?>_fecha" placeholder="<?php echo ew_HtmlEncode($deudas->fecha->PlaceHolder) ?>" value="<?php echo $deudas->fecha->EditValue ?>"<?php echo $deudas->fecha->EditAttributes() ?>>
-<?php if (!$deudas->fecha->ReadOnly && !$deudas->fecha->Disabled && !isset($deudas->fecha->EditAttrs["readonly"]) && !isset($deudas->fecha->EditAttrs["disabled"])) { ?>
+<?php if (!$deudas->fecha->ReadOnly && !$deudas->fecha->Disabled && @$deudas->fecha->EditAttrs["readonly"] == "" && @$deudas->fecha->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fdeudasgrid", "x<?php echo $deudas_grid->RowIndex ?>_fecha", "%d/%m/%Y");
 </script>
@@ -423,7 +419,7 @@ ew_CreateCalendar("fdeudasgrid", "x<?php echo $deudas_grid->RowIndex ?>_fecha", 
 <?php if ($deudas->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
 <span id="el<?php echo $deudas_grid->RowCnt ?>_deudas_fecha" class="form-group deudas_fecha">
 <input type="text" data-field="x_fecha" name="x<?php echo $deudas_grid->RowIndex ?>_fecha" id="x<?php echo $deudas_grid->RowIndex ?>_fecha" placeholder="<?php echo ew_HtmlEncode($deudas->fecha->PlaceHolder) ?>" value="<?php echo $deudas->fecha->EditValue ?>"<?php echo $deudas->fecha->EditAttributes() ?>>
-<?php if (!$deudas->fecha->ReadOnly && !$deudas->fecha->Disabled && !isset($deudas->fecha->EditAttrs["readonly"]) && !isset($deudas->fecha->EditAttrs["disabled"])) { ?>
+<?php if (!$deudas->fecha->ReadOnly && !$deudas->fecha->Disabled && @$deudas->fecha->EditAttrs["readonly"] == "" && @$deudas->fecha->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fdeudasgrid", "x<?php echo $deudas_grid->RowIndex ?>_fecha", "%d/%m/%Y");
 </script>
@@ -611,7 +607,7 @@ fdeudasgrid.UpdateOpts(<?php echo $deudas_grid->RowIndex ?>);
 $deudas_grid->ListOptions->Render("body", "left", $deudas_grid->RowIndex);
 ?>
 	<?php if ($deudas->id->Visible) { // id ?>
-		<td data-name="id">
+		<td>
 <?php if ($deudas->CurrentAction <> "F") { ?>
 <?php } else { ?>
 <span id="el$rowindex$_deudas_id" class="form-group deudas_id">
@@ -624,7 +620,7 @@ $deudas_grid->ListOptions->Render("body", "left", $deudas_grid->RowIndex);
 </td>
 	<?php } ?>
 	<?php if ($deudas->mes->Visible) { // mes ?>
-		<td data-name="mes">
+		<td>
 <?php if ($deudas->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_deudas_mes" class="form-group deudas_mes">
 <input type="text" data-field="x_mes" name="x<?php echo $deudas_grid->RowIndex ?>_mes" id="x<?php echo $deudas_grid->RowIndex ?>_mes" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($deudas->mes->PlaceHolder) ?>" value="<?php echo $deudas->mes->EditValue ?>"<?php echo $deudas->mes->EditAttributes() ?>>
@@ -640,7 +636,7 @@ $deudas_grid->ListOptions->Render("body", "left", $deudas_grid->RowIndex);
 </td>
 	<?php } ?>
 	<?php if ($deudas->anio->Visible) { // anio ?>
-		<td data-name="anio">
+		<td>
 <?php if ($deudas->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_deudas_anio" class="form-group deudas_anio">
 <input type="text" data-field="x_anio" name="x<?php echo $deudas_grid->RowIndex ?>_anio" id="x<?php echo $deudas_grid->RowIndex ?>_anio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($deudas->anio->PlaceHolder) ?>" value="<?php echo $deudas->anio->EditValue ?>"<?php echo $deudas->anio->EditAttributes() ?>>
@@ -656,11 +652,11 @@ $deudas_grid->ListOptions->Render("body", "left", $deudas_grid->RowIndex);
 </td>
 	<?php } ?>
 	<?php if ($deudas->fecha->Visible) { // fecha ?>
-		<td data-name="fecha">
+		<td>
 <?php if ($deudas->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_deudas_fecha" class="form-group deudas_fecha">
 <input type="text" data-field="x_fecha" name="x<?php echo $deudas_grid->RowIndex ?>_fecha" id="x<?php echo $deudas_grid->RowIndex ?>_fecha" placeholder="<?php echo ew_HtmlEncode($deudas->fecha->PlaceHolder) ?>" value="<?php echo $deudas->fecha->EditValue ?>"<?php echo $deudas->fecha->EditAttributes() ?>>
-<?php if (!$deudas->fecha->ReadOnly && !$deudas->fecha->Disabled && !isset($deudas->fecha->EditAttrs["readonly"]) && !isset($deudas->fecha->EditAttrs["disabled"])) { ?>
+<?php if (!$deudas->fecha->ReadOnly && !$deudas->fecha->Disabled && @$deudas->fecha->EditAttrs["readonly"] == "" && @$deudas->fecha->EditAttrs["disabled"] == "") { ?>
 <script type="text/javascript">
 ew_CreateCalendar("fdeudasgrid", "x<?php echo $deudas_grid->RowIndex ?>_fecha", "%d/%m/%Y");
 </script>
@@ -677,7 +673,7 @@ ew_CreateCalendar("fdeudasgrid", "x<?php echo $deudas_grid->RowIndex ?>_fecha", 
 </td>
 	<?php } ?>
 	<?php if ($deudas->monto->Visible) { // monto ?>
-		<td data-name="monto">
+		<td>
 <?php if ($deudas->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_deudas_monto" class="form-group deudas_monto">
 <input type="text" data-field="x_monto" name="x<?php echo $deudas_grid->RowIndex ?>_monto" id="x<?php echo $deudas_grid->RowIndex ?>_monto" size="30" placeholder="<?php echo ew_HtmlEncode($deudas->monto->PlaceHolder) ?>" value="<?php echo $deudas->monto->EditValue ?>"<?php echo $deudas->monto->EditAttributes() ?>>
@@ -693,7 +689,7 @@ ew_CreateCalendar("fdeudasgrid", "x<?php echo $deudas_grid->RowIndex ?>_fecha", 
 </td>
 	<?php } ?>
 	<?php if ($deudas->id_socio->Visible) { // id_socio ?>
-		<td data-name="id_socio">
+		<td>
 <?php if ($deudas->CurrentAction <> "F") { ?>
 <?php if ($deudas->id_socio->getSessionValue() <> "") { ?>
 <span id="el$rowindex$_deudas_id_socio" class="form-group deudas_id_socio">

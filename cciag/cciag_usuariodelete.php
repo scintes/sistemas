@@ -1,12 +1,13 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
@@ -392,7 +393,7 @@ class cusuario_delete extends cusuario {
 		$sSql = $this->SelectSQL();
 
 		// Load recordset
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 		$conn->raiseErrorFn = '';
 
@@ -568,7 +569,7 @@ class cusuario_delete extends cusuario {
 		}
 		$DeleteRows = TRUE;
 		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+		$conn->raiseErrorFn = 'ew_ErrorFn';
 		$rs = $conn->Execute($sSql);
 		$conn->raiseErrorFn = '';
 		if ($rs === FALSE) {
@@ -605,7 +606,7 @@ class cusuario_delete extends cusuario {
 				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
 				$sThisKey .= $row['id'];
 				$this->LoadDbValues($row);
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+				$conn->raiseErrorFn = 'ew_ErrorFn';
 				$DeleteRows = $this->Delete($row); // Delete
 				$conn->raiseErrorFn = '';
 				if ($DeleteRows === FALSE)
@@ -659,10 +660,9 @@ class cusuario_delete extends cusuario {
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_usuariolist.php", "", $this->TableVar, TRUE);
 		$PageId = "delete";
-		$Breadcrumb->Add("delete", $PageId, $url);
+		$Breadcrumb->Add("delete", $PageId, ew_CurrentUrl());
 	}
 
 	// Write Audit Trail start/end for grid update
@@ -785,7 +785,7 @@ Page_Rendering();
 // Page Rendering event
 $usuario_delete->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
@@ -899,7 +899,7 @@ while (!$usuario_delete->Recordset->EOF) {
 	<tr<?php echo $usuario->RowAttributes() ?>>
 <?php if ($usuario->id->Visible) { // id ?>
 		<td<?php echo $usuario->id->CellAttributes() ?>>
-<span id="el<?php echo $usuario_delete->RowCnt ?>_usuario_id" class="usuario_id">
+<span id="el<?php echo $usuario_delete->RowCnt ?>_usuario_id" class="form-group usuario_id">
 <span<?php echo $usuario->id->ViewAttributes() ?>>
 <?php echo $usuario->id->ListViewValue() ?></span>
 </span>
@@ -907,7 +907,7 @@ while (!$usuario_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($usuario->usuario->Visible) { // usuario ?>
 		<td<?php echo $usuario->usuario->CellAttributes() ?>>
-<span id="el<?php echo $usuario_delete->RowCnt ?>_usuario_usuario" class="usuario_usuario">
+<span id="el<?php echo $usuario_delete->RowCnt ?>_usuario_usuario" class="form-group usuario_usuario">
 <span<?php echo $usuario->usuario->ViewAttributes() ?>>
 <?php echo $usuario->usuario->ListViewValue() ?></span>
 </span>
@@ -915,7 +915,7 @@ while (!$usuario_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($usuario->contrasenia->Visible) { // contrasenia ?>
 		<td<?php echo $usuario->contrasenia->CellAttributes() ?>>
-<span id="el<?php echo $usuario_delete->RowCnt ?>_usuario_contrasenia" class="usuario_contrasenia">
+<span id="el<?php echo $usuario_delete->RowCnt ?>_usuario_contrasenia" class="form-group usuario_contrasenia">
 <span<?php echo $usuario->contrasenia->ViewAttributes() ?>>
 <?php echo $usuario->contrasenia->ListViewValue() ?></span>
 </span>
@@ -923,7 +923,7 @@ while (!$usuario_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($usuario->nombre->Visible) { // nombre ?>
 		<td<?php echo $usuario->nombre->CellAttributes() ?>>
-<span id="el<?php echo $usuario_delete->RowCnt ?>_usuario_nombre" class="usuario_nombre">
+<span id="el<?php echo $usuario_delete->RowCnt ?>_usuario_nombre" class="form-group usuario_nombre">
 <span<?php echo $usuario->nombre->ViewAttributes() ?>>
 <?php echo $usuario->nombre->ListViewValue() ?></span>
 </span>
@@ -931,7 +931,7 @@ while (!$usuario_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($usuario->_email->Visible) { // email ?>
 		<td<?php echo $usuario->_email->CellAttributes() ?>>
-<span id="el<?php echo $usuario_delete->RowCnt ?>_usuario__email" class="usuario__email">
+<span id="el<?php echo $usuario_delete->RowCnt ?>_usuario__email" class="form-group usuario__email">
 <span<?php echo $usuario->_email->ViewAttributes() ?>>
 <?php echo $usuario->_email->ListViewValue() ?></span>
 </span>
@@ -939,7 +939,7 @@ while (!$usuario_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($usuario->cel->Visible) { // cel ?>
 		<td<?php echo $usuario->cel->CellAttributes() ?>>
-<span id="el<?php echo $usuario_delete->RowCnt ?>_usuario_cel" class="usuario_cel">
+<span id="el<?php echo $usuario_delete->RowCnt ?>_usuario_cel" class="form-group usuario_cel">
 <span<?php echo $usuario->cel->ViewAttributes() ?>>
 <?php echo $usuario->cel->ListViewValue() ?></span>
 </span>
@@ -947,7 +947,7 @@ while (!$usuario_delete->Recordset->EOF) {
 <?php } ?>
 <?php if ($usuario->activo->Visible) { // activo ?>
 		<td<?php echo $usuario->activo->CellAttributes() ?>>
-<span id="el<?php echo $usuario_delete->RowCnt ?>_usuario_activo" class="usuario_activo">
+<span id="el<?php echo $usuario_delete->RowCnt ?>_usuario_activo" class="form-group usuario_activo">
 <span<?php echo $usuario->activo->ViewAttributes() ?>>
 <?php echo $usuario->activo->ListViewValue() ?></span>
 </span>
@@ -981,7 +981,7 @@ if (EW_DEBUG_ENABLED)
 // document.write("page loaded");
 
 </script>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
 $usuario_delete->Page_Terminate();
 ?>

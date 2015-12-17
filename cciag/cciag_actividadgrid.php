@@ -1,4 +1,4 @@
-<?php include_once "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
 <?php
 
 // Create page object
@@ -113,10 +113,9 @@ if ($actividad->CurrentAction == "gridadd") {
 } else {
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
-		if ($actividad_grid->TotalRecs <= 0)
-			$actividad_grid->TotalRecs = $actividad->SelectRecordCount();
+		$actividad_grid->TotalRecs = $actividad->SelectRecordCount();
 	} else {
-		if (!$actividad_grid->Recordset && ($actividad_grid->Recordset = $actividad_grid->LoadRecordset()))
+		if ($actividad_grid->Recordset = $actividad_grid->LoadRecordset())
 			$actividad_grid->TotalRecs = $actividad_grid->Recordset->RecordCount();
 	}
 	$actividad_grid->StartRec = 1;
@@ -158,9 +157,6 @@ $actividad_grid->ShowMessage();
 <thead><!-- Table header -->
 	<tr class="ewTableHeader">
 <?php
-
-// Header row
-$actividad->RowType = EW_ROWTYPE_HEADER;
 
 // Render list options
 $actividad_grid->RenderListOptions();
@@ -591,7 +587,7 @@ factividadgrid.UpdateOpts(<?php echo $actividad_grid->RowIndex ?>);
 $actividad_grid->ListOptions->Render("body", "left", $actividad_grid->RowIndex);
 ?>
 	<?php if ($actividad->id->Visible) { // id ?>
-		<td data-name="id">
+		<td>
 <?php if ($actividad->CurrentAction <> "F") { ?>
 <?php } else { ?>
 <span id="el$rowindex$_actividad_id" class="form-group actividad_id">
@@ -604,7 +600,7 @@ $actividad_grid->ListOptions->Render("body", "left", $actividad_grid->RowIndex);
 </td>
 	<?php } ?>
 	<?php if ($actividad->id_rubro->Visible) { // id_rubro ?>
-		<td data-name="id_rubro">
+		<td>
 <?php if ($actividad->CurrentAction <> "F") { ?>
 <?php if ($actividad->id_rubro->getSessionValue() <> "") { ?>
 <span id="el$rowindex$_actividad_id_rubro" class="form-group actividad_id_rubro">
@@ -660,7 +656,7 @@ if (@$emptywrk) $actividad->id_rubro->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($actividad->actividad->Visible) { // actividad ?>
-		<td data-name="actividad">
+		<td>
 <?php if ($actividad->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_actividad_actividad" class="form-group actividad_actividad">
 <input type="text" data-field="x_actividad" name="x<?php echo $actividad_grid->RowIndex ?>_actividad" id="x<?php echo $actividad_grid->RowIndex ?>_actividad" size="30" maxlength="100" placeholder="<?php echo ew_HtmlEncode($actividad->actividad->PlaceHolder) ?>" value="<?php echo $actividad->actividad->EditValue ?>"<?php echo $actividad->actividad->EditAttributes() ?>>
@@ -676,7 +672,7 @@ if (@$emptywrk) $actividad->id_rubro->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($actividad->descripcion->Visible) { // descripcion ?>
-		<td data-name="descripcion">
+		<td>
 <?php if ($actividad->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_actividad_descripcion" class="form-group actividad_descripcion">
 <textarea data-field="x_descripcion" name="x<?php echo $actividad_grid->RowIndex ?>_descripcion" id="x<?php echo $actividad_grid->RowIndex ?>_descripcion" cols="35" rows="4" placeholder="<?php echo ew_HtmlEncode($actividad->descripcion->PlaceHolder) ?>"<?php echo $actividad->descripcion->EditAttributes() ?>><?php echo $actividad->descripcion->EditValue ?></textarea>
@@ -692,7 +688,7 @@ if (@$emptywrk) $actividad->id_rubro->OldValue = "";
 </td>
 	<?php } ?>
 	<?php if ($actividad->activa->Visible) { // activa ?>
-		<td data-name="activa">
+		<td>
 <?php if ($actividad->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_actividad_activa" class="form-group actividad_activa">
 <div id="tp_x<?php echo $actividad_grid->RowIndex ?>_activa" class="<?php echo EW_ITEM_TEMPLATE_CLASSNAME ?>"><input type="radio" name="x<?php echo $actividad_grid->RowIndex ?>_activa" id="x<?php echo $actividad_grid->RowIndex ?>_activa" value="{value}"<?php echo $actividad->activa->EditAttributes() ?>></div>
