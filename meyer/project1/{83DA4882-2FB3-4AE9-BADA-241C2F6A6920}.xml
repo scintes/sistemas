@@ -1,0 +1,9 @@
+﻿<?xml version="1.0"?>
+<configuration date="2014/10/25" author="e.World Technology Ltd.">
+<project id="{83DA4882-2FB3-4AE9-BADA-241C2F6A6920}" file="C:\wamp\www\meyer\project1\project1.pmp" name="project1" product="PHPMaker" version="10.0" datetime="2014/10/25 09:30:11" languagefolder="phplang" userlevel="0,&quot;Default&quot;,0">
+<table id="trabajos" name="trabajos" caption="Trabajos" userlevel="0,&quot;Default&quot;,0" priv="1"/>
+<table id="usuario" name="usuario" caption="Usuario" userlevel="0,&quot;Default&quot;,0" priv="1"/>
+<table id="v_trabajos_a_entregar" name="v_trabajos_a_entregar" caption="Trabajos a Entregar" userlevel="0,&quot;Default&quot;,0" priv="1"/>
+<table id="estados" name="estados" caption="Estodos" userlevel="0,&quot;Default&quot;,0" priv="1"/>
+<table id="tipo_clientes" name="tipo_clientes" caption="Tipo Clientes" userlevel="0,&quot;Default&quot;,0" priv="1"/>
+</project></configuration>

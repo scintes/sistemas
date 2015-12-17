@@ -1,0 +1,5 @@
+date/time	script	user	action	table	field	key value	old value	new value
+2014/10/08 14:02:41	/meyer/logout.php	Administrator	Finalizar	127.0.0.1				
+2014/10/08 14:02:52	/meyer/login.php	admin	Ingresar	127.0.0.1				
+2014/10/08 20:57:40	/meyer/logout.php	Administrator	Finalizar	127.0.0.1				
+2014/10/08 20:57:53	/meyer/login.php	a	Ingresar	127.0.0.1				

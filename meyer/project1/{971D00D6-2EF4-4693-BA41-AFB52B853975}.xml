@@ -1,0 +1,7 @@
+﻿<?xml version="1.0"?>
+<configuration date="2014/10/04" author="e.World Technology Ltd.">
+<project id="{971D00D6-2EF4-4693-BA41-AFB52B853975}" file="C:\Documents and Settings\Administrador\Mis documentos\PHPMaker\Projects\meyer\project1.pmp" name="project1" product="PHPMaker" version="10.0" datetime="2014/10/04 13:10:30" languagefolder="phplang" userlevel="">
+<table id="trabajos" name="trabajos" caption="trabajos" userlevel="" priv="1"/>
+<table id="usuario" name="usuario" caption="usuario" userlevel="" priv="1"/>
+<table id="v_trabajos_a_entregar" name="v_trabajos_a_entregar" caption="trabajos a entregar" userlevel="" priv="1"/>
+</project></configuration>
