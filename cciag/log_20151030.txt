@@ -1,0 +1,5 @@
+date/time	script	user	action	table	field	key value	old value	new value
+2015/10/30 12:31:03	/cciag/cciag_rubrosadd.php	Administrator	A	rubros	rubro	4		Sin fines de lucro
+2015/10/30 12:31:03	/cciag/cciag_rubrosadd.php	Administrator	A	rubros	Descripcion	4		[MEMO]
+2015/10/30 12:31:03	/cciag/cciag_rubrosadd.php	Administrator	A	rubros	activa	4		S
+2015/10/30 12:31:03	/cciag/cciag_rubrosadd.php	Administrator	A	rubros	id	4		4

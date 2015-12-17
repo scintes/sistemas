@@ -1,0 +1,9 @@
+date/time	script	user	action	table	field	key value	old value	new value
+2015/10/19 09:29:07	/cciag/cciag_deudasadd.php	Administrator	A	deudas	mes	4		12
+2015/10/19 09:29:07	/cciag/cciag_deudasadd.php	Administrator	A	deudas	anio	4		2015
+2015/10/19 09:29:07	/cciag/cciag_deudasadd.php	Administrator	A	deudas	fecha	4		2015-10-10
+2015/10/19 09:29:07	/cciag/cciag_deudasadd.php	Administrator	A	deudas	monto	4		123
+2015/10/19 09:29:07	/cciag/cciag_deudasadd.php	Administrator	A	deudas	id_usuario	4		1
+2015/10/19 09:29:07	/cciag/cciag_deudasadd.php	Administrator	A	deudas	id_socio	4		110
+2015/10/19 09:29:07	/cciag/cciag_deudasadd.php	Administrator	A	deudas	id	4		4
+2015/10/19 11:46:09	/cciag/cciag_sociosedit.php	Administrator	U	socios	id_actividad	2	20	1

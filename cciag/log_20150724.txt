@@ -1,0 +1,31 @@
+date/time	script	user	action	table	field	key value	old value	new value
+2015/07/24 11:12:03	/cciag/cciagsociosadd.php	-1	A	socios	id_actividad	10029		3
+2015/07/24 11:12:03	/cciag/cciagsociosadd.php	-1	A	socios	propietario	10029		dddddddddd
+2015/07/24 11:12:03	/cciag/cciagsociosadd.php	-1	A	socios	comercio	10029		
+2015/07/24 11:12:03	/cciag/cciagsociosadd.php	-1	A	socios	direccion_comercio	10029		
+2015/07/24 11:12:03	/cciag/cciagsociosadd.php	-1	A	socios	activo	10029		
+2015/07/24 11:12:03	/cciag/cciagsociosadd.php	-1	A	socios	mail	10029		
+2015/07/24 11:12:03	/cciag/cciagsociosadd.php	-1	A	socios	tel	10029		
+2015/07/24 11:12:03	/cciag/cciagsociosadd.php	-1	A	socios	cel	10029		
+2015/07/24 11:12:03	/cciag/cciagsociosadd.php	-1	A	socios	cuit_cuil	10029		
+2015/07/24 11:12:03	/cciag/cciagsociosadd.php	-1	A	socios	socio_nro	10029		10029
+2015/07/24 11:21:34	/cciag/cciag_sociosadd.php	-1	A	socios	id_actividad	10030		2
+2015/07/24 11:21:34	/cciag/cciag_sociosadd.php	-1	A	socios	propietario	10030		eeeeeeeee
+2015/07/24 11:21:34	/cciag/cciag_sociosadd.php	-1	A	socios	comercio	10030		eeeeeee
+2015/07/24 11:21:34	/cciag/cciag_sociosadd.php	-1	A	socios	direccion_comercio	10030		
+2015/07/24 11:21:34	/cciag/cciag_sociosadd.php	-1	A	socios	activo	10030		S
+2015/07/24 11:21:34	/cciag/cciag_sociosadd.php	-1	A	socios	mail	10030		
+2015/07/24 11:21:34	/cciag/cciag_sociosadd.php	-1	A	socios	tel	10030		
+2015/07/24 11:21:34	/cciag/cciag_sociosadd.php	-1	A	socios	cel	10030		
+2015/07/24 11:21:34	/cciag/cciag_sociosadd.php	-1	A	socios	cuit_cuil	10030		
+2015/07/24 11:21:34	/cciag/cciag_sociosadd.php	-1	A	socios	socio_nro	10030		10030
+2015/07/24 11:27:03	/cciag/cciag_sociosadd.php	-1	A	socios	id_actividad	10031		4
+2015/07/24 11:27:03	/cciag/cciag_sociosadd.php	-1	A	socios	propietario	10031		ddddddddddd
+2015/07/24 11:27:03	/cciag/cciag_sociosadd.php	-1	A	socios	comercio	10031		
+2015/07/24 11:27:03	/cciag/cciag_sociosadd.php	-1	A	socios	direccion_comercio	10031		
+2015/07/24 11:27:03	/cciag/cciag_sociosadd.php	-1	A	socios	activo	10031		S
+2015/07/24 11:27:03	/cciag/cciag_sociosadd.php	-1	A	socios	mail	10031		
+2015/07/24 11:27:03	/cciag/cciag_sociosadd.php	-1	A	socios	tel	10031		
+2015/07/24 11:27:03	/cciag/cciag_sociosadd.php	-1	A	socios	cel	10031		
+2015/07/24 11:27:03	/cciag/cciag_sociosadd.php	-1	A	socios	cuit_cuil	10031		
+2015/07/24 11:27:03	/cciag/cciag_sociosadd.php	-1	A	socios	socio_nro	10031		10031

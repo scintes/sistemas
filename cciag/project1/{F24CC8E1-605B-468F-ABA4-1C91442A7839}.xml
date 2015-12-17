@@ -1,0 +1,8 @@
+﻿<?xml version="1.0"?>
+<configuration date="2014/10/03" author="e.World Technology Ltd.">
+<project id="{F24CC8E1-605B-468F-ABA4-1C91442A7839}" file="C:\Documents and Settings\Administrador\Mis documentos\PHPMaker\project1.pmp" name="project1" product="PHPMaker" version="10.0" datetime="2014/10/03 20:08:13" languagefolder="phplang" userlevel="0,&quot;Default&quot;,0">
+<table id="rubros" name="rubros" caption="Rubros" userlevel="0,&quot;Default&quot;,0" priv="1"/>
+<table id="socios" name="socios" caption="Socios" userlevel="0,&quot;Default&quot;,0" priv="1"/>
+<table id="socios_activos" name="socios_activos" caption="socios activos" userlevel="0,&quot;Default&quot;,0" priv="1"/>
+<table id="usuario" name="usuario" caption="Usuario" userlevel="0,&quot;Default&quot;,0" priv="1"/>
+</project></configuration>
