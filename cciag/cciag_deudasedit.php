@@ -882,6 +882,27 @@ class cdeudas_edit extends cdeudas {
 			// id_socio
 			$this->id_socio->SetDbValueDef($rsnew, $this->id_socio->CurrentValue, NULL, $this->id_socio->ReadOnly);
 
+			// Check referential integrity for master table 'socios'
+			$bValidMasterRecord = TRUE;
+			$sMasterFilter = $this->SqlMasterFilter_socios();
+			$KeyValue = isset($rsnew['id_socio']) ? $rsnew['id_socio'] : $rsold['id_socio'];
+			if (strval($KeyValue) <> "") {
+				$sMasterFilter = str_replace("@socio_nro@", ew_AdjustSql($KeyValue), $sMasterFilter);
+			} else {
+				$bValidMasterRecord = FALSE;
+			}
+			if ($bValidMasterRecord) {
+				$rsmaster = $GLOBALS["socios"]->LoadRs($sMasterFilter);
+				$bValidMasterRecord = ($rsmaster && !$rsmaster->EOF);
+				$rsmaster->Close();
+			}
+			if (!$bValidMasterRecord) {
+				$sRelatedRecordMsg = str_replace("%t", "socios", $Language->Phrase("RelatedRecordRequired"));
+				$this->setFailureMessage($sRelatedRecordMsg);
+				$rs->Close();
+				return FALSE;
+			}
+
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
 			if ($bUpdateRow) {

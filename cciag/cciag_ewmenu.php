@@ -6,13 +6,16 @@
 $RootMenu->IsRoot = TRUE;
 $RootMenu->AddMenuItem(27, "mi_inicio_php", $Language->MenuPhrase("27", "MenuText"), "inicio/inicio.php", -1, "", TRUE, FALSE);
 $RootMenu->AddMenuItem(13, "mci_Socios", $Language->MenuPhrase("13", "MenuText"), "", -1, "", TRUE, FALSE, TRUE);
-$RootMenu->AddMenuItem(6, "mi_socios", $Language->MenuPhrase("6", "MenuText"), "cciag_socioslist.php", 13, "", IsLoggedIn(), FALSE);
+$RootMenu->AddMenuItem(6, "mi_socios", $Language->MenuPhrase("6", "MenuText"), "cciag_socioslist.php?cmd=resetall", 13, "", IsLoggedIn(), FALSE);
 $RootMenu->AddMenuItem(26, "mi_socios_detalles", $Language->MenuPhrase("26", "MenuText"), "cciag_socios_detalleslist.php?cmd=resetall", 13, "", IsLoggedIn(), FALSE);
-$RootMenu->AddMenuItem(16, "mi_cantidad_socios_por_actividad", $Language->MenuPhrase("16", "MenuText"), "cciag_cantidad_socios_por_actividadreport.php", 13, "", IsLoggedIn(), FALSE);
+$RootMenu->AddMenuItem(97, "mci_Listados", $Language->MenuPhrase("97", "MenuText"), "", 13, "", TRUE, FALSE, TRUE);
+$RootMenu->AddMenuItem(24, "mi_socios_activos", $Language->MenuPhrase("24", "MenuText"), "cciag_socios_activoslist.php", 97, "", IsLoggedIn(), FALSE);
+$RootMenu->AddMenuItem(99, "mi_r_listado_socios_por_actividad_y_rubro", $Language->MenuPhrase("99", "MenuText"), "cciag_r_listado_socios_por_actividad_y_rubroreport.php", 97, "", IsLoggedIn(), FALSE);
 $RootMenu->AddMenuItem(60, "mci_Tramites", $Language->MenuPhrase("60", "MenuText"), "", -1, "", TRUE, FALSE, TRUE);
 $RootMenu->AddMenuItem(62, "mi_tramites", $Language->MenuPhrase("62", "MenuText"), "cciag_tramiteslist.php", 60, "", IsLoggedIn(), FALSE);
 $RootMenu->AddMenuItem(61, "mi_seguimiento_tramites", $Language->MenuPhrase("61", "MenuText"), "cciag_seguimiento_tramiteslist.php?cmd=resetall", 60, "", IsLoggedIn(), FALSE);
 $RootMenu->AddMenuItem(12, "mci_Contables", $Language->MenuPhrase("12", "MenuText"), "", -1, "", TRUE, FALSE, TRUE);
+$RootMenu->AddMenuItem(100, "mi_v_total_estado_cuenta_x_anio_mes", $Language->MenuPhrase("100", "MenuText"), "cciag_v_total_estado_cuenta_x_anio_meslist.php", 12, "", IsLoggedIn(), FALSE);
 $RootMenu->AddMenuItem(2, "mi_deudas", $Language->MenuPhrase("2", "MenuText"), "cciag_deudaslist.php?cmd=resetall", 12, "", IsLoggedIn(), FALSE);
 $RootMenu->AddMenuItem(4, "mi_pagos", $Language->MenuPhrase("4", "MenuText"), "cciag_pagoslist.php?cmd=resetall", 12, "", IsLoggedIn(), FALSE);
 $RootMenu->AddMenuItem(7, "mi_socios_cuotas", $Language->MenuPhrase("7", "MenuText"), "cciag_socios_cuotaslist.php?cmd=resetall", 12, "", IsLoggedIn(), FALSE);

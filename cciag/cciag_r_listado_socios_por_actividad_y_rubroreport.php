@@ -1,22 +1,31 @@
 <?php
 if (session_id() == "") session_start(); // Initialize Session data
 ob_start(); // Turn on output buffering
+$EW_RELATIVE_PATH = "";
 ?>
-<?php include_once "cciag_ewcfg11.php" ?>
-<?php include_once "cciag_ewmysql11.php" ?>
-<?php include_once "cciag_phpfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
 <?php
 
 // Global variable for table object
-$cantidad_socios_por_actividad = NULL;
+$r_listado_socios_por_actividad_y_rubro = NULL;
 
 //
-// Table class for cantidad_socios_por_actividad
+// Table class for r_listado_socios_por_actividad_y_rubro
 //
-class ccantidad_socios_por_actividad extends cTableBase {
-	var $socio_nro;
-	var $actividad;
+class cr_listado_socios_por_actividad_y_rubro extends cTableBase {
+	var $id_rubro;
+	var $id_actividad;
 	var $rubro;
+	var $actividad;
+	var $cuit_cuil;
+	var $propietario;
+	var $comercio;
+	var $direccion_comercio;
+	var $mail;
+	var $tel;
+	var $cel;
 
 	//
 	// Table class constructor
@@ -26,36 +35,67 @@ class ccantidad_socios_por_actividad extends cTableBase {
 
 		// Language object
 		if (!isset($Language)) $Language = new cLanguage();
-		$this->TableVar = 'cantidad_socios_por_actividad';
-		$this->TableName = 'cantidad_socios_por_actividad';
+		$this->TableVar = 'r_listado_socios_por_actividad_y_rubro';
+		$this->TableName = 'r_listado_socios_por_actividad_y_rubro';
 		$this->TableType = 'REPORT';
 		$this->ExportAll = TRUE;
 		$this->ExportPageBreakCount = 0; // Page break per every n record (PDF only)
 		$this->ExportPageOrientation = "portrait"; // Page orientation (PDF only)
 		$this->ExportPageSize = "a4"; // Page size (PDF only)
-		$this->ExportExcelPageOrientation = ""; // Page orientation (PHPExcel only)
-		$this->ExportExcelPageSize = ""; // Page size (PHPExcel only)
-		$this->UserIDAllowSecurity = 104; // User ID Allow
+		$this->UserIDAllowSecurity = 0; // User ID Allow
 
-		// socio_nro
-		$this->socio_nro = new cField('cantidad_socios_por_actividad', 'cantidad_socios_por_actividad', 'x_socio_nro', 'socio_nro', '`socio_nro`', '`socio_nro`', 20, -1, FALSE, '`socio_nro`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
-		$this->socio_nro->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
-		$this->fields['socio_nro'] = &$this->socio_nro;
+		// id_rubro
+		$this->id_rubro = new cField('r_listado_socios_por_actividad_y_rubro', 'r_listado_socios_por_actividad_y_rubro', 'x_id_rubro', 'id_rubro', '`id_rubro`', '`id_rubro`', 3, -1, FALSE, '`id_rubro`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->id_rubro->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['id_rubro'] = &$this->id_rubro;
 
-		// actividad
-		$this->actividad = new cField('cantidad_socios_por_actividad', 'cantidad_socios_por_actividad', 'x_actividad', 'actividad', '`actividad`', '`actividad`', 200, -1, FALSE, '`actividad`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
-		$this->fields['actividad'] = &$this->actividad;
+		// id_actividad
+		$this->id_actividad = new cField('r_listado_socios_por_actividad_y_rubro', 'r_listado_socios_por_actividad_y_rubro', 'x_id_actividad', 'id_actividad', '`id_actividad`', '`id_actividad`', 3, -1, FALSE, '`id_actividad`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->id_actividad->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['id_actividad'] = &$this->id_actividad;
 
 		// rubro
-		$this->rubro = new cField('cantidad_socios_por_actividad', 'cantidad_socios_por_actividad', 'x_rubro', 'rubro', '`rubro`', '`rubro`', 200, -1, FALSE, '`rubro`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->rubro = new cField('r_listado_socios_por_actividad_y_rubro', 'r_listado_socios_por_actividad_y_rubro', 'x_rubro', 'rubro', '`rubro`', '`rubro`', 200, -1, FALSE, '`rubro`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
 		$this->fields['rubro'] = &$this->rubro;
+
+		// actividad
+		$this->actividad = new cField('r_listado_socios_por_actividad_y_rubro', 'r_listado_socios_por_actividad_y_rubro', 'x_actividad', 'actividad', '`actividad`', '`actividad`', 200, -1, FALSE, '`actividad`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->fields['actividad'] = &$this->actividad;
+
+		// cuit_cuil
+		$this->cuit_cuil = new cField('r_listado_socios_por_actividad_y_rubro', 'r_listado_socios_por_actividad_y_rubro', 'x_cuit_cuil', 'cuit_cuil', '`cuit_cuil`', '`cuit_cuil`', 200, -1, FALSE, '`cuit_cuil`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->fields['cuit_cuil'] = &$this->cuit_cuil;
+
+		// propietario
+		$this->propietario = new cField('r_listado_socios_por_actividad_y_rubro', 'r_listado_socios_por_actividad_y_rubro', 'x_propietario', 'propietario', '`propietario`', '`propietario`', 200, -1, FALSE, '`propietario`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->fields['propietario'] = &$this->propietario;
+
+		// comercio
+		$this->comercio = new cField('r_listado_socios_por_actividad_y_rubro', 'r_listado_socios_por_actividad_y_rubro', 'x_comercio', 'comercio', '`comercio`', '`comercio`', 200, -1, FALSE, '`comercio`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->fields['comercio'] = &$this->comercio;
+
+		// direccion_comercio
+		$this->direccion_comercio = new cField('r_listado_socios_por_actividad_y_rubro', 'r_listado_socios_por_actividad_y_rubro', 'x_direccion_comercio', 'direccion_comercio', '`direccion_comercio`', '`direccion_comercio`', 200, -1, FALSE, '`direccion_comercio`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->fields['direccion_comercio'] = &$this->direccion_comercio;
+
+		// mail
+		$this->mail = new cField('r_listado_socios_por_actividad_y_rubro', 'r_listado_socios_por_actividad_y_rubro', 'x_mail', 'mail', '`mail`', '`mail`', 200, -1, FALSE, '`mail`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->fields['mail'] = &$this->mail;
+
+		// tel
+		$this->tel = new cField('r_listado_socios_por_actividad_y_rubro', 'r_listado_socios_por_actividad_y_rubro', 'x_tel', 'tel', '`tel`', '`tel`', 200, -1, FALSE, '`tel`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->fields['tel'] = &$this->tel;
+
+		// cel
+		$this->cel = new cField('r_listado_socios_por_actividad_y_rubro', 'r_listado_socios_por_actividad_y_rubro', 'x_cel', 'cel', '`cel`', '`cel`', 200, -1, FALSE, '`cel`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->fields['cel'] = &$this->cel;
 	}
 
 	// Report group level SQL
 	var $_SqlGroupSelect = "";
 
 	function getSqlGroupSelect() { // Select
-		return ($this->_SqlGroupSelect <> "") ? $this->_SqlGroupSelect : "SELECT DISTINCT `rubro`,`actividad` FROM `cant_socios_actividad`";
+		return ($this->_SqlGroupSelect <> "") ? $this->_SqlGroupSelect : "SELECT DISTINCT `rubro`,`actividad` FROM `v_db_rubro_actividad_socio`";
 	}
 
 	function SqlGroupSelect() { // For backward compatibility
@@ -122,7 +162,7 @@ class ccantidad_socios_por_actividad extends cTableBase {
 	var $_SqlDetailSelect = "";
 
 	function getSqlDetailSelect() { // Select
-		return ($this->_SqlDetailSelect <> "") ? $this->_SqlDetailSelect : "SELECT * FROM `cant_socios_actividad`";
+		return ($this->_SqlDetailSelect <> "") ? $this->_SqlDetailSelect : "SELECT * FROM `v_db_rubro_actividad_socio`";
 	}
 
 	function SqlDetailSelect() { // For backward compatibility
@@ -174,7 +214,7 @@ class ccantidad_socios_por_actividad extends cTableBase {
 	var $_SqlDetailOrderBy = "";
 
 	function getSqlDetailOrderBy() { // Order By
-		return ($this->_SqlDetailOrderBy <> "") ? $this->_SqlDetailOrderBy : "";
+		return ($this->_SqlDetailOrderBy <> "") ? $this->_SqlDetailOrderBy : "`comercio` ASC,`propietario` ASC,`direccion_comercio` ASC";
 	}
 
 	function SqlDetailOrderBy() { // For backward compatibility
@@ -270,7 +310,7 @@ class ccantidad_socios_por_actividad extends cTableBase {
 		if (@$_SESSION[$name] <> "") {
 			return $_SESSION[$name];
 		} else {
-			return "cciag_cantidad_socios_por_actividadreport.php";
+			return "cciag_r_listado_socios_por_actividad_y_rubroreport.php";
 		}
 	}
 
@@ -280,7 +320,7 @@ class ccantidad_socios_por_actividad extends cTableBase {
 
 	// List URL
 	function GetListUrl() {
-		return "cciag_cantidad_socios_por_actividadreport.php";
+		return "cciag_r_listado_socios_por_actividad_y_rubroreport.php";
 	}
 
 	// View URL
@@ -413,17 +453,17 @@ class ccantidad_socios_por_actividad extends cTableBase {
 	}
 }
 ?>
-<?php include_once "cciag_usuarioinfo.php" ?>
-<?php include_once "cciag_userfn11.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
 //
 // Page class
 //
 
-$cantidad_socios_por_actividad_report = NULL; // Initialize page object first
+$r_listado_socios_por_actividad_y_rubro_report = NULL; // Initialize page object first
 
-class ccantidad_socios_por_actividad_report extends ccantidad_socios_por_actividad {
+class cr_listado_socios_por_actividad_y_rubro_report extends cr_listado_socios_por_actividad_y_rubro {
 
 	// Page ID
 	var $PageID = 'report';
@@ -432,10 +472,10 @@ class ccantidad_socios_por_actividad_report extends ccantidad_socios_por_activid
 	var $ProjectID = "{E85D8E60-21B0-46D8-A725-BE5A2EF61FC0}";
 
 	// Table name
-	var $TableName = 'cantidad_socios_por_actividad';
+	var $TableName = 'r_listado_socios_por_actividad_y_rubro';
 
 	// Page object name
-	var $PageObjName = 'cantidad_socios_por_actividad_report';
+	var $PageObjName = 'r_listado_socios_por_actividad_y_rubro_report';
 
 	// Page name
 	function PageName() {
@@ -625,10 +665,10 @@ class ccantidad_socios_por_actividad_report extends ccantidad_socios_por_activid
 		// Parent constuctor
 		parent::__construct();
 
-		// Table object (cantidad_socios_por_actividad)
-		if (!isset($GLOBALS["cantidad_socios_por_actividad"]) || get_class($GLOBALS["cantidad_socios_por_actividad"]) == "ccantidad_socios_por_actividad") {
-			$GLOBALS["cantidad_socios_por_actividad"] = &$this;
-			$GLOBALS["Table"] = &$GLOBALS["cantidad_socios_por_actividad"];
+		// Table object (r_listado_socios_por_actividad_y_rubro)
+		if (!isset($GLOBALS["r_listado_socios_por_actividad_y_rubro"]) || get_class($GLOBALS["r_listado_socios_por_actividad_y_rubro"]) == "cr_listado_socios_por_actividad_y_rubro") {
+			$GLOBALS["r_listado_socios_por_actividad_y_rubro"] = &$this;
+			$GLOBALS["Table"] = &$GLOBALS["r_listado_socios_por_actividad_y_rubro"];
 		}
 
 		// Initialize URLs
@@ -648,7 +688,7 @@ class ccantidad_socios_por_actividad_report extends ccantidad_socios_por_activid
 
 		// Table name (for backward compatibility)
 		if (!defined("EW_TABLE_NAME"))
-			define("EW_TABLE_NAME", 'cantidad_socios_por_actividad', TRUE);
+			define("EW_TABLE_NAME", 'r_listado_socios_por_actividad_y_rubro', TRUE);
 
 		// Start timer
 		if (!isset($GLOBALS["gTimer"])) $GLOBALS["gTimer"] = new cTimer();
@@ -752,6 +792,12 @@ class ccantidad_socios_por_actividad_report extends ccantidad_socios_por_activid
 			$sContent = ob_get_contents();
 			$fn = $EW_EXPORT_REPORT[$this->Export];
 			$this->$fn($sContent);
+			if ($this->Export == "email") { // Email
+				ob_end_clean();
+				$conn->Close(); // Close connection
+				header("Location: " . ew_CurrentPage());
+				exit();
+			}
 		}
 		$this->Page_Redirecting($url);
 
@@ -794,9 +840,9 @@ class ccantidad_socios_por_actividad_report extends ccantidad_socios_por_activid
 		$this->ReportGroups = &ew_InitArray(3, NULL);
 		$this->ReportCounts = &ew_InitArray(3, 0);
 		$this->LevelBreak = &ew_InitArray(3, FALSE);
-		$this->ReportTotals = &ew_Init2DArray(3, 2, 0);
-		$this->ReportMaxs = &ew_Init2DArray(3, 2, 0);
-		$this->ReportMins = &ew_Init2DArray(3, 2, 0);
+		$this->ReportTotals = &ew_Init2DArray(3, 8, 0);
+		$this->ReportMaxs = &ew_Init2DArray(3, 8, 0);
+		$this->ReportMins = &ew_Init2DArray(3, 8, 0);
 
 		// Set up Breadcrumb
 		$this->SetupBreadcrumb();
@@ -831,38 +877,100 @@ class ccantidad_socios_por_actividad_report extends ccantidad_socios_por_activid
 		$this->Row_Rendering();
 
 		// Common render codes for all row types
-		// socio_nro
-		// actividad
+		// id_rubro
+		// id_actividad
 		// rubro
+		// actividad
+		// cuit_cuil
+		// propietario
+		// comercio
+		// direccion_comercio
+		// mail
+		// tel
+		// cel
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
-
-			// socio_nro
-			$this->socio_nro->ViewValue = $this->socio_nro->CurrentValue;
-			$this->socio_nro->ViewCustomAttributes = "";
-
-			// actividad
-			$this->actividad->ViewValue = $this->actividad->CurrentValue;
-			$this->actividad->ViewCustomAttributes = "";
 
 			// rubro
 			$this->rubro->ViewValue = $this->rubro->CurrentValue;
 			$this->rubro->ViewCustomAttributes = "";
 
-			// socio_nro
-			$this->socio_nro->LinkCustomAttributes = "";
-			$this->socio_nro->HrefValue = "";
-			$this->socio_nro->TooltipValue = "";
+			// actividad
+			$this->actividad->ViewValue = $this->actividad->CurrentValue;
+			$this->actividad->ViewCustomAttributes = "";
+
+			// cuit_cuil
+			$this->cuit_cuil->ViewValue = $this->cuit_cuil->CurrentValue;
+			$this->cuit_cuil->ViewCustomAttributes = "";
+
+			// propietario
+			$this->propietario->ViewValue = $this->propietario->CurrentValue;
+			$this->propietario->ViewCustomAttributes = "";
+
+			// comercio
+			$this->comercio->ViewValue = $this->comercio->CurrentValue;
+			$this->comercio->ViewCustomAttributes = "";
+
+			// direccion_comercio
+			$this->direccion_comercio->ViewValue = $this->direccion_comercio->CurrentValue;
+			$this->direccion_comercio->ViewCustomAttributes = "";
+
+			// mail
+			$this->mail->ViewValue = $this->mail->CurrentValue;
+			$this->mail->ViewCustomAttributes = "";
+
+			// tel
+			$this->tel->ViewValue = $this->tel->CurrentValue;
+			$this->tel->ViewCustomAttributes = "";
+
+			// cel
+			$this->cel->ViewValue = $this->cel->CurrentValue;
+			$this->cel->ViewCustomAttributes = "";
+
+			// rubro
+			$this->rubro->LinkCustomAttributes = "";
+			$this->rubro->HrefValue = "";
+			$this->rubro->TooltipValue = "";
 
 			// actividad
 			$this->actividad->LinkCustomAttributes = "";
 			$this->actividad->HrefValue = "";
 			$this->actividad->TooltipValue = "";
 
-			// rubro
-			$this->rubro->LinkCustomAttributes = "";
-			$this->rubro->HrefValue = "";
-			$this->rubro->TooltipValue = "";
+			// cuit_cuil
+			$this->cuit_cuil->LinkCustomAttributes = "";
+			$this->cuit_cuil->HrefValue = "";
+			$this->cuit_cuil->TooltipValue = "";
+
+			// propietario
+			$this->propietario->LinkCustomAttributes = "";
+			$this->propietario->HrefValue = "";
+			$this->propietario->TooltipValue = "";
+
+			// comercio
+			$this->comercio->LinkCustomAttributes = "";
+			$this->comercio->HrefValue = "";
+			$this->comercio->TooltipValue = "";
+
+			// direccion_comercio
+			$this->direccion_comercio->LinkCustomAttributes = "";
+			$this->direccion_comercio->HrefValue = "";
+			$this->direccion_comercio->TooltipValue = "";
+
+			// mail
+			$this->mail->LinkCustomAttributes = "";
+			$this->mail->HrefValue = "";
+			$this->mail->TooltipValue = "";
+
+			// tel
+			$this->tel->LinkCustomAttributes = "";
+			$this->tel->HrefValue = "";
+			$this->tel->TooltipValue = "";
+
+			// cel
+			$this->cel->LinkCustomAttributes = "";
+			$this->cel->HrefValue = "";
+			$this->cel->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -911,7 +1019,7 @@ class ccantidad_socios_por_actividad_report extends ccantidad_socios_por_activid
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
-		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
+		$url = ew_CurrentUrl();
 		$url = preg_replace('/\?cmd=reset(all){0,1}$/i', '', $url); // Remove cmd=reset / cmd=resetall
 		$Breadcrumb->Add("report", $this->TableVar, $url, "", $this->TableVar, TRUE);
 	}
@@ -992,6 +1100,23 @@ class ccantidad_socios_por_actividad_report extends ccantidad_socios_por_activid
 		// Example:
 		//$header = "your header";
 
+		$razon_social = 'CCIAG - Sauce Viejo';
+		$listado = 'Listado socios por actividad y rubros';
+		$header = "<table cellspacing='0' border=1 width='100%'>
+		<thead>
+			<tr class='ewTableHeader'>
+				<td rowspan='2'>
+					<image src='./inicio/logo_reporte.jpg' width='400' height='90'>
+				</td>
+				<td align='center'>
+					<FONT FACE='impact' SIZE=5>".$razon_social."</font>
+				</td>
+			</tr>
+			<tr class='ewTableHeader'>
+				<td align='center'>".$listado."</td>
+			</tr>    
+		</thead>          
+	</table>";	
 	}
 
 	// Page Data Rendered event
@@ -1007,120 +1132,124 @@ class ccantidad_socios_por_actividad_report extends ccantidad_socios_por_activid
 <?php
 
 // Create page object
-if (!isset($cantidad_socios_por_actividad_report)) $cantidad_socios_por_actividad_report = new ccantidad_socios_por_actividad_report();
+if (!isset($r_listado_socios_por_actividad_y_rubro_report)) $r_listado_socios_por_actividad_y_rubro_report = new cr_listado_socios_por_actividad_y_rubro_report();
 
 // Page init
-$cantidad_socios_por_actividad_report->Page_Init();
+$r_listado_socios_por_actividad_y_rubro_report->Page_Init();
 
 // Page main
-$cantidad_socios_por_actividad_report->Page_Main();
+$r_listado_socios_por_actividad_y_rubro_report->Page_Main();
 
 // Global Page Rendering event (in userfn*.php)
 Page_Rendering();
 
 // Page Rendering event
-$cantidad_socios_por_actividad_report->Page_Render();
+$r_listado_socios_por_actividad_y_rubro_report->Page_Render();
 ?>
-<?php include_once "cciag_header.php" ?>
-<?php if ($cantidad_socios_por_actividad->Export == "") { ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
+<?php if ($r_listado_socios_por_actividad_y_rubro->Export == "") { ?>
 <script type="text/javascript">
 
 // Write your client script here, no need to add script tags.
 </script>
 <?php } ?>
 <div class="ewToolbar">
-<?php if ($cantidad_socios_por_actividad->Export == "") { ?>
+<?php if ($r_listado_socios_por_actividad_y_rubro->Export == "") { ?>
 <?php $Breadcrumb->Render(); ?>
 <?php } ?>
-<?php if ($cantidad_socios_por_actividad->Export == "") { ?>
+<?php if ($r_listado_socios_por_actividad_y_rubro->Export == "") { ?>
 <?php echo $Language->SelectionForm(); ?>
 <?php } ?>
 <div class="clearfix"></div>
 </div>
 <?php
-$cantidad_socios_por_actividad_report->DefaultFilter = "";
-$cantidad_socios_por_actividad_report->ReportFilter = $cantidad_socios_por_actividad_report->DefaultFilter;
+$r_listado_socios_por_actividad_y_rubro_report->DefaultFilter = "";
+$r_listado_socios_por_actividad_y_rubro_report->ReportFilter = $r_listado_socios_por_actividad_y_rubro_report->DefaultFilter;
 if (!$Security->CanReport()) {
-	if ($cantidad_socios_por_actividad_report->ReportFilter <> "") $cantidad_socios_por_actividad_report->ReportFilter .= " AND ";
-	$cantidad_socios_por_actividad_report->ReportFilter .= "(0=1)";
+	if ($r_listado_socios_por_actividad_y_rubro_report->ReportFilter <> "") $r_listado_socios_por_actividad_y_rubro_report->ReportFilter .= " AND ";
+	$r_listado_socios_por_actividad_y_rubro_report->ReportFilter .= "(0=1)";
 }
-if ($cantidad_socios_por_actividad_report->DbDetailFilter <> "") {
-	if ($cantidad_socios_por_actividad_report->ReportFilter <> "") $cantidad_socios_por_actividad_report->ReportFilter .= " AND ";
-	$cantidad_socios_por_actividad_report->ReportFilter .= "(" . $cantidad_socios_por_actividad_report->DbDetailFilter . ")";
+if ($r_listado_socios_por_actividad_y_rubro_report->DbDetailFilter <> "") {
+	if ($r_listado_socios_por_actividad_y_rubro_report->ReportFilter <> "") $r_listado_socios_por_actividad_y_rubro_report->ReportFilter .= " AND ";
+	$r_listado_socios_por_actividad_y_rubro_report->ReportFilter .= "(" . $r_listado_socios_por_actividad_y_rubro_report->DbDetailFilter . ")";
 }
 
 // Set up filter and load Group level sql
-$cantidad_socios_por_actividad->CurrentFilter = $cantidad_socios_por_actividad_report->ReportFilter;
-$cantidad_socios_por_actividad_report->ReportSql = $cantidad_socios_por_actividad->GroupSQL();
+$r_listado_socios_por_actividad_y_rubro->CurrentFilter = $r_listado_socios_por_actividad_y_rubro_report->ReportFilter;
+$r_listado_socios_por_actividad_y_rubro_report->ReportSql = $r_listado_socios_por_actividad_y_rubro->GroupSQL();
 
 // Load recordset
-$cantidad_socios_por_actividad_report->Recordset = $conn->Execute($cantidad_socios_por_actividad_report->ReportSql);
-$cantidad_socios_por_actividad_report->RecordExists = !$cantidad_socios_por_actividad_report->Recordset->EOF;
+$r_listado_socios_por_actividad_y_rubro_report->Recordset = $conn->Execute($r_listado_socios_por_actividad_y_rubro_report->ReportSql);
+$r_listado_socios_por_actividad_y_rubro_report->RecordExists = !$r_listado_socios_por_actividad_y_rubro_report->Recordset->EOF;
 ?>
-<?php if ($cantidad_socios_por_actividad->Export == "") { ?>
-<?php if ($cantidad_socios_por_actividad_report->RecordExists) { ?>
-<div class="ewViewExportOptions"><?php $cantidad_socios_por_actividad_report->ExportOptions->Render("body") ?></div>
+<?php if ($r_listado_socios_por_actividad_y_rubro->Export == "") { ?>
+<?php if ($r_listado_socios_por_actividad_y_rubro_report->RecordExists) { ?>
+<div class="ewViewExportOptions"><?php $r_listado_socios_por_actividad_y_rubro_report->ExportOptions->Render("body") ?></div>
 <?php } ?>
 <?php } ?>
-<?php $cantidad_socios_por_actividad_report->ShowPageHeader(); ?>
+<?php $r_listado_socios_por_actividad_y_rubro_report->ShowPageHeader(); ?>
+<form method="post">
+<?php if ($r_listado_socios_por_actividad_y_rubro_report->CheckToken) { ?>
+<input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $r_listado_socios_por_actividad_y_rubro_report->Token ?>">
+<?php } ?>
 <table class="ewReportTable">
 <?php
 
 // Get First Row
-if ($cantidad_socios_por_actividad_report->RecordExists) {
-	$cantidad_socios_por_actividad->rubro->setDbValue($cantidad_socios_por_actividad_report->Recordset->fields('rubro'));
-	$cantidad_socios_por_actividad_report->ReportGroups[0] = $cantidad_socios_por_actividad->rubro->DbValue;
-	$cantidad_socios_por_actividad->actividad->setDbValue($cantidad_socios_por_actividad_report->Recordset->fields('actividad'));
-	$cantidad_socios_por_actividad_report->ReportGroups[1] = $cantidad_socios_por_actividad->actividad->DbValue;
+if ($r_listado_socios_por_actividad_y_rubro_report->RecordExists) {
+	$r_listado_socios_por_actividad_y_rubro->rubro->setDbValue($r_listado_socios_por_actividad_y_rubro_report->Recordset->fields('rubro'));
+	$r_listado_socios_por_actividad_y_rubro_report->ReportGroups[0] = $r_listado_socios_por_actividad_y_rubro->rubro->DbValue;
+	$r_listado_socios_por_actividad_y_rubro->actividad->setDbValue($r_listado_socios_por_actividad_y_rubro_report->Recordset->fields('actividad'));
+	$r_listado_socios_por_actividad_y_rubro_report->ReportGroups[1] = $r_listado_socios_por_actividad_y_rubro->actividad->DbValue;
 }
-$cantidad_socios_por_actividad_report->RecCnt = 0;
-$cantidad_socios_por_actividad_report->ReportCounts[0] = 0;
-$cantidad_socios_por_actividad_report->ChkLvlBreak();
-while (!$cantidad_socios_por_actividad_report->Recordset->EOF) {
+$r_listado_socios_por_actividad_y_rubro_report->RecCnt = 0;
+$r_listado_socios_por_actividad_y_rubro_report->ReportCounts[0] = 0;
+$r_listado_socios_por_actividad_y_rubro_report->ChkLvlBreak();
+while (!$r_listado_socios_por_actividad_y_rubro_report->Recordset->EOF) {
 
 	// Render for view
-	$cantidad_socios_por_actividad->RowType = EW_ROWTYPE_VIEW;
-	$cantidad_socios_por_actividad->ResetAttrs();
-	$cantidad_socios_por_actividad_report->RenderRow();
+	$r_listado_socios_por_actividad_y_rubro->RowType = EW_ROWTYPE_VIEW;
+	$r_listado_socios_por_actividad_y_rubro->ResetAttrs();
+	$r_listado_socios_por_actividad_y_rubro_report->RenderRow();
 
 	// Show group headers
-	if ($cantidad_socios_por_actividad_report->LevelBreak[1]) { // Reset counter and aggregation
+	if ($r_listado_socios_por_actividad_y_rubro_report->LevelBreak[1]) { // Reset counter and aggregation
 ?>
-	<tr><td colspan=2 class="ewGroupField"><?php echo $cantidad_socios_por_actividad->rubro->FldCaption() ?></td>
-	<td colspan=1 class="ewGroupName">
-<span<?php echo $cantidad_socios_por_actividad->rubro->ViewAttributes() ?>>
-<?php echo $cantidad_socios_por_actividad->rubro->ViewValue ?></span>
+	<tr><td colspan=2 class="ewGroupField"><?php echo $r_listado_socios_por_actividad_y_rubro->rubro->FldCaption() ?></td>
+	<td colspan=7 class="ewGroupName">
+<span<?php echo $r_listado_socios_por_actividad_y_rubro->rubro->ViewAttributes() ?>>
+<?php echo $r_listado_socios_por_actividad_y_rubro->rubro->ViewValue ?></span>
 </td></tr>
 <?php
 	}
-	if ($cantidad_socios_por_actividad_report->LevelBreak[2]) { // Reset counter and aggregation
+	if ($r_listado_socios_por_actividad_y_rubro_report->LevelBreak[2]) { // Reset counter and aggregation
 ?>
-	<tr><td><div class="ewGroupIndent"></div></td><td class="ewGroupField"><?php echo $cantidad_socios_por_actividad->actividad->FldCaption() ?></td>
-	<td colspan=1 class="ewGroupName">
-<span<?php echo $cantidad_socios_por_actividad->actividad->ViewAttributes() ?>>
-<?php echo $cantidad_socios_por_actividad->actividad->ViewValue ?></span>
+	<tr><td><div class="ewGroupIndent"></div></td><td class="ewGroupField"><?php echo $r_listado_socios_por_actividad_y_rubro->actividad->FldCaption() ?></td>
+	<td colspan=7 class="ewGroupName">
+<span<?php echo $r_listado_socios_por_actividad_y_rubro->actividad->ViewAttributes() ?>>
+<?php echo $r_listado_socios_por_actividad_y_rubro->actividad->ViewValue ?></span>
 </td></tr>
 <?php
 	}
 
 	// Get detail records
-	$cantidad_socios_por_actividad_report->ReportFilter = $cantidad_socios_por_actividad_report->DefaultFilter;
-	if ($cantidad_socios_por_actividad_report->ReportFilter <> "") $cantidad_socios_por_actividad_report->ReportFilter .= " AND ";
-	if (is_null($cantidad_socios_por_actividad->rubro->CurrentValue)) {
-		$cantidad_socios_por_actividad_report->ReportFilter .= "(`rubro` IS NULL)";
+	$r_listado_socios_por_actividad_y_rubro_report->ReportFilter = $r_listado_socios_por_actividad_y_rubro_report->DefaultFilter;
+	if ($r_listado_socios_por_actividad_y_rubro_report->ReportFilter <> "") $r_listado_socios_por_actividad_y_rubro_report->ReportFilter .= " AND ";
+	if (is_null($r_listado_socios_por_actividad_y_rubro->rubro->CurrentValue)) {
+		$r_listado_socios_por_actividad_y_rubro_report->ReportFilter .= "(`rubro` IS NULL)";
 	} else {
-		$cantidad_socios_por_actividad_report->ReportFilter .= "(`rubro` = '" . ew_AdjustSql($cantidad_socios_por_actividad->rubro->CurrentValue) . "')";
+		$r_listado_socios_por_actividad_y_rubro_report->ReportFilter .= "(`rubro` = '" . ew_AdjustSql($r_listado_socios_por_actividad_y_rubro->rubro->CurrentValue) . "')";
 	}
-	if ($cantidad_socios_por_actividad_report->ReportFilter <> "") $cantidad_socios_por_actividad_report->ReportFilter .= " AND ";
-	if (is_null($cantidad_socios_por_actividad->actividad->CurrentValue)) {
-		$cantidad_socios_por_actividad_report->ReportFilter .= "(`actividad` IS NULL)";
+	if ($r_listado_socios_por_actividad_y_rubro_report->ReportFilter <> "") $r_listado_socios_por_actividad_y_rubro_report->ReportFilter .= " AND ";
+	if (is_null($r_listado_socios_por_actividad_y_rubro->actividad->CurrentValue)) {
+		$r_listado_socios_por_actividad_y_rubro_report->ReportFilter .= "(`actividad` IS NULL)";
 	} else {
-		$cantidad_socios_por_actividad_report->ReportFilter .= "(`actividad` = '" . ew_AdjustSql($cantidad_socios_por_actividad->actividad->CurrentValue) . "')";
+		$r_listado_socios_por_actividad_y_rubro_report->ReportFilter .= "(`actividad` = '" . ew_AdjustSql($r_listado_socios_por_actividad_y_rubro->actividad->CurrentValue) . "')";
 	}
-	if ($cantidad_socios_por_actividad_report->DbDetailFilter <> "") {
-		if ($cantidad_socios_por_actividad_report->ReportFilter <> "")
-			$cantidad_socios_por_actividad_report->ReportFilter .= " AND ";
-		$cantidad_socios_por_actividad_report->ReportFilter .= "(" . $cantidad_socios_por_actividad_report->DbDetailFilter . ")";
+	if ($r_listado_socios_por_actividad_y_rubro_report->DbDetailFilter <> "") {
+		if ($r_listado_socios_por_actividad_y_rubro_report->ReportFilter <> "")
+			$r_listado_socios_por_actividad_y_rubro_report->ReportFilter .= " AND ";
+		$r_listado_socios_por_actividad_y_rubro_report->ReportFilter .= "(" . $r_listado_socios_por_actividad_y_rubro_report->DbDetailFilter . ")";
 	}
 	if (!$Security->CanReport()) {
 		if ($sFilter <> "") $sFilter .= " AND ";
@@ -1128,116 +1257,157 @@ while (!$cantidad_socios_por_actividad_report->Recordset->EOF) {
 	}
 
 	// Set up detail SQL
-	$cantidad_socios_por_actividad->CurrentFilter = $cantidad_socios_por_actividad_report->ReportFilter;
-	$cantidad_socios_por_actividad_report->ReportSql = $cantidad_socios_por_actividad->DetailSQL();
+	$r_listado_socios_por_actividad_y_rubro->CurrentFilter = $r_listado_socios_por_actividad_y_rubro_report->ReportFilter;
+	$r_listado_socios_por_actividad_y_rubro_report->ReportSql = $r_listado_socios_por_actividad_y_rubro->DetailSQL();
 
 	// Load detail records
-	$cantidad_socios_por_actividad_report->DetailRecordset = $conn->Execute($cantidad_socios_por_actividad_report->ReportSql);
-	$cantidad_socios_por_actividad_report->DtlRecordCount = $cantidad_socios_por_actividad_report->DetailRecordset->RecordCount();
+	$r_listado_socios_por_actividad_y_rubro_report->DetailRecordset = $conn->Execute($r_listado_socios_por_actividad_y_rubro_report->ReportSql);
+	$r_listado_socios_por_actividad_y_rubro_report->DtlRecordCount = $r_listado_socios_por_actividad_y_rubro_report->DetailRecordset->RecordCount();
 
 	// Initialize aggregates
-	if (!$cantidad_socios_por_actividad_report->DetailRecordset->EOF) {
-		$cantidad_socios_por_actividad_report->RecCnt++;
+	if (!$r_listado_socios_por_actividad_y_rubro_report->DetailRecordset->EOF) {
+		$r_listado_socios_por_actividad_y_rubro_report->RecCnt++;
 	}
-	if ($cantidad_socios_por_actividad_report->RecCnt == 1) {
-		$cantidad_socios_por_actividad_report->ReportCounts[0] = 0;
+	if ($r_listado_socios_por_actividad_y_rubro_report->RecCnt == 1) {
+		$r_listado_socios_por_actividad_y_rubro_report->ReportCounts[0] = 0;
 	}
 	for ($i = 1; $i <= 2; $i++) {
-		if ($cantidad_socios_por_actividad_report->LevelBreak[$i]) { // Reset counter and aggregation
-			$cantidad_socios_por_actividad_report->ReportCounts[$i] = 0;
+		if ($r_listado_socios_por_actividad_y_rubro_report->LevelBreak[$i]) { // Reset counter and aggregation
+			$r_listado_socios_por_actividad_y_rubro_report->ReportCounts[$i] = 0;
 		}
 	}
-	$cantidad_socios_por_actividad_report->ReportCounts[0] += $cantidad_socios_por_actividad_report->DtlRecordCount;
-	$cantidad_socios_por_actividad_report->ReportCounts[1] += $cantidad_socios_por_actividad_report->DtlRecordCount;
-	$cantidad_socios_por_actividad_report->ReportCounts[2] += $cantidad_socios_por_actividad_report->DtlRecordCount;
-	if ($cantidad_socios_por_actividad_report->RecordExists) {
+	$r_listado_socios_por_actividad_y_rubro_report->ReportCounts[0] += $r_listado_socios_por_actividad_y_rubro_report->DtlRecordCount;
+	$r_listado_socios_por_actividad_y_rubro_report->ReportCounts[1] += $r_listado_socios_por_actividad_y_rubro_report->DtlRecordCount;
+	$r_listado_socios_por_actividad_y_rubro_report->ReportCounts[2] += $r_listado_socios_por_actividad_y_rubro_report->DtlRecordCount;
+	if ($r_listado_socios_por_actividad_y_rubro_report->RecordExists) {
 ?>
 	<tr>
 		<td><div class="ewGroupIndent"></div></td>
 		<td><div class="ewGroupIndent"></div></td>
-		<td class="ewGroupHeader"><?php echo $cantidad_socios_por_actividad->socio_nro->FldCaption() ?></td>
+		<td class="ewGroupHeader"><?php echo $r_listado_socios_por_actividad_y_rubro->cuit_cuil->FldCaption() ?></td>
+		<td class="ewGroupHeader"><?php echo $r_listado_socios_por_actividad_y_rubro->propietario->FldCaption() ?></td>
+		<td class="ewGroupHeader"><?php echo $r_listado_socios_por_actividad_y_rubro->comercio->FldCaption() ?></td>
+		<td class="ewGroupHeader"><?php echo $r_listado_socios_por_actividad_y_rubro->direccion_comercio->FldCaption() ?></td>
+		<td class="ewGroupHeader"><?php echo $r_listado_socios_por_actividad_y_rubro->mail->FldCaption() ?></td>
+		<td class="ewGroupHeader"><?php echo $r_listado_socios_por_actividad_y_rubro->tel->FldCaption() ?></td>
+		<td class="ewGroupHeader"><?php echo $r_listado_socios_por_actividad_y_rubro->cel->FldCaption() ?></td>
 	</tr>
 <?php
 	}
-	while (!$cantidad_socios_por_actividad_report->DetailRecordset->EOF) {
-		$cantidad_socios_por_actividad->socio_nro->setDbValue($cantidad_socios_por_actividad_report->DetailRecordset->fields('socio_nro'));
+	while (!$r_listado_socios_por_actividad_y_rubro_report->DetailRecordset->EOF) {
+		$r_listado_socios_por_actividad_y_rubro->cuit_cuil->setDbValue($r_listado_socios_por_actividad_y_rubro_report->DetailRecordset->fields('cuit_cuil'));
+		$r_listado_socios_por_actividad_y_rubro->propietario->setDbValue($r_listado_socios_por_actividad_y_rubro_report->DetailRecordset->fields('propietario'));
+		$r_listado_socios_por_actividad_y_rubro->comercio->setDbValue($r_listado_socios_por_actividad_y_rubro_report->DetailRecordset->fields('comercio'));
+		$r_listado_socios_por_actividad_y_rubro->direccion_comercio->setDbValue($r_listado_socios_por_actividad_y_rubro_report->DetailRecordset->fields('direccion_comercio'));
+		$r_listado_socios_por_actividad_y_rubro->mail->setDbValue($r_listado_socios_por_actividad_y_rubro_report->DetailRecordset->fields('mail'));
+		$r_listado_socios_por_actividad_y_rubro->tel->setDbValue($r_listado_socios_por_actividad_y_rubro_report->DetailRecordset->fields('tel'));
+		$r_listado_socios_por_actividad_y_rubro->cel->setDbValue($r_listado_socios_por_actividad_y_rubro_report->DetailRecordset->fields('cel'));
 
 		// Render for view
-		$cantidad_socios_por_actividad->RowType = EW_ROWTYPE_VIEW;
-		$cantidad_socios_por_actividad->ResetAttrs();
-		$cantidad_socios_por_actividad_report->RenderRow();
+		$r_listado_socios_por_actividad_y_rubro->RowType = EW_ROWTYPE_VIEW;
+		$r_listado_socios_por_actividad_y_rubro->ResetAttrs();
+		$r_listado_socios_por_actividad_y_rubro_report->RenderRow();
 ?>
 	<tr>
 		<td><div class="ewGroupIndent"></div></td>
 		<td><div class="ewGroupIndent"></div></td>
-		<td<?php echo $cantidad_socios_por_actividad->socio_nro->CellAttributes() ?>>
-<span<?php echo $cantidad_socios_por_actividad->socio_nro->ViewAttributes() ?>>
-<?php echo $cantidad_socios_por_actividad->socio_nro->ViewValue ?></span>
+		<td<?php echo $r_listado_socios_por_actividad_y_rubro->cuit_cuil->CellAttributes() ?>>
+<span<?php echo $r_listado_socios_por_actividad_y_rubro->cuit_cuil->ViewAttributes() ?>>
+<?php echo $r_listado_socios_por_actividad_y_rubro->cuit_cuil->ViewValue ?></span>
+</td>
+		<td<?php echo $r_listado_socios_por_actividad_y_rubro->propietario->CellAttributes() ?>>
+<span<?php echo $r_listado_socios_por_actividad_y_rubro->propietario->ViewAttributes() ?>>
+<?php echo $r_listado_socios_por_actividad_y_rubro->propietario->ViewValue ?></span>
+</td>
+		<td<?php echo $r_listado_socios_por_actividad_y_rubro->comercio->CellAttributes() ?>>
+<span<?php echo $r_listado_socios_por_actividad_y_rubro->comercio->ViewAttributes() ?>>
+<?php echo $r_listado_socios_por_actividad_y_rubro->comercio->ViewValue ?></span>
+</td>
+		<td<?php echo $r_listado_socios_por_actividad_y_rubro->direccion_comercio->CellAttributes() ?>>
+<span<?php echo $r_listado_socios_por_actividad_y_rubro->direccion_comercio->ViewAttributes() ?>>
+<?php echo $r_listado_socios_por_actividad_y_rubro->direccion_comercio->ViewValue ?></span>
+</td>
+		<td<?php echo $r_listado_socios_por_actividad_y_rubro->mail->CellAttributes() ?>>
+<span<?php echo $r_listado_socios_por_actividad_y_rubro->mail->ViewAttributes() ?>>
+<?php echo $r_listado_socios_por_actividad_y_rubro->mail->ViewValue ?></span>
+</td>
+		<td<?php echo $r_listado_socios_por_actividad_y_rubro->tel->CellAttributes() ?>>
+<span<?php echo $r_listado_socios_por_actividad_y_rubro->tel->ViewAttributes() ?>>
+<?php echo $r_listado_socios_por_actividad_y_rubro->tel->ViewValue ?></span>
+</td>
+		<td<?php echo $r_listado_socios_por_actividad_y_rubro->cel->CellAttributes() ?>>
+<span<?php echo $r_listado_socios_por_actividad_y_rubro->cel->ViewAttributes() ?>>
+<?php echo $r_listado_socios_por_actividad_y_rubro->cel->ViewValue ?></span>
 </td>
 	</tr>
 <?php
-		$cantidad_socios_por_actividad_report->DetailRecordset->MoveNext();
+		$r_listado_socios_por_actividad_y_rubro_report->DetailRecordset->MoveNext();
 	}
-	$cantidad_socios_por_actividad_report->DetailRecordset->Close();
+	$r_listado_socios_por_actividad_y_rubro_report->DetailRecordset->Close();
 
 	// Save old group data
-	$cantidad_socios_por_actividad_report->ReportGroups[0] = $cantidad_socios_por_actividad->rubro->CurrentValue;
-	$cantidad_socios_por_actividad_report->ReportGroups[1] = $cantidad_socios_por_actividad->actividad->CurrentValue;
+	$r_listado_socios_por_actividad_y_rubro_report->ReportGroups[0] = $r_listado_socios_por_actividad_y_rubro->rubro->CurrentValue;
+	$r_listado_socios_por_actividad_y_rubro_report->ReportGroups[1] = $r_listado_socios_por_actividad_y_rubro->actividad->CurrentValue;
 
 	// Get next record
-	$cantidad_socios_por_actividad_report->Recordset->MoveNext();
-	if ($cantidad_socios_por_actividad_report->Recordset->EOF) {
-		$cantidad_socios_por_actividad_report->RecCnt = 0; // EOF, force all level breaks
+	$r_listado_socios_por_actividad_y_rubro_report->Recordset->MoveNext();
+	if ($r_listado_socios_por_actividad_y_rubro_report->Recordset->EOF) {
+		$r_listado_socios_por_actividad_y_rubro_report->RecCnt = 0; // EOF, force all level breaks
 	} else {
-		$cantidad_socios_por_actividad->rubro->setDbValue($cantidad_socios_por_actividad_report->Recordset->fields('rubro'));
-		$cantidad_socios_por_actividad->actividad->setDbValue($cantidad_socios_por_actividad_report->Recordset->fields('actividad'));
+		$r_listado_socios_por_actividad_y_rubro->rubro->setDbValue($r_listado_socios_por_actividad_y_rubro_report->Recordset->fields('rubro'));
+		$r_listado_socios_por_actividad_y_rubro->actividad->setDbValue($r_listado_socios_por_actividad_y_rubro_report->Recordset->fields('actividad'));
 	}
-	$cantidad_socios_por_actividad_report->ChkLvlBreak();
+	$r_listado_socios_por_actividad_y_rubro_report->ChkLvlBreak();
 
 	// Show footers
-	if ($cantidad_socios_por_actividad_report->LevelBreak[2]) {
-		$cantidad_socios_por_actividad->actividad->CurrentValue = $cantidad_socios_por_actividad_report->ReportGroups[1];
+	if ($r_listado_socios_por_actividad_y_rubro_report->LevelBreak[2]) {
+		$r_listado_socios_por_actividad_y_rubro->actividad->CurrentValue = $r_listado_socios_por_actividad_y_rubro_report->ReportGroups[1];
 
 		// Render row for view
-		$cantidad_socios_por_actividad->RowType = EW_ROWTYPE_VIEW;
-		$cantidad_socios_por_actividad->ResetAttrs();
-		$cantidad_socios_por_actividad_report->RenderRow();
-		$cantidad_socios_por_actividad->actividad->CurrentValue = $cantidad_socios_por_actividad->actividad->DbValue;
+		$r_listado_socios_por_actividad_y_rubro->RowType = EW_ROWTYPE_VIEW;
+		$r_listado_socios_por_actividad_y_rubro->ResetAttrs();
+		$r_listado_socios_por_actividad_y_rubro_report->RenderRow();
+		$r_listado_socios_por_actividad_y_rubro->actividad->CurrentValue = $r_listado_socios_por_actividad_y_rubro->actividad->DbValue;
 ?>
+	<tr><td><div class="ewGroupIndent"></div></td><td colspan=8 class="ewGroupSummary"><?php echo $Language->Phrase("RptSumHead") ?>&nbsp;<?php echo $r_listado_socios_por_actividad_y_rubro->actividad->FldCaption() ?>:&nbsp;<?php echo $r_listado_socios_por_actividad_y_rubro->actividad->ViewValue ?> (<?php echo ew_FormatNumber($r_listado_socios_por_actividad_y_rubro_report->ReportCounts[2],0) ?> <?php echo $Language->Phrase("RptDtlRec") ?>)</td></tr>
+	<tr><td colspan=9>&nbsp;<br></td></tr>
 <?php
 }
-	if ($cantidad_socios_por_actividad_report->LevelBreak[1]) {
-		$cantidad_socios_por_actividad->rubro->CurrentValue = $cantidad_socios_por_actividad_report->ReportGroups[0];
+	if ($r_listado_socios_por_actividad_y_rubro_report->LevelBreak[1]) {
+		$r_listado_socios_por_actividad_y_rubro->rubro->CurrentValue = $r_listado_socios_por_actividad_y_rubro_report->ReportGroups[0];
 
 		// Render row for view
-		$cantidad_socios_por_actividad->RowType = EW_ROWTYPE_VIEW;
-		$cantidad_socios_por_actividad->ResetAttrs();
-		$cantidad_socios_por_actividad_report->RenderRow();
-		$cantidad_socios_por_actividad->rubro->CurrentValue = $cantidad_socios_por_actividad->rubro->DbValue;
+		$r_listado_socios_por_actividad_y_rubro->RowType = EW_ROWTYPE_VIEW;
+		$r_listado_socios_por_actividad_y_rubro->ResetAttrs();
+		$r_listado_socios_por_actividad_y_rubro_report->RenderRow();
+		$r_listado_socios_por_actividad_y_rubro->rubro->CurrentValue = $r_listado_socios_por_actividad_y_rubro->rubro->DbValue;
 ?>
+	<tr><td colspan=9 class="ewGroupSummary"><?php echo $Language->Phrase("RptSumHead") ?>&nbsp;<?php echo $r_listado_socios_por_actividad_y_rubro->rubro->FldCaption() ?>:&nbsp;<?php echo $r_listado_socios_por_actividad_y_rubro->rubro->ViewValue ?> (<?php echo ew_FormatNumber($r_listado_socios_por_actividad_y_rubro_report->ReportCounts[1],0) ?> <?php echo $Language->Phrase("RptDtlRec") ?>)</td></tr>
+	<tr><td colspan=9>&nbsp;<br></td></tr>
 <?php
 }
 }
 
 // Close recordset
-$cantidad_socios_por_actividad_report->Recordset->Close();
+$r_listado_socios_por_actividad_y_rubro_report->Recordset->Close();
 ?>
-<?php if ($cantidad_socios_por_actividad_report->RecordExists) { ?>
-	<tr><td colspan=3>&nbsp;<br></td></tr>
-	<tr><td colspan=3 class="ewGrandSummary"><?php echo $Language->Phrase("RptGrandTotal") ?>&nbsp;(<?php echo ew_FormatNumber($cantidad_socios_por_actividad_report->ReportCounts[0], 0) ?>&nbsp;<?php echo $Language->Phrase("RptDtlRec") ?>)</td></tr>
+<?php if ($r_listado_socios_por_actividad_y_rubro_report->RecordExists) { ?>
+	<tr><td colspan=9>&nbsp;<br></td></tr>
+	<tr><td colspan=9 class="ewGrandSummary"><?php echo $Language->Phrase("RptGrandTotal") ?>&nbsp;(<?php echo ew_FormatNumber($r_listado_socios_por_actividad_y_rubro_report->ReportCounts[0], 0) ?>&nbsp;<?php echo $Language->Phrase("RptDtlRec") ?>)</td></tr>
 <?php } ?>
-<?php if ($cantidad_socios_por_actividad_report->RecordExists) { ?>
-	<tr><td colspan=3>&nbsp;<br></td></tr>
+<?php if ($r_listado_socios_por_actividad_y_rubro_report->RecordExists) { ?>
+	<tr><td colspan=9>&nbsp;<br></td></tr>
 <?php } else { ?>
 	<tr><td><?php echo $Language->Phrase("NoRecord") ?></td></tr>
 <?php } ?>
 </table>
+</form>
 <?php
-$cantidad_socios_por_actividad_report->ShowPageFooter();
+$r_listado_socios_por_actividad_y_rubro_report->ShowPageFooter();
 if (EW_DEBUG_ENABLED)
 	echo ew_DebugMsg();
 ?>
-<?php if ($cantidad_socios_por_actividad->Export == "") { ?>
+<?php if ($r_listado_socios_por_actividad_y_rubro->Export == "") { ?>
 <script type="text/javascript">
 
 // Write your table-specific startup script here
@@ -1245,7 +1415,7 @@ if (EW_DEBUG_ENABLED)
 
 </script>
 <?php } ?>
-<?php include_once "cciag_footer.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
-$cantidad_socios_por_actividad_report->Page_Terminate();
+$r_listado_socios_por_actividad_y_rubro_report->Page_Terminate();
 ?>

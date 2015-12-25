@@ -9,8 +9,8 @@ $EW_RELATIVE_PATH = "";
 <?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_socios_detallesgridcls.php" ?>
-<?php include_once $EW_RELATIVE_PATH . "cciag_deudasgridcls.php" ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_socios_cuotasgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_deudasgridcls.php" ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
@@ -377,18 +377,18 @@ class csocios_view extends csocios {
 				exit();
 			}
 
-			// Process auto fill for detail table 'deudas'
-			if (@$_POST["grid"] == "fdeudasgrid") {
-				if (!isset($GLOBALS["deudas_grid"])) $GLOBALS["deudas_grid"] = new cdeudas_grid;
-				$GLOBALS["deudas_grid"]->Page_Init();
-				$this->Page_Terminate();
-				exit();
-			}
-
 			// Process auto fill for detail table 'socios_cuotas'
 			if (@$_POST["grid"] == "fsocios_cuotasgrid") {
 				if (!isset($GLOBALS["socios_cuotas_grid"])) $GLOBALS["socios_cuotas_grid"] = new csocios_cuotas_grid;
 				$GLOBALS["socios_cuotas_grid"]->Page_Init();
+				$this->Page_Terminate();
+				exit();
+			}
+
+			// Process auto fill for detail table 'deudas'
+			if (@$_POST["grid"] == "fdeudasgrid") {
+				if (!isset($GLOBALS["deudas_grid"])) $GLOBALS["deudas_grid"] = new cdeudas_grid;
+				$GLOBALS["deudas_grid"]->Page_Init();
 				$this->Page_Terminate();
 				exit();
 			}
@@ -588,43 +588,10 @@ class csocios_view extends csocios {
 		}
 		$body = "<div class=\"btn-group\">" . $body . "</div>";
 		$item->Body = $body;
-		$item->Visible = $Security->AllowList(CurrentProjectID() . 'socios_cuotas') && $this->ShowOptionLink();
+		$item->Visible = $Security->AllowList(CurrentProjectID() . 'deudas') && $this->ShowOptionLink();
 		if ($item->Visible) {
 			if ($DetailTableLink <> "") $DetailTableLink .= ",";
 			$DetailTableLink .= "socios_detalles";
-		}
-		if ($this->ShowMultipleDetails) $item->Visible = FALSE;
-
-		// "detail_deudas"
-		$item = &$option->Add("detail_deudas");
-		$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("deudas", "TblCaption");
-		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_deudaslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . strval($this->socio_nro->CurrentValue) . "") . "\">" . $body . "</a>";
-		$links = "";
-		if ($GLOBALS["deudas_grid"] && $GLOBALS["deudas_grid"]->DetailView && $Security->CanView() && $this->ShowOptionLink('view') && $Security->AllowView(CurrentProjectID() . 'deudas')) {
-			$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
-			if ($DetailViewTblVar <> "") $DetailViewTblVar .= ",";
-			$DetailViewTblVar .= "deudas";
-		}
-		if ($GLOBALS["deudas_grid"] && $GLOBALS["deudas_grid"]->DetailEdit && $Security->CanEdit() && $this->ShowOptionLink('edit') && $Security->AllowEdit(CurrentProjectID() . 'deudas')) {
-			$links .= "<li><a class=\"ewRowLink ewDetailEdit\" data-action=\"edit\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailEditLink")) . "</a></li>";
-			if ($DetailEditTblVar <> "") $DetailEditTblVar .= ",";
-			$DetailEditTblVar .= "deudas";
-		}
-		if ($GLOBALS["deudas_grid"] && $GLOBALS["deudas_grid"]->DetailAdd && $Security->CanAdd() && $this->ShowOptionLink('add') && $Security->AllowAdd(CurrentProjectID() . 'deudas')) {
-			$links .= "<li><a class=\"ewRowLink ewDetailCopy\" data-action=\"add\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailCopyLink")) . "</a></li>";
-			if ($DetailCopyTblVar <> "") $DetailCopyTblVar .= ",";
-			$DetailCopyTblVar .= "deudas";
-		}
-		if ($links <> "") {
-			$body .= "<button class=\"dropdown-toggle btn btn-default btn-sm ewDetail\" data-toggle=\"dropdown\"><b class=\"caret\"></b></button>";
-			$body .= "<ul class=\"dropdown-menu\">". $links . "</ul>";
-		}
-		$body = "<div class=\"btn-group\">" . $body . "</div>";
-		$item->Body = $body;
-		$item->Visible = $Security->AllowList(CurrentProjectID() . 'socios_cuotas') && $this->ShowOptionLink();
-		if ($item->Visible) {
-			if ($DetailTableLink <> "") $DetailTableLink .= ",";
-			$DetailTableLink .= "deudas";
 		}
 		if ($this->ShowMultipleDetails) $item->Visible = FALSE;
 
@@ -654,10 +621,43 @@ class csocios_view extends csocios {
 		}
 		$body = "<div class=\"btn-group\">" . $body . "</div>";
 		$item->Body = $body;
-		$item->Visible = $Security->AllowList(CurrentProjectID() . 'socios_cuotas') && $this->ShowOptionLink();
+		$item->Visible = $Security->AllowList(CurrentProjectID() . 'deudas') && $this->ShowOptionLink();
 		if ($item->Visible) {
 			if ($DetailTableLink <> "") $DetailTableLink .= ",";
 			$DetailTableLink .= "socios_cuotas";
+		}
+		if ($this->ShowMultipleDetails) $item->Visible = FALSE;
+
+		// "detail_deudas"
+		$item = &$option->Add("detail_deudas");
+		$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("deudas", "TblCaption");
+		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_deudaslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . strval($this->socio_nro->CurrentValue) . "") . "\">" . $body . "</a>";
+		$links = "";
+		if ($GLOBALS["deudas_grid"] && $GLOBALS["deudas_grid"]->DetailView && $Security->CanView() && $this->ShowOptionLink('view') && $Security->AllowView(CurrentProjectID() . 'deudas')) {
+			$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
+			if ($DetailViewTblVar <> "") $DetailViewTblVar .= ",";
+			$DetailViewTblVar .= "deudas";
+		}
+		if ($GLOBALS["deudas_grid"] && $GLOBALS["deudas_grid"]->DetailEdit && $Security->CanEdit() && $this->ShowOptionLink('edit') && $Security->AllowEdit(CurrentProjectID() . 'deudas')) {
+			$links .= "<li><a class=\"ewRowLink ewDetailEdit\" data-action=\"edit\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailEditLink")) . "</a></li>";
+			if ($DetailEditTblVar <> "") $DetailEditTblVar .= ",";
+			$DetailEditTblVar .= "deudas";
+		}
+		if ($GLOBALS["deudas_grid"] && $GLOBALS["deudas_grid"]->DetailAdd && $Security->CanAdd() && $this->ShowOptionLink('add') && $Security->AllowAdd(CurrentProjectID() . 'deudas')) {
+			$links .= "<li><a class=\"ewRowLink ewDetailCopy\" data-action=\"add\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailCopyLink")) . "</a></li>";
+			if ($DetailCopyTblVar <> "") $DetailCopyTblVar .= ",";
+			$DetailCopyTblVar .= "deudas";
+		}
+		if ($links <> "") {
+			$body .= "<button class=\"dropdown-toggle btn btn-default btn-sm ewDetail\" data-toggle=\"dropdown\"><b class=\"caret\"></b></button>";
+			$body .= "<ul class=\"dropdown-menu\">". $links . "</ul>";
+		}
+		$body = "<div class=\"btn-group\">" . $body . "</div>";
+		$item->Body = $body;
+		$item->Visible = $Security->AllowList(CurrentProjectID() . 'deudas') && $this->ShowOptionLink();
+		if ($item->Visible) {
+			if ($DetailTableLink <> "") $DetailTableLink .= ",";
+			$DetailTableLink .= "deudas";
 		}
 		if ($this->ShowMultipleDetails) $item->Visible = FALSE;
 
@@ -792,21 +792,21 @@ class csocios_view extends csocios {
 		$row = &$rs->fields;
 		$this->Row_Selected($row);
 		$this->socio_nro->setDbValue($rs->fields('socio_nro'));
+		$this->cuit_cuil->setDbValue($rs->fields('cuit_cuil'));
 		$this->id_actividad->setDbValue($rs->fields('id_actividad'));
 		if (array_key_exists('EV__id_actividad', $rs->fields)) {
 			$this->id_actividad->VirtualValue = $rs->fields('EV__id_actividad'); // Set up virtual field value
 		} else {
 			$this->id_actividad->VirtualValue = ""; // Clear value
 		}
-		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 		$this->propietario->setDbValue($rs->fields('propietario'));
 		$this->comercio->setDbValue($rs->fields('comercio'));
 		$this->direccion_comercio->setDbValue($rs->fields('direccion_comercio'));
-		$this->activo->setDbValue($rs->fields('activo'));
 		$this->mail->setDbValue($rs->fields('mail'));
 		$this->tel->setDbValue($rs->fields('tel'));
 		$this->cel->setDbValue($rs->fields('cel'));
-		$this->cuit_cuil->setDbValue($rs->fields('cuit_cuil'));
+		$this->activo->setDbValue($rs->fields('activo'));
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Load DbValue from recordset
@@ -814,16 +814,16 @@ class csocios_view extends csocios {
 		if (!$rs || !is_array($rs) && $rs->EOF) return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->socio_nro->DbValue = $row['socio_nro'];
+		$this->cuit_cuil->DbValue = $row['cuit_cuil'];
 		$this->id_actividad->DbValue = $row['id_actividad'];
-		$this->id_usuario->DbValue = $row['id_usuario'];
 		$this->propietario->DbValue = $row['propietario'];
 		$this->comercio->DbValue = $row['comercio'];
 		$this->direccion_comercio->DbValue = $row['direccion_comercio'];
-		$this->activo->DbValue = $row['activo'];
 		$this->mail->DbValue = $row['mail'];
 		$this->tel->DbValue = $row['tel'];
 		$this->cel->DbValue = $row['cel'];
-		$this->cuit_cuil->DbValue = $row['cuit_cuil'];
+		$this->activo->DbValue = $row['activo'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Render row values based on field settings
@@ -844,22 +844,27 @@ class csocios_view extends csocios {
 
 		// Common render codes for all row types
 		// socio_nro
+		// cuit_cuil
 		// id_actividad
-		// id_usuario
 		// propietario
 		// comercio
 		// direccion_comercio
-		// activo
 		// mail
 		// tel
 		// cel
-		// cuit_cuil
+		// activo
+		// id_usuario
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
 			// socio_nro
 			$this->socio_nro->ViewValue = $this->socio_nro->CurrentValue;
 			$this->socio_nro->ViewCustomAttributes = "";
+
+			// cuit_cuil
+			$this->cuit_cuil->ViewValue = $this->cuit_cuil->CurrentValue;
+			$this->cuit_cuil->ViewValue = ew_FormatNumber($this->cuit_cuil->ViewValue, 0, -2, -2, -2);
+			$this->cuit_cuil->ViewCustomAttributes = "";
 
 			// propietario
 			$this->propietario->ViewValue = $this->propietario->CurrentValue;
@@ -872,6 +877,21 @@ class csocios_view extends csocios {
 			// direccion_comercio
 			$this->direccion_comercio->ViewValue = $this->direccion_comercio->CurrentValue;
 			$this->direccion_comercio->ViewCustomAttributes = "";
+
+			// mail
+			$this->mail->ViewValue = $this->mail->CurrentValue;
+			$this->mail->ViewValue = strtolower($this->mail->ViewValue);
+			$this->mail->ViewCustomAttributes = "";
+
+			// tel
+			$this->tel->ViewValue = $this->tel->CurrentValue;
+			$this->tel->ViewValue = trim($this->tel->ViewValue);
+			$this->tel->ViewCustomAttributes = "";
+
+			// cel
+			$this->cel->ViewValue = $this->cel->CurrentValue;
+			$this->cel->ViewValue = trim($this->cel->ViewValue);
+			$this->cel->ViewCustomAttributes = "";
 
 			// activo
 			if (strval($this->activo->CurrentValue) <> "") {
@@ -890,30 +910,15 @@ class csocios_view extends csocios {
 			}
 			$this->activo->ViewCustomAttributes = "";
 
-			// mail
-			$this->mail->ViewValue = $this->mail->CurrentValue;
-			$this->mail->ViewValue = strtolower($this->mail->ViewValue);
-			$this->mail->ViewCustomAttributes = "";
-
-			// tel
-			$this->tel->ViewValue = $this->tel->CurrentValue;
-			$this->tel->ViewValue = trim($this->tel->ViewValue);
-			$this->tel->ViewCustomAttributes = "";
-
-			// cel
-			$this->cel->ViewValue = $this->cel->CurrentValue;
-			$this->cel->ViewValue = trim($this->cel->ViewValue);
-			$this->cel->ViewCustomAttributes = "";
-
-			// cuit_cuil
-			$this->cuit_cuil->ViewValue = $this->cuit_cuil->CurrentValue;
-			$this->cuit_cuil->ViewValue = ew_FormatNumber($this->cuit_cuil->ViewValue, 0, -2, -2, -2);
-			$this->cuit_cuil->ViewCustomAttributes = "";
-
 			// socio_nro
 			$this->socio_nro->LinkCustomAttributes = "";
 			$this->socio_nro->HrefValue = "";
 			$this->socio_nro->TooltipValue = "";
+
+			// cuit_cuil
+			$this->cuit_cuil->LinkCustomAttributes = "";
+			$this->cuit_cuil->HrefValue = "";
+			$this->cuit_cuil->TooltipValue = "";
 
 			// propietario
 			$this->propietario->LinkCustomAttributes = "";
@@ -930,11 +935,6 @@ class csocios_view extends csocios {
 			$this->direccion_comercio->HrefValue = "";
 			$this->direccion_comercio->TooltipValue = "";
 
-			// activo
-			$this->activo->LinkCustomAttributes = "";
-			$this->activo->HrefValue = "";
-			$this->activo->TooltipValue = "";
-
 			// mail
 			$this->mail->LinkCustomAttributes = "";
 			$this->mail->HrefValue = "";
@@ -950,10 +950,10 @@ class csocios_view extends csocios {
 			$this->cel->HrefValue = "";
 			$this->cel->TooltipValue = "";
 
-			// cuit_cuil
-			$this->cuit_cuil->LinkCustomAttributes = "";
-			$this->cuit_cuil->HrefValue = "";
-			$this->cuit_cuil->TooltipValue = "";
+			// activo
+			$this->activo->LinkCustomAttributes = "";
+			$this->activo->HrefValue = "";
+			$this->activo->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -1089,24 +1089,6 @@ class csocios_view extends csocios {
 			}
 		}
 
-		// Export detail records (deudas)
-		if (EW_EXPORT_DETAIL_RECORDS && in_array("deudas", explode(",", $this->getCurrentDetailTable()))) {
-			global $deudas;
-			if (!isset($deudas)) $deudas = new cdeudas;
-			$rsdetail = $deudas->LoadRs($deudas->GetDetailFilter()); // Load detail records
-			if ($rsdetail && !$rsdetail->EOF) {
-				$ExportStyle = $Doc->Style;
-				$Doc->SetStyle("h"); // Change to horizontal
-				if ($this->Export <> "csv" || EW_EXPORT_DETAIL_RECORDS_FOR_CSV) {
-					$Doc->ExportEmptyRow();
-					$detailcnt = $rsdetail->RecordCount();
-					$deudas->ExportDocument($Doc, $rsdetail, 1, $detailcnt);
-				}
-				$Doc->SetStyle($ExportStyle); // Restore
-				$rsdetail->Close();
-			}
-		}
-
 		// Export detail records (socios_cuotas)
 		if (EW_EXPORT_DETAIL_RECORDS && in_array("socios_cuotas", explode(",", $this->getCurrentDetailTable()))) {
 			global $socios_cuotas;
@@ -1119,6 +1101,24 @@ class csocios_view extends csocios {
 					$Doc->ExportEmptyRow();
 					$detailcnt = $rsdetail->RecordCount();
 					$socios_cuotas->ExportDocument($Doc, $rsdetail, 1, $detailcnt);
+				}
+				$Doc->SetStyle($ExportStyle); // Restore
+				$rsdetail->Close();
+			}
+		}
+
+		// Export detail records (deudas)
+		if (EW_EXPORT_DETAIL_RECORDS && in_array("deudas", explode(",", $this->getCurrentDetailTable()))) {
+			global $deudas;
+			if (!isset($deudas)) $deudas = new cdeudas;
+			$rsdetail = $deudas->LoadRs($deudas->GetDetailFilter()); // Load detail records
+			if ($rsdetail && !$rsdetail->EOF) {
+				$ExportStyle = $Doc->Style;
+				$Doc->SetStyle("h"); // Change to horizontal
+				if ($this->Export <> "csv" || EW_EXPORT_DETAIL_RECORDS_FOR_CSV) {
+					$Doc->ExportEmptyRow();
+					$detailcnt = $rsdetail->RecordCount();
+					$deudas->ExportDocument($Doc, $rsdetail, 1, $detailcnt);
 				}
 				$Doc->SetStyle($ExportStyle); // Restore
 				$rsdetail->Close();
@@ -1287,20 +1287,6 @@ class csocios_view extends csocios {
 					$GLOBALS["socios_detalles_grid"]->id_socio->setSessionValue($GLOBALS["socios_detalles_grid"]->id_socio->CurrentValue);
 				}
 			}
-			if (in_array("deudas", $DetailTblVar)) {
-				if (!isset($GLOBALS["deudas_grid"]))
-					$GLOBALS["deudas_grid"] = new cdeudas_grid;
-				if ($GLOBALS["deudas_grid"]->DetailView) {
-					$GLOBALS["deudas_grid"]->CurrentMode = "view";
-
-					// Save current master table to detail table
-					$GLOBALS["deudas_grid"]->setCurrentMasterTable($this->TableVar);
-					$GLOBALS["deudas_grid"]->setStartRecordNumber(1);
-					$GLOBALS["deudas_grid"]->id_socio->FldIsDetailKey = TRUE;
-					$GLOBALS["deudas_grid"]->id_socio->CurrentValue = $this->socio_nro->CurrentValue;
-					$GLOBALS["deudas_grid"]->id_socio->setSessionValue($GLOBALS["deudas_grid"]->id_socio->CurrentValue);
-				}
-			}
 			if (in_array("socios_cuotas", $DetailTblVar)) {
 				if (!isset($GLOBALS["socios_cuotas_grid"]))
 					$GLOBALS["socios_cuotas_grid"] = new csocios_cuotas_grid;
@@ -1313,6 +1299,20 @@ class csocios_view extends csocios {
 					$GLOBALS["socios_cuotas_grid"]->id_socio->FldIsDetailKey = TRUE;
 					$GLOBALS["socios_cuotas_grid"]->id_socio->CurrentValue = $this->socio_nro->CurrentValue;
 					$GLOBALS["socios_cuotas_grid"]->id_socio->setSessionValue($GLOBALS["socios_cuotas_grid"]->id_socio->CurrentValue);
+				}
+			}
+			if (in_array("deudas", $DetailTblVar)) {
+				if (!isset($GLOBALS["deudas_grid"]))
+					$GLOBALS["deudas_grid"] = new cdeudas_grid;
+				if ($GLOBALS["deudas_grid"]->DetailView) {
+					$GLOBALS["deudas_grid"]->CurrentMode = "view";
+
+					// Save current master table to detail table
+					$GLOBALS["deudas_grid"]->setCurrentMasterTable($this->TableVar);
+					$GLOBALS["deudas_grid"]->setStartRecordNumber(1);
+					$GLOBALS["deudas_grid"]->id_socio->FldIsDetailKey = TRUE;
+					$GLOBALS["deudas_grid"]->id_socio->CurrentValue = $this->socio_nro->CurrentValue;
+					$GLOBALS["deudas_grid"]->id_socio->setSessionValue($GLOBALS["deudas_grid"]->id_socio->CurrentValue);
 				}
 			}
 		}
@@ -1505,6 +1505,17 @@ $socios_view->ShowMessage();
 </td>
 	</tr>
 <?php } ?>
+<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
+	<tr id="r_cuit_cuil">
+		<td><span id="elh_socios_cuit_cuil"><?php echo $socios->cuit_cuil->FldCaption() ?></span></td>
+		<td<?php echo $socios->cuit_cuil->CellAttributes() ?>>
+<span id="el_socios_cuit_cuil" class="form-group">
+<span<?php echo $socios->cuit_cuil->ViewAttributes() ?>>
+<?php echo $socios->cuit_cuil->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
 <?php if ($socios->propietario->Visible) { // propietario ?>
 	<tr id="r_propietario">
 		<td><span id="elh_socios_propietario"><?php echo $socios->propietario->FldCaption() ?></span></td>
@@ -1534,17 +1545,6 @@ $socios_view->ShowMessage();
 <span id="el_socios_direccion_comercio" class="form-group">
 <span<?php echo $socios->direccion_comercio->ViewAttributes() ?>>
 <?php echo $socios->direccion_comercio->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($socios->activo->Visible) { // activo ?>
-	<tr id="r_activo">
-		<td><span id="elh_socios_activo"><?php echo $socios->activo->FldCaption() ?></span></td>
-		<td<?php echo $socios->activo->CellAttributes() ?>>
-<span id="el_socios_activo" class="form-group">
-<span<?php echo $socios->activo->ViewAttributes() ?>>
-<?php echo $socios->activo->ViewValue ?></span>
 </span>
 </td>
 	</tr>
@@ -1582,13 +1582,13 @@ $socios_view->ShowMessage();
 </td>
 	</tr>
 <?php } ?>
-<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
-	<tr id="r_cuit_cuil">
-		<td><span id="elh_socios_cuit_cuil"><?php echo $socios->cuit_cuil->FldCaption() ?></span></td>
-		<td<?php echo $socios->cuit_cuil->CellAttributes() ?>>
-<span id="el_socios_cuit_cuil" class="form-group">
-<span<?php echo $socios->cuit_cuil->ViewAttributes() ?>>
-<?php echo $socios->cuit_cuil->ViewValue ?></span>
+<?php if ($socios->activo->Visible) { // activo ?>
+	<tr id="r_activo">
+		<td><span id="elh_socios_activo"><?php echo $socios->activo->FldCaption() ?></span></td>
+		<td<?php echo $socios->activo->CellAttributes() ?>>
+<span id="el_socios_activo" class="form-group">
+<span<?php echo $socios->activo->ViewAttributes() ?>>
+<?php echo $socios->activo->ViewValue ?></span>
 </span>
 </td>
 	</tr>
@@ -1617,19 +1617,6 @@ $socios_view->ShowMessage();
 	}
 ?>
 <?php
-	if (in_array("deudas", explode(",", $socios->getCurrentDetailTable())) && $deudas->DetailView) {
-		if ($FirstActiveDetailTable == "" || $FirstActiveDetailTable == "deudas") {
-			$FirstActiveDetailTable = "deudas";
-			$ActiveTableItemClass = " class=\"active\"";
-		} else {
-			$ActiveTableItemClass = "";
-		}
-?>
-		<li<?php echo $ActiveTableItemClass ?>><a href="#tab_deudas" data-toggle="tab"><?php echo $Language->TablePhrase("deudas", "TblCaption") ?></a></li>
-<?php
-	}
-?>
-<?php
 	if (in_array("socios_cuotas", explode(",", $socios->getCurrentDetailTable())) && $socios_cuotas->DetailView) {
 		if ($FirstActiveDetailTable == "" || $FirstActiveDetailTable == "socios_cuotas") {
 			$FirstActiveDetailTable = "socios_cuotas";
@@ -1639,6 +1626,19 @@ $socios_view->ShowMessage();
 		}
 ?>
 		<li<?php echo $ActiveTableItemClass ?>><a href="#tab_socios_cuotas" data-toggle="tab"><?php echo $Language->TablePhrase("socios_cuotas", "TblCaption") ?></a></li>
+<?php
+	}
+?>
+<?php
+	if (in_array("deudas", explode(",", $socios->getCurrentDetailTable())) && $deudas->DetailView) {
+		if ($FirstActiveDetailTable == "" || $FirstActiveDetailTable == "deudas") {
+			$FirstActiveDetailTable = "deudas";
+			$ActiveTableItemClass = " class=\"active\"";
+		} else {
+			$ActiveTableItemClass = "";
+		}
+?>
+		<li<?php echo $ActiveTableItemClass ?>><a href="#tab_deudas" data-toggle="tab"><?php echo $Language->TablePhrase("deudas", "TblCaption") ?></a></li>
 <?php
 	}
 ?>
@@ -1658,19 +1658,6 @@ $socios_view->ShowMessage();
 		</div>
 <?php } ?>
 <?php
-	if (in_array("deudas", explode(",", $socios->getCurrentDetailTable())) && $deudas->DetailView) {
-		if ($FirstActiveDetailTable == "" || $FirstActiveDetailTable == "deudas") {
-			$FirstActiveDetailTable = "deudas";
-			$ActiveTableDivClass = " active";
-		} else {
-			$ActiveTableDivClass = "";
-		}
-?>
-		<div class="tab-pane<?php echo $ActiveTableDivClass ?>" id="tab_deudas">
-<?php include_once "cciag_deudasgrid.php" ?>
-		</div>
-<?php } ?>
-<?php
 	if (in_array("socios_cuotas", explode(",", $socios->getCurrentDetailTable())) && $socios_cuotas->DetailView) {
 		if ($FirstActiveDetailTable == "" || $FirstActiveDetailTable == "socios_cuotas") {
 			$FirstActiveDetailTable = "socios_cuotas";
@@ -1681,6 +1668,19 @@ $socios_view->ShowMessage();
 ?>
 		<div class="tab-pane<?php echo $ActiveTableDivClass ?>" id="tab_socios_cuotas">
 <?php include_once "cciag_socios_cuotasgrid.php" ?>
+		</div>
+<?php } ?>
+<?php
+	if (in_array("deudas", explode(",", $socios->getCurrentDetailTable())) && $deudas->DetailView) {
+		if ($FirstActiveDetailTable == "" || $FirstActiveDetailTable == "deudas") {
+			$FirstActiveDetailTable = "deudas";
+			$ActiveTableDivClass = " active";
+		} else {
+			$ActiveTableDivClass = "";
+		}
+?>
+		<div class="tab-pane<?php echo $ActiveTableDivClass ?>" id="tab_deudas">
+<?php include_once "cciag_deudasgrid.php" ?>
 		</div>
 <?php } ?>
 	</div>

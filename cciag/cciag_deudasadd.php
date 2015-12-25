@@ -872,6 +872,25 @@ class cdeudas_add extends cdeudas {
 			}
 		}
 
+		// Check referential integrity for master table 'socios'
+		$bValidMasterRecord = TRUE;
+		$sMasterFilter = $this->SqlMasterFilter_socios();
+		if (strval($this->id_socio->CurrentValue) <> "") {
+			$sMasterFilter = str_replace("@socio_nro@", ew_AdjustSql($this->id_socio->CurrentValue), $sMasterFilter);
+		} else {
+			$bValidMasterRecord = FALSE;
+		}
+		if ($bValidMasterRecord) {
+			$rsmaster = $GLOBALS["socios"]->LoadRs($sMasterFilter);
+			$bValidMasterRecord = ($rsmaster && !$rsmaster->EOF);
+			$rsmaster->Close();
+		}
+		if (!$bValidMasterRecord) {
+			$sRelatedRecordMsg = str_replace("%t", "socios", $Language->Phrase("RelatedRecordRequired"));
+			$this->setFailureMessage($sRelatedRecordMsg);
+			return FALSE;
+		}
+
 		// Begin transaction
 		if ($this->getCurrentDetailTable() <> "")
 			$conn->BeginTrans();

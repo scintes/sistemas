@@ -42,7 +42,6 @@ class csocios_delete extends csocios {
 		if ($this->UseTokenInUrl) $PageUrl .= "t=" . $this->TableVar . "&"; // Add page token
 		return $PageUrl;
 	}
-	var $AuditTrailOnDelete = TRUE;
 
 	// Message
 	function getMessage() {
@@ -274,18 +273,18 @@ class csocios_delete extends csocios {
 				exit();
 			}
 
-			// Process auto fill for detail table 'deudas'
-			if (@$_POST["grid"] == "fdeudasgrid") {
-				if (!isset($GLOBALS["deudas_grid"])) $GLOBALS["deudas_grid"] = new cdeudas_grid;
-				$GLOBALS["deudas_grid"]->Page_Init();
-				$this->Page_Terminate();
-				exit();
-			}
-
 			// Process auto fill for detail table 'socios_cuotas'
 			if (@$_POST["grid"] == "fsocios_cuotasgrid") {
 				if (!isset($GLOBALS["socios_cuotas_grid"])) $GLOBALS["socios_cuotas_grid"] = new csocios_cuotas_grid;
 				$GLOBALS["socios_cuotas_grid"]->Page_Init();
+				$this->Page_Terminate();
+				exit();
+			}
+
+			// Process auto fill for detail table 'deudas'
+			if (@$_POST["grid"] == "fdeudasgrid") {
+				if (!isset($GLOBALS["deudas_grid"])) $GLOBALS["deudas_grid"] = new cdeudas_grid;
+				$GLOBALS["deudas_grid"]->Page_Init();
 				$this->Page_Terminate();
 				exit();
 			}
@@ -460,21 +459,21 @@ class csocios_delete extends csocios {
 		$row = &$rs->fields;
 		$this->Row_Selected($row);
 		$this->socio_nro->setDbValue($rs->fields('socio_nro'));
+		$this->cuit_cuil->setDbValue($rs->fields('cuit_cuil'));
 		$this->id_actividad->setDbValue($rs->fields('id_actividad'));
 		if (array_key_exists('EV__id_actividad', $rs->fields)) {
 			$this->id_actividad->VirtualValue = $rs->fields('EV__id_actividad'); // Set up virtual field value
 		} else {
 			$this->id_actividad->VirtualValue = ""; // Clear value
 		}
-		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 		$this->propietario->setDbValue($rs->fields('propietario'));
 		$this->comercio->setDbValue($rs->fields('comercio'));
 		$this->direccion_comercio->setDbValue($rs->fields('direccion_comercio'));
-		$this->activo->setDbValue($rs->fields('activo'));
 		$this->mail->setDbValue($rs->fields('mail'));
 		$this->tel->setDbValue($rs->fields('tel'));
 		$this->cel->setDbValue($rs->fields('cel'));
-		$this->cuit_cuil->setDbValue($rs->fields('cuit_cuil'));
+		$this->activo->setDbValue($rs->fields('activo'));
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Load DbValue from recordset
@@ -482,16 +481,16 @@ class csocios_delete extends csocios {
 		if (!$rs || !is_array($rs) && $rs->EOF) return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->socio_nro->DbValue = $row['socio_nro'];
+		$this->cuit_cuil->DbValue = $row['cuit_cuil'];
 		$this->id_actividad->DbValue = $row['id_actividad'];
-		$this->id_usuario->DbValue = $row['id_usuario'];
 		$this->propietario->DbValue = $row['propietario'];
 		$this->comercio->DbValue = $row['comercio'];
 		$this->direccion_comercio->DbValue = $row['direccion_comercio'];
-		$this->activo->DbValue = $row['activo'];
 		$this->mail->DbValue = $row['mail'];
 		$this->tel->DbValue = $row['tel'];
 		$this->cel->DbValue = $row['cel'];
-		$this->cuit_cuil->DbValue = $row['cuit_cuil'];
+		$this->activo->DbValue = $row['activo'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Render row values based on field settings
@@ -506,27 +505,31 @@ class csocios_delete extends csocios {
 
 		// Common render codes for all row types
 		// socio_nro
+		// cuit_cuil
 		// id_actividad
 
 		$this->id_actividad->CellCssStyle = "white-space: nowrap;";
 
-		// id_usuario
-		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
-
 		// propietario
 		// comercio
 		// direccion_comercio
-		// activo
 		// mail
 		// tel
 		// cel
-		// cuit_cuil
+		// activo
+		// id_usuario
 
+		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
 			// socio_nro
 			$this->socio_nro->ViewValue = $this->socio_nro->CurrentValue;
 			$this->socio_nro->ViewCustomAttributes = "";
+
+			// cuit_cuil
+			$this->cuit_cuil->ViewValue = $this->cuit_cuil->CurrentValue;
+			$this->cuit_cuil->ViewValue = ew_FormatNumber($this->cuit_cuil->ViewValue, 0, -2, -2, -2);
+			$this->cuit_cuil->ViewCustomAttributes = "";
 
 			// propietario
 			$this->propietario->ViewValue = $this->propietario->CurrentValue;
@@ -539,6 +542,21 @@ class csocios_delete extends csocios {
 			// direccion_comercio
 			$this->direccion_comercio->ViewValue = $this->direccion_comercio->CurrentValue;
 			$this->direccion_comercio->ViewCustomAttributes = "";
+
+			// mail
+			$this->mail->ViewValue = $this->mail->CurrentValue;
+			$this->mail->ViewValue = strtolower($this->mail->ViewValue);
+			$this->mail->ViewCustomAttributes = "";
+
+			// tel
+			$this->tel->ViewValue = $this->tel->CurrentValue;
+			$this->tel->ViewValue = trim($this->tel->ViewValue);
+			$this->tel->ViewCustomAttributes = "";
+
+			// cel
+			$this->cel->ViewValue = $this->cel->CurrentValue;
+			$this->cel->ViewValue = trim($this->cel->ViewValue);
+			$this->cel->ViewCustomAttributes = "";
 
 			// activo
 			if (strval($this->activo->CurrentValue) <> "") {
@@ -557,30 +575,15 @@ class csocios_delete extends csocios {
 			}
 			$this->activo->ViewCustomAttributes = "";
 
-			// mail
-			$this->mail->ViewValue = $this->mail->CurrentValue;
-			$this->mail->ViewValue = strtolower($this->mail->ViewValue);
-			$this->mail->ViewCustomAttributes = "";
-
-			// tel
-			$this->tel->ViewValue = $this->tel->CurrentValue;
-			$this->tel->ViewValue = trim($this->tel->ViewValue);
-			$this->tel->ViewCustomAttributes = "";
-
-			// cel
-			$this->cel->ViewValue = $this->cel->CurrentValue;
-			$this->cel->ViewValue = trim($this->cel->ViewValue);
-			$this->cel->ViewCustomAttributes = "";
-
-			// cuit_cuil
-			$this->cuit_cuil->ViewValue = $this->cuit_cuil->CurrentValue;
-			$this->cuit_cuil->ViewValue = ew_FormatNumber($this->cuit_cuil->ViewValue, 0, -2, -2, -2);
-			$this->cuit_cuil->ViewCustomAttributes = "";
-
 			// socio_nro
 			$this->socio_nro->LinkCustomAttributes = "";
 			$this->socio_nro->HrefValue = "";
 			$this->socio_nro->TooltipValue = "";
+
+			// cuit_cuil
+			$this->cuit_cuil->LinkCustomAttributes = "";
+			$this->cuit_cuil->HrefValue = "";
+			$this->cuit_cuil->TooltipValue = "";
 
 			// propietario
 			$this->propietario->LinkCustomAttributes = "";
@@ -597,11 +600,6 @@ class csocios_delete extends csocios {
 			$this->direccion_comercio->HrefValue = "";
 			$this->direccion_comercio->TooltipValue = "";
 
-			// activo
-			$this->activo->LinkCustomAttributes = "";
-			$this->activo->HrefValue = "";
-			$this->activo->TooltipValue = "";
-
 			// mail
 			$this->mail->LinkCustomAttributes = "";
 			$this->mail->HrefValue = "";
@@ -617,10 +615,10 @@ class csocios_delete extends csocios {
 			$this->cel->HrefValue = "";
 			$this->cel->TooltipValue = "";
 
-			// cuit_cuil
-			$this->cuit_cuil->LinkCustomAttributes = "";
-			$this->cuit_cuil->HrefValue = "";
-			$this->cuit_cuil->TooltipValue = "";
+			// activo
+			$this->activo->LinkCustomAttributes = "";
+			$this->activo->HrefValue = "";
+			$this->activo->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -655,7 +653,6 @@ class csocios_delete extends csocios {
 		}
 		$rows = ($rs) ? $rs->GetRows() : array();
 		$conn->BeginTrans();
-		if ($this->AuditTrailOnDelete) $this->WriteAuditTrailDummy($Language->Phrase("BatchDeleteBegin")); // Batch delete begin
 
 		// Clone old rows
 		$rsold = $rows;
@@ -699,14 +696,8 @@ class csocios_delete extends csocios {
 		}
 		if ($DeleteRows) {
 			$conn->CommitTrans(); // Commit the changes
-			if ($DeleteRows) {
-				foreach ($rsold as $row)
-					$this->WriteAuditTrailOnDelete($row);
-			}
-			if ($this->AuditTrailOnDelete) $this->WriteAuditTrailDummy($Language->Phrase("BatchDeleteSuccess")); // Batch delete success
 		} else {
 			$conn->RollbackTrans(); // Rollback changes
-			if ($this->AuditTrailOnDelete) $this->WriteAuditTrailDummy($Language->Phrase("BatchDeleteRollback")); // Batch delete rollback
 		}
 
 		// Call Row Deleted event
@@ -733,45 +724,6 @@ class csocios_delete extends csocios {
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_socioslist.php", "", $this->TableVar, TRUE);
 		$PageId = "delete";
 		$Breadcrumb->Add("delete", $PageId, ew_CurrentUrl());
-	}
-
-	// Write Audit Trail start/end for grid update
-	function WriteAuditTrailDummy($typ) {
-		$table = 'socios';
-	  $usr = CurrentUserID();
-		ew_WriteAuditTrail("log", ew_StdCurrentDateTime(), ew_ScriptName(), $usr, $typ, $table, "", "", "", "");
-	}
-
-	// Write Audit Trail (delete page)
-	function WriteAuditTrailOnDelete(&$rs) {
-		if (!$this->AuditTrailOnDelete) return;
-		$table = 'socios';
-
-		// Get key value
-		$key = "";
-		if ($key <> "")
-			$key .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
-		$key .= $rs['socio_nro'];
-
-		// Write Audit Trail
-		$dt = ew_StdCurrentDateTime();
-		$id = ew_ScriptName();
-	  $curUser = CurrentUserID();
-		foreach (array_keys($rs) as $fldname) {
-			if (array_key_exists($fldname, $this->fields) && $this->fields[$fldname]->FldDataType <> EW_DATATYPE_BLOB) { // Ignore BLOB fields
-				if ($this->fields[$fldname]->FldDataType == EW_DATATYPE_MEMO) {
-					if (EW_AUDIT_TRAIL_TO_DATABASE)
-						$oldvalue = $rs[$fldname];
-					else
-						$oldvalue = "[MEMO]"; // Memo field
-				} elseif ($this->fields[$fldname]->FldDataType == EW_DATATYPE_XML) {
-					$oldvalue = "[XML]"; // XML field
-				} else {
-					$oldvalue = $rs[$fldname];
-				}
-				ew_WriteAuditTrail("log", $dt, $id, $curUser, "D", $table, $fldname, $key, $oldvalue, "");
-			}
-		}
 	}
 
 	// Page Load event
@@ -926,6 +878,9 @@ $socios_delete->ShowMessage();
 <?php if ($socios->socio_nro->Visible) { // socio_nro ?>
 		<th><span id="elh_socios_socio_nro" class="socios_socio_nro"><?php echo $socios->socio_nro->FldCaption() ?></span></th>
 <?php } ?>
+<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
+		<th><span id="elh_socios_cuit_cuil" class="socios_cuit_cuil"><?php echo $socios->cuit_cuil->FldCaption() ?></span></th>
+<?php } ?>
 <?php if ($socios->propietario->Visible) { // propietario ?>
 		<th><span id="elh_socios_propietario" class="socios_propietario"><?php echo $socios->propietario->FldCaption() ?></span></th>
 <?php } ?>
@@ -934,9 +889,6 @@ $socios_delete->ShowMessage();
 <?php } ?>
 <?php if ($socios->direccion_comercio->Visible) { // direccion_comercio ?>
 		<th><span id="elh_socios_direccion_comercio" class="socios_direccion_comercio"><?php echo $socios->direccion_comercio->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($socios->activo->Visible) { // activo ?>
-		<th><span id="elh_socios_activo" class="socios_activo"><?php echo $socios->activo->FldCaption() ?></span></th>
 <?php } ?>
 <?php if ($socios->mail->Visible) { // mail ?>
 		<th><span id="elh_socios_mail" class="socios_mail"><?php echo $socios->mail->FldCaption() ?></span></th>
@@ -947,8 +899,8 @@ $socios_delete->ShowMessage();
 <?php if ($socios->cel->Visible) { // cel ?>
 		<th><span id="elh_socios_cel" class="socios_cel"><?php echo $socios->cel->FldCaption() ?></span></th>
 <?php } ?>
-<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
-		<th><span id="elh_socios_cuit_cuil" class="socios_cuit_cuil"><?php echo $socios->cuit_cuil->FldCaption() ?></span></th>
+<?php if ($socios->activo->Visible) { // activo ?>
+		<th><span id="elh_socios_activo" class="socios_activo"><?php echo $socios->activo->FldCaption() ?></span></th>
 <?php } ?>
 	</tr>
 	</thead>
@@ -979,6 +931,14 @@ while (!$socios_delete->Recordset->EOF) {
 </span>
 </td>
 <?php } ?>
+<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
+		<td<?php echo $socios->cuit_cuil->CellAttributes() ?>>
+<span id="el<?php echo $socios_delete->RowCnt ?>_socios_cuit_cuil" class="form-group socios_cuit_cuil">
+<span<?php echo $socios->cuit_cuil->ViewAttributes() ?>>
+<?php echo $socios->cuit_cuil->ListViewValue() ?></span>
+</span>
+</td>
+<?php } ?>
 <?php if ($socios->propietario->Visible) { // propietario ?>
 		<td<?php echo $socios->propietario->CellAttributes() ?>>
 <span id="el<?php echo $socios_delete->RowCnt ?>_socios_propietario" class="form-group socios_propietario">
@@ -1000,14 +960,6 @@ while (!$socios_delete->Recordset->EOF) {
 <span id="el<?php echo $socios_delete->RowCnt ?>_socios_direccion_comercio" class="form-group socios_direccion_comercio">
 <span<?php echo $socios->direccion_comercio->ViewAttributes() ?>>
 <?php echo $socios->direccion_comercio->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($socios->activo->Visible) { // activo ?>
-		<td<?php echo $socios->activo->CellAttributes() ?>>
-<span id="el<?php echo $socios_delete->RowCnt ?>_socios_activo" class="form-group socios_activo">
-<span<?php echo $socios->activo->ViewAttributes() ?>>
-<?php echo $socios->activo->ListViewValue() ?></span>
 </span>
 </td>
 <?php } ?>
@@ -1035,11 +987,11 @@ while (!$socios_delete->Recordset->EOF) {
 </span>
 </td>
 <?php } ?>
-<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
-		<td<?php echo $socios->cuit_cuil->CellAttributes() ?>>
-<span id="el<?php echo $socios_delete->RowCnt ?>_socios_cuit_cuil" class="form-group socios_cuit_cuil">
-<span<?php echo $socios->cuit_cuil->ViewAttributes() ?>>
-<?php echo $socios->cuit_cuil->ListViewValue() ?></span>
+<?php if ($socios->activo->Visible) { // activo ?>
+		<td<?php echo $socios->activo->CellAttributes() ?>>
+<span id="el<?php echo $socios_delete->RowCnt ?>_socios_activo" class="form-group socios_activo">
+<span<?php echo $socios->activo->ViewAttributes() ?>>
+<?php echo $socios->activo->ListViewValue() ?></span>
 </span>
 </td>
 <?php } ?>

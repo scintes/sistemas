@@ -1,14 +1,14 @@
 <?php
 
 // socio_nro
+// cuit_cuil
 // propietario
 // comercio
 // direccion_comercio
-// activo
 // mail
 // tel
 // cel
-// cuit_cuil
+// activo
 
 ?>
 <?php if ($socios->Visible) { ?>
@@ -22,6 +22,17 @@
 <span id="el_socios_socio_nro" class="form-group">
 <span<?php echo $socios->socio_nro->ViewAttributes() ?>>
 <?php echo $socios->socio_nro->ListViewValue() ?></span>
+</span>
+</td>
+		</tr>
+<?php } ?>
+<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
+		<tr id="r_cuit_cuil">
+			<td><?php echo $socios->cuit_cuil->FldCaption() ?></td>
+			<td<?php echo $socios->cuit_cuil->CellAttributes() ?>>
+<span id="el_socios_cuit_cuil" class="form-group">
+<span<?php echo $socios->cuit_cuil->ViewAttributes() ?>>
+<?php echo $socios->cuit_cuil->ListViewValue() ?></span>
 </span>
 </td>
 		</tr>
@@ -59,17 +70,6 @@
 </td>
 		</tr>
 <?php } ?>
-<?php if ($socios->activo->Visible) { // activo ?>
-		<tr id="r_activo">
-			<td><?php echo $socios->activo->FldCaption() ?></td>
-			<td<?php echo $socios->activo->CellAttributes() ?>>
-<span id="el_socios_activo" class="form-group">
-<span<?php echo $socios->activo->ViewAttributes() ?>>
-<?php echo $socios->activo->ListViewValue() ?></span>
-</span>
-</td>
-		</tr>
-<?php } ?>
 <?php if ($socios->mail->Visible) { // mail ?>
 		<tr id="r_mail">
 			<td><?php echo $socios->mail->FldCaption() ?></td>
@@ -103,13 +103,13 @@
 </td>
 		</tr>
 <?php } ?>
-<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
-		<tr id="r_cuit_cuil">
-			<td><?php echo $socios->cuit_cuil->FldCaption() ?></td>
-			<td<?php echo $socios->cuit_cuil->CellAttributes() ?>>
-<span id="el_socios_cuit_cuil" class="form-group">
-<span<?php echo $socios->cuit_cuil->ViewAttributes() ?>>
-<?php echo $socios->cuit_cuil->ListViewValue() ?></span>
+<?php if ($socios->activo->Visible) { // activo ?>
+		<tr id="r_activo">
+			<td><?php echo $socios->activo->FldCaption() ?></td>
+			<td<?php echo $socios->activo->CellAttributes() ?>>
+<span id="el_socios_activo" class="form-group">
+<span<?php echo $socios->activo->ViewAttributes() ?>>
+<?php echo $socios->activo->ListViewValue() ?></span>
 </span>
 </td>
 		</tr>

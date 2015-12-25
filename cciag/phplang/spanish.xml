@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" standalone="yes"?>
-<ew-language date="2015/12/17" version="11.0.3" id="sp" name="Spanish" desc="Spanish" author="Cintes Sergio R.">
+<ew-language date="2015/12/25" version="11.0.3" id="sp" name="Spanish" desc="Spanish" author="Cintes Sergio R.">
 	<locale>
 		<phrase id="locale" value=""/><!-- *** system locale for this language -->
 		<phrase id="use_system_locale" value="1"/><!-- *** change to "0" to disable system locale and use the following settings *** -->
@@ -415,27 +415,31 @@
 	</global>
 	<project><phrase id="bodytitle" value="Administración de Socios del CCIAG"/>
 <phrase id="footertext" value="&amp;copy;2015 e.World Technology Ltd. All rights reserved."/>
+<menu id="98"><phrase id="menutext" value="v db rubro actividad socio"/>
+</menu>
 <menu id="27"><phrase id="menutext" value="Inicio"/>
 </menu>
-<menu id="30"><phrase id="menutext" value="backup"/>
-</menu>
-<menu id="23"><phrase id="menutext" value="codigo actividad"/>
-</menu>
-<menu id="25"><phrase id="menutext" value="Autorizaciones"/>
+<menu id="64"><phrase id="menutext" value="v deuda adquirida"/>
 </menu>
 <menu id="13"><phrase id="menutext" value="Socios"/>
-</menu>
-<menu id="24"><phrase id="menutext" value="socios activos"/>
 </menu>
 <menu id="6"><phrase id="menutext" value="ABM - Socios"/>
 </menu>
 <menu id="26"><phrase id="menutext" value="Autorizaciones de Socios"/>
 </menu>
+<menu id="19"><phrase id="menutext" value="detalle asociado"/>
+</menu>
+<menu id="97"><phrase id="menutext" value="Listados"/>
+</menu>
+<menu id="24"><phrase id="menutext" value="socios activos"/>
+</menu>
 <menu id="15"><phrase id="menutext" value="Cantidad de Socios por Actividad"/>
+</menu>
+<menu id="99"><phrase id="menutext" value="Socios por actividad y rubro"/>
 </menu>
 <menu id="16"><phrase id="menutext" value="Cantidad socios por actividad"/>
 </menu>
-<menu id="19"><phrase id="menutext" value="detalle asociado"/>
+<menu id="65"><phrase id="menutext" value="v db rubro actividad"/>
 </menu>
 <menu id="60"><phrase id="menutext" value="Tramites"/>
 </menu>
@@ -445,7 +449,7 @@
 </menu>
 <menu id="12"><phrase id="menutext" value="Contables"/>
 </menu>
-<menu id="21"><phrase id="menutext" value="Resumen por mes de pago"/>
+<menu id="100"><phrase id="menutext" value="Estado de Cuenta de Socios"/>
 </menu>
 <menu id="2"><phrase id="menutext" value="ABM - Deudas Socios"/>
 </menu>
@@ -455,7 +459,11 @@
 </menu>
 <menu id="22"><phrase id="menutext" value="Detalle de deudas"/>
 </menu>
+<menu id="30"><phrase id="menutext" value="backup"/>
+</menu>
 <menu id="14"><phrase id="menutext" value="Listados"/>
+</menu>
+<menu id="25"><phrase id="menutext" value="Autorizaciones"/>
 </menu>
 <menu id="50"><phrase id="menutext" value="Configuración"/>
 </menu>
@@ -558,9 +566,9 @@
 <table id="socios"><phrase id="tblcaption" value="ABM - Socios"/>
 <field id="socio_nro"><phrase id="fldcaption" value="Socio Nro."/>
 </field>
-<field id="id_actividad"><phrase id="fldcaption" value="Actividad"/>
+<field id="cuit_cuil"><phrase id="fldcaption" value="Cuit/Cuil"/>
 </field>
-<field id="id_usuario"><phrase id="fldcaption" value="Usuario"/>
+<field id="id_actividad"><phrase id="fldcaption" value="Actividad"/>
 </field>
 <field id="propietario"><phrase id="fldcaption" value="Propietario"/>
 </field>
@@ -568,19 +576,19 @@
 </field>
 <field id="direccion_comercio"><phrase id="fldcaption" value="Dirección Comercio"/>
 </field>
-<field id="activo"><phrase id="fldcaption" value="Activo"/>
-<phrase id="fldtagvalue1" value="S"/>
-<phrase id="fldtagcaption1" value="Si"/>
-<phrase id="fldtagvalue2" value="N"/>
-<phrase id="fldtagcaption2" value="No"/>
-</field>
 <field id="mail"><phrase id="fldcaption" value="Mail"/>
 </field>
 <field id="tel"><phrase id="fldcaption" value="Tel"/>
 </field>
 <field id="cel"><phrase id="fldcaption" value="Cel"/>
 </field>
-<field id="cuit_cuil"><phrase id="fldcaption" value="Cuit/Cuil"/>
+<field id="activo"><phrase id="fldcaption" value="Activo"/>
+<phrase id="fldtagvalue1" value="S"/>
+<phrase id="fldtagcaption1" value="Si"/>
+<phrase id="fldtagvalue2" value="N"/>
+<phrase id="fldtagcaption2" value="No"/>
+</field>
+<field id="id_usuario"><phrase id="fldcaption" value="Usuario"/>
 </field>
 </table>
 <table id="socios_cuotas"><phrase id="tblcaption" value="Socios Cuotas"/>
@@ -618,11 +626,15 @@
 </field>
 <field id="actividad"><phrase id="fldcaption" value="actividad"/>
 </field>
+<field id="rubro"><phrase id="fldcaption" value="rubro"/>
+</field>
 </table>
 <table id="cantidad_socios_por_actividad"><phrase id="tblcaption" value="Cantidad de Socios por Actividad"/>
-<field id="socio_nro"><phrase id="fldcaption" value="socio nro"/>
+<field id="socio_nro"><phrase id="fldcaption" value="Nto. Socio"/>
 </field>
-<field id="actividad"><phrase id="fldcaption" value="actividad"/>
+<field id="actividad"><phrase id="fldcaption" value="Actividad"/>
+</field>
+<field id="rubro"><phrase id="fldcaption" value="Rubro"/>
 </field>
 </table>
 <table id="userlevelpermissions"><phrase id="tblcaption" value="userlevelpermissions"/>
@@ -647,52 +659,12 @@
 <field id="total"><phrase id="fldcaption" value="Sum (m.importe)"/>
 </field>
 </table>
-<table id="resumen_por_mes_de_pago"><phrase id="tblcaption" value="resumen por mes de pago"/>
-<field id="socio_nro"><phrase id="fldcaption" value="Socio Nro"/>
-</field>
-<field id="comercio"><phrase id="fldcaption" value="Comercio"/>
-</field>
-<field id="mes"><phrase id="fldcaption" value="Mes"/>
-</field>
-<field id="anio"><phrase id="fldcaption" value="Año"/>
-</field>
-<field id="pagos"><phrase id="fldcaption" value="Pagos"/>
-</field>
-</table>
 <table id="detalle_deudas"><phrase id="tblcaption" value="detalle deudas"/>
 <field id="id_deuda"><phrase id="fldcaption" value="Deuda"/>
 </field>
 <field id="detalle"><phrase id="fldcaption" value="Detalle"/>
 </field>
 <field id="importe"><phrase id="fldcaption" value="Importe"/>
-</field>
-</table>
-<table id="codigo_actividad"><phrase id="tblcaption" value="codigo actividad"/>
-<field id="id"><phrase id="fldcaption" value="id"/>
-</field>
-<field id="codigo"><phrase id="fldcaption" value="Código"/>
-</field>
-<field id="descripcion"><phrase id="fldcaption" value="Descripcion"/>
-</field>
-<field id="descripcion_resumida"><phrase id="fldcaption" value="Descripción Resumida"/>
-</field>
-<field id="observaciones"><phrase id="fldcaption" value="observaciones"/>
-</field>
-<field id="version"><phrase id="fldcaption" value="version"/>
-</field>
-<field id="id_rubro"><phrase id="fldcaption" value="id rubro"/>
-</field>
-<field id="fecha_alta"><phrase id="fldcaption" value="fecha alta"/>
-</field>
-<field id="fecha_baja"><phrase id="fldcaption" value="fecha baja"/>
-</field>
-<field id="objeto_cuantificable"><phrase id="fldcaption" value="objeto cuantificable"/>
-</field>
-<field id="manipula_alimento"><phrase id="fldcaption" value="manipula alimento"/>
-</field>
-<field id="id_clanae"><phrase id="fldcaption" value="id clanae"/>
-</field>
-<field id="id_actividad_padre"><phrase id="fldcaption" value="id actividad padre"/>
 </field>
 </table>
 <table id="socios_activos"><phrase id="tblcaption" value="socios activos"/>
@@ -740,7 +712,36 @@
 <table id="backup_php"><phrase id="tblcaption" value="backup"/>
 </table>
 <table id="v__configuracion_deuda"/>
-<table id="v_deuda_adquirida"/>
+<table id="v_deuda_adquirida"><phrase id="tblcaption" value="v deuda adquirida"/>
+<field id="propietario"><phrase id="fldcaption" value="propietario"/>
+</field>
+<field id="comercio"><phrase id="fldcaption" value="comercio"/>
+</field>
+<field id="direccion_comercio"><phrase id="fldcaption" value="direccion comercio"/>
+</field>
+<field id="mail"><phrase id="fldcaption" value="mail"/>
+</field>
+<field id="tel"><phrase id="fldcaption" value="tel"/>
+</field>
+<field id="cel"><phrase id="fldcaption" value="cel"/>
+</field>
+<field id="mes"><phrase id="fldcaption" value="mes"/>
+</field>
+<field id="anio"><phrase id="fldcaption" value="anio"/>
+</field>
+<field id="fecha"><phrase id="fldcaption" value="fecha"/>
+</field>
+<field id="monto"><phrase id="fldcaption" value="monto"/>
+</field>
+<field id="detalle"><phrase id="fldcaption" value="detalle"/>
+</field>
+<field id="importe"><phrase id="fldcaption" value="importe"/>
+</field>
+<field id="id_deuda"><phrase id="fldcaption" value="id deuda"/>
+</field>
+<field id="id_socio"><phrase id="fldcaption" value="id socio"/>
+</field>
+</table>
 <table id="seguimiento_tramites"><phrase id="tblcaption" value="Seguimiento de Tramites"/>
 <field id="id_tramite"><phrase id="fldcaption" value="id tramite"/>
 </field>
@@ -777,6 +778,121 @@
 <phrase id="fldtagcaption2" value="En tramite"/>
 <phrase id="fldtagvalue3" value="F"/>
 <phrase id="fldtagcaption3" value="Finalizado"/>
+</field>
+</table>
+<table id="v_db_rubro_actividad"><phrase id="tblcaption" value="v db rubro actividad"/>
+<field id="rubro"><phrase id="fldcaption" value="rubro"/>
+</field>
+<field id="actividad"><phrase id="fldcaption" value="actividad"/>
+</field>
+<field id="id_rubro"><phrase id="fldcaption" value="id rubro"/>
+</field>
+<field id="id_actividad"><phrase id="fldcaption" value="id actividad"/>
+</field>
+</table>
+<table id="v_db_rubro_actividad_socio"><phrase id="tblcaption" value="v db rubro actividad socio"/>
+<field id="id_rubro"><phrase id="fldcaption" value="id rubro"/>
+</field>
+<field id="id_actividad"><phrase id="fldcaption" value="id actividad"/>
+</field>
+<field id="rubro"><phrase id="fldcaption" value="rubro"/>
+</field>
+<field id="actividad"><phrase id="fldcaption" value="actividad"/>
+</field>
+<field id="propietario"><phrase id="fldcaption" value="propietario"/>
+</field>
+<field id="comercio"><phrase id="fldcaption" value="comercio"/>
+</field>
+<field id="direccion_comercio"><phrase id="fldcaption" value="direccion comercio"/>
+</field>
+<field id="mail"><phrase id="fldcaption" value="mail"/>
+</field>
+<field id="tel"><phrase id="fldcaption" value="tel"/>
+</field>
+<field id="cel"><phrase id="fldcaption" value="cel"/>
+</field>
+<field id="cuit_cuil"><phrase id="fldcaption" value="cuit cuil"/>
+</field>
+</table>
+<table id="r_listado_socios_por_actividad_y_rubro"><phrase id="tblcaption" value="r listado socios por actividad y rubro"/>
+<field id="id_rubro"><phrase id="fldcaption" value="id rubro"/>
+</field>
+<field id="id_actividad"><phrase id="fldcaption" value="id actividad"/>
+</field>
+<field id="rubro"><phrase id="fldcaption" value="Rubro"/>
+</field>
+<field id="actividad"><phrase id="fldcaption" value="Actividad"/>
+</field>
+<field id="cuit_cuil"><phrase id="fldcaption" value="Cuit/Cuil"/>
+</field>
+<field id="propietario"><phrase id="fldcaption" value="Propietario"/>
+</field>
+<field id="comercio"><phrase id="fldcaption" value="Razon Social"/>
+</field>
+<field id="direccion_comercio"><phrase id="fldcaption" value="Direccion Comercio"/>
+</field>
+<field id="mail"><phrase id="fldcaption" value="Email"/>
+</field>
+<field id="tel"><phrase id="fldcaption" value="Tel"/>
+</field>
+<field id="cel"><phrase id="fldcaption" value="Cel"/>
+</field>
+</table>
+<table id="codigo_actividad"/>
+<table id="v_total_estado_cuenta_x_anio_mes"><phrase id="tblcaption" value="v total estado cuenta x anio mes"/>
+<field id="socio_nro"><phrase id="fldcaption" value="Socio Nro"/>
+</field>
+<field id="cuit_cuil"><phrase id="fldcaption" value="Cuit Cuil"/>
+</field>
+<field id="propietario"><phrase id="fldcaption" value="Propietario"/>
+</field>
+<field id="comercio"><phrase id="fldcaption" value="Comercio"/>
+</field>
+<field id="mes"><phrase id="fldcaption" value="Mes"/>
+<phrase id="fldtagvalue1" value="1"/>
+<phrase id="fldtagcaption1" value="Enero"/>
+<phrase id="fldtagvalue2" value="2"/>
+<phrase id="fldtagcaption2" value="Febrero"/>
+<phrase id="fldtagvalue3" value="3"/>
+<phrase id="fldtagcaption3" value="Marzo"/>
+<phrase id="fldtagvalue4" value="4"/>
+<phrase id="fldtagcaption4" value="Abril"/>
+<phrase id="fldtagvalue5" value="5"/>
+<phrase id="fldtagcaption5" value="Mayo"/>
+<phrase id="fldtagvalue6" value="6"/>
+<phrase id="fldtagcaption6" value="Junio"/>
+<phrase id="fldtagvalue7" value="7"/>
+<phrase id="fldtagcaption7" value="Julio"/>
+<phrase id="fldtagvalue8" value="8"/>
+<phrase id="fldtagcaption8" value="Agosto"/>
+<phrase id="fldtagvalue9" value="9"/>
+<phrase id="fldtagcaption9" value="Septiembre"/>
+<phrase id="fldtagvalue10" value="10"/>
+<phrase id="fldtagcaption10" value="Octubre"/>
+<phrase id="fldtagvalue11" value="11"/>
+<phrase id="fldtagcaption11" value="Noviembre"/>
+<phrase id="fldtagvalue12" value="12"/>
+<phrase id="fldtagcaption12" value="Diciembre"/>
+</field>
+<field id="anio"><phrase id="fldcaption" value="Año"/>
+<phrase id="fldtagvalue1" value="2012"/>
+<phrase id="fldtagcaption1" value="2010"/>
+<phrase id="fldtagvalue2" value="2013"/>
+<phrase id="fldtagcaption2" value="2011"/>
+<phrase id="fldtagvalue3" value="2014"/>
+<phrase id="fldtagcaption3" value="2012"/>
+<phrase id="fldtagvalue4" value="2015"/>
+<phrase id="fldtagcaption4" value="2013"/>
+<phrase id="fldtagvalue5" value="2016"/>
+<phrase id="fldtagcaption5" value="2016"/>
+<phrase id="fldtagvalue6" value="2017"/>
+<phrase id="fldtagcaption6" value="2017"/>
+<phrase id="fldtagvalue7" value="2018"/>
+<phrase id="fldtagcaption7" value="2018"/>
+</field>
+<field id="deuda"><phrase id="fldcaption" value="T. Deudas"/>
+</field>
+<field id="pago"><phrase id="fldcaption" value="T. Pagos"/>
 </field>
 </table>
 </project>

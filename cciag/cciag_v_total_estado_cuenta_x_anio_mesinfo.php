@@ -1,23 +1,20 @@
 <?php
 
 // Global variable for table object
-$socios = NULL;
+$v_total_estado_cuenta_x_anio_mes = NULL;
 
 //
-// Table class for socios
+// Table class for v_total_estado_cuenta_x_anio_mes
 //
-class csocios extends cTable {
+class cv_total_estado_cuenta_x_anio_mes extends cTable {
 	var $socio_nro;
 	var $cuit_cuil;
-	var $id_actividad;
 	var $propietario;
 	var $comercio;
-	var $direccion_comercio;
-	var $mail;
-	var $tel;
-	var $cel;
-	var $activo;
-	var $id_usuario;
+	var $mes;
+	var $anio;
+	var $deuda;
+	var $pago;
 
 	//
 	// Table class constructor
@@ -27,69 +24,56 @@ class csocios extends cTable {
 
 		// Language object
 		if (!isset($Language)) $Language = new cLanguage();
-		$this->TableVar = 'socios';
-		$this->TableName = 'socios';
-		$this->TableType = 'TABLE';
+		$this->TableVar = 'v_total_estado_cuenta_x_anio_mes';
+		$this->TableName = 'v_total_estado_cuenta_x_anio_mes';
+		$this->TableType = 'VIEW';
 		$this->ExportAll = TRUE;
 		$this->ExportPageBreakCount = 0; // Page break per every n record (PDF only)
 		$this->ExportPageOrientation = "portrait"; // Page orientation (PDF only)
 		$this->ExportPageSize = "a4"; // Page size (PDF only)
-		$this->DetailAdd = TRUE; // Allow detail add
-		$this->DetailEdit = TRUE; // Allow detail edit
-		$this->DetailView = TRUE; // Allow detail view
-		$this->ShowMultipleDetails = TRUE; // Show multiple details
+		$this->DetailAdd = FALSE; // Allow detail add
+		$this->DetailEdit = FALSE; // Allow detail edit
+		$this->DetailView = FALSE; // Allow detail view
+		$this->ShowMultipleDetails = FALSE; // Show multiple details
 		$this->GridAddRowCount = 5;
 		$this->AllowAddDeleteRow = ew_AllowAddDeleteRow(); // Allow add/delete row
-		$this->UserIDAllowSecurity = 104; // User ID Allow
+		$this->UserIDAllowSecurity = 0; // User ID Allow
 		$this->BasicSearch = new cBasicSearch($this->TableVar);
 
 		// socio_nro
-		$this->socio_nro = new cField('socios', 'socios', 'x_socio_nro', 'socio_nro', '`socio_nro`', '`socio_nro`', 3, -1, FALSE, '`socio_nro`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->socio_nro = new cField('v_total_estado_cuenta_x_anio_mes', 'v_total_estado_cuenta_x_anio_mes', 'x_socio_nro', 'socio_nro', '`socio_nro`', '`socio_nro`', 3, -1, FALSE, '`socio_nro`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
 		$this->socio_nro->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['socio_nro'] = &$this->socio_nro;
 
 		// cuit_cuil
-		$this->cuit_cuil = new cField('socios', 'socios', 'x_cuit_cuil', 'cuit_cuil', '`cuit_cuil`', '`cuit_cuil`', 200, -1, FALSE, '`cuit_cuil`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->cuit_cuil = new cField('v_total_estado_cuenta_x_anio_mes', 'v_total_estado_cuenta_x_anio_mes', 'x_cuit_cuil', 'cuit_cuil', '`cuit_cuil`', '`cuit_cuil`', 200, -1, FALSE, '`cuit_cuil`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
 		$this->fields['cuit_cuil'] = &$this->cuit_cuil;
 
-		// id_actividad
-		$this->id_actividad = new cField('socios', 'socios', 'x_id_actividad', 'id_actividad', '`id_actividad`', '`id_actividad`', 3, -1, FALSE, '`EV__id_actividad`', TRUE, TRUE, TRUE, 'FORMATTED TEXT');
-		$this->id_actividad->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
-		$this->fields['id_actividad'] = &$this->id_actividad;
-
 		// propietario
-		$this->propietario = new cField('socios', 'socios', 'x_propietario', 'propietario', '`propietario`', '`propietario`', 200, -1, FALSE, '`propietario`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->propietario = new cField('v_total_estado_cuenta_x_anio_mes', 'v_total_estado_cuenta_x_anio_mes', 'x_propietario', 'propietario', '`propietario`', '`propietario`', 200, -1, FALSE, '`propietario`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
 		$this->fields['propietario'] = &$this->propietario;
 
 		// comercio
-		$this->comercio = new cField('socios', 'socios', 'x_comercio', 'comercio', '`comercio`', '`comercio`', 200, -1, FALSE, '`comercio`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->comercio = new cField('v_total_estado_cuenta_x_anio_mes', 'v_total_estado_cuenta_x_anio_mes', 'x_comercio', 'comercio', '`comercio`', '`comercio`', 200, -1, FALSE, '`comercio`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
 		$this->fields['comercio'] = &$this->comercio;
 
-		// direccion_comercio
-		$this->direccion_comercio = new cField('socios', 'socios', 'x_direccion_comercio', 'direccion_comercio', '`direccion_comercio`', '`direccion_comercio`', 200, -1, FALSE, '`direccion_comercio`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
-		$this->fields['direccion_comercio'] = &$this->direccion_comercio;
+		// mes
+		$this->mes = new cField('v_total_estado_cuenta_x_anio_mes', 'v_total_estado_cuenta_x_anio_mes', 'x_mes', 'mes', '`mes`', '`mes`', 200, -1, FALSE, '`mes`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->fields['mes'] = &$this->mes;
 
-		// mail
-		$this->mail = new cField('socios', 'socios', 'x_mail', 'mail', '`mail`', '`mail`', 200, -1, FALSE, '`mail`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
-		$this->mail->FldDefaultErrMsg = $Language->Phrase("IncorrectEmail");
-		$this->fields['mail'] = &$this->mail;
+		// anio
+		$this->anio = new cField('v_total_estado_cuenta_x_anio_mes', 'v_total_estado_cuenta_x_anio_mes', 'x_anio', 'anio', '`anio`', '`anio`', 200, -1, FALSE, '`anio`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->fields['anio'] = &$this->anio;
 
-		// tel
-		$this->tel = new cField('socios', 'socios', 'x_tel', 'tel', '`tel`', '`tel`', 200, -1, FALSE, '`tel`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
-		$this->fields['tel'] = &$this->tel;
+		// deuda
+		$this->deuda = new cField('v_total_estado_cuenta_x_anio_mes', 'v_total_estado_cuenta_x_anio_mes', 'x_deuda', 'deuda', '`deuda`', '`deuda`', 131, -1, FALSE, '`deuda`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->deuda->FldDefaultErrMsg = $Language->Phrase("IncorrectFloat");
+		$this->fields['deuda'] = &$this->deuda;
 
-		// cel
-		$this->cel = new cField('socios', 'socios', 'x_cel', 'cel', '`cel`', '`cel`', 200, -1, FALSE, '`cel`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
-		$this->fields['cel'] = &$this->cel;
-
-		// activo
-		$this->activo = new cField('socios', 'socios', 'x_activo', 'activo', '`activo`', '`activo`', 200, -1, FALSE, '`activo`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
-		$this->fields['activo'] = &$this->activo;
-
-		// id_usuario
-		$this->id_usuario = new cField('socios', 'socios', 'x_id_usuario', 'id_usuario', '`id_usuario`', '`id_usuario`', 3, -1, FALSE, '`id_usuario`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
-		$this->id_usuario->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
-		$this->fields['id_usuario'] = &$this->id_usuario;
+		// pago
+		$this->pago = new cField('v_total_estado_cuenta_x_anio_mes', 'v_total_estado_cuenta_x_anio_mes', 'x_pago', 'pago', '`pago`', '`pago`', 131, -1, FALSE, '`pago`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->pago->FldDefaultErrMsg = $Language->Phrase("IncorrectFloat");
+		$this->fields['pago'] = &$this->pago;
 	}
 
 	// Single column sort
@@ -104,59 +88,16 @@ class csocios extends cTable {
 			}
 			$ofld->setSort($sThisSort);
 			$this->setSessionOrderBy($sSortField . " " . $sThisSort); // Save to Session
-			$sSortFieldList = ($ofld->FldVirtualExpression <> "") ? $ofld->FldVirtualExpression : $sSortField;
-			$this->setSessionOrderByList($sSortFieldList . " " . $sThisSort); // Save to Session
 		} else {
 			$ofld->setSort("");
 		}
-	}
-
-	// Session ORDER BY for List page
-	function getSessionOrderByList() {
-		return @$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_ORDER_BY_LIST];
-	}
-
-	function setSessionOrderByList($v) {
-		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_ORDER_BY_LIST] = $v;
-	}
-
-	// Current detail table name
-	function getCurrentDetailTable() {
-		return @$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_DETAIL_TABLE];
-	}
-
-	function setCurrentDetailTable($v) {
-		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_DETAIL_TABLE] = $v;
-	}
-
-	// Get detail url
-	function GetDetailUrl() {
-
-		// Detail url
-		$sDetailUrl = "";
-		if ($this->getCurrentDetailTable() == "socios_detalles") {
-			$sDetailUrl = $GLOBALS["socios_detalles"]->GetListUrl() . "?showmaster=" . $this->TableVar;
-			$sDetailUrl .= "&fk_socio_nro=" . urlencode($this->socio_nro->CurrentValue);
-		}
-		if ($this->getCurrentDetailTable() == "socios_cuotas") {
-			$sDetailUrl = $GLOBALS["socios_cuotas"]->GetListUrl() . "?showmaster=" . $this->TableVar;
-			$sDetailUrl .= "&fk_socio_nro=" . urlencode($this->socio_nro->CurrentValue);
-		}
-		if ($this->getCurrentDetailTable() == "deudas") {
-			$sDetailUrl = $GLOBALS["deudas"]->GetListUrl() . "?showmaster=" . $this->TableVar;
-			$sDetailUrl .= "&fk_socio_nro=" . urlencode($this->socio_nro->CurrentValue);
-		}
-		if ($sDetailUrl == "") {
-			$sDetailUrl = "cciag_socioslist.php";
-		}
-		return $sDetailUrl;
 	}
 
 	// Table level SQL
 	var $_SqlFrom = "";
 
 	function getSqlFrom() { // From
-		return ($this->_SqlFrom <> "") ? $this->_SqlFrom : "`socios`";
+		return ($this->_SqlFrom <> "") ? $this->_SqlFrom : "`v_total_estado_cuenta_x_anio_mes`";
 	}
 
 	function SqlFrom() { // For backward compatibility
@@ -178,23 +119,6 @@ class csocios extends cTable {
 
 	function setSqlSelect($v) {
     	$this->_SqlSelect = $v;
-	}
-	var $_SqlSelectList = "";
-
-	function getSqlSelectList() { // Select for List page
-		$select = "";
-		$select = "SELECT * FROM (" .
-			"SELECT *, (SELECT CONCAT(`rubro`,'" . ew_ValueSeparator(1, $this->id_actividad) . "',`actividad`) FROM `v_db_rubro_actividad` `EW_TMP_LOOKUPTABLE` WHERE `EW_TMP_LOOKUPTABLE`.`id_actividad` = `socios`.`id_actividad` LIMIT 1) AS `EV__id_actividad` FROM `socios`" .
-			") `EW_TMP_TABLE`";
-		return ($this->_SqlSelectList <> "") ? $this->_SqlSelectList : $select;
-	}
-
-	function SqlSelectList() { // For backward compatibility
-    	return $this->getSqlSelectList();
-	}
-
-	function setSqlSelectList($v) {
-    	$this->_SqlSelectList = $v;
 	}
 	var $_SqlWhere = "";
 
@@ -277,18 +201,12 @@ class csocios extends cTable {
 
 	// Apply User ID filters
 	function ApplyUserIDFilters($sFilter) {
-		global $Security;
-
-		// Add User ID filter
-		if (!$this->AllowAnonymousUser() && $Security->CurrentUserID() <> "" && !$Security->IsAdmin()) { // Non system admin
-			$sFilter = $this->AddUserIDFilter($sFilter);
-		}
 		return $sFilter;
 	}
 
 	// Check if User ID security allows view all
 	function UserIDAllow($id = "") {
-		$allow = $this->UserIDAllowSecurity;
+		$allow = EW_USER_ID_ALLOW;
 		switch ($id) {
 			case "add":
 			case "copy":
@@ -336,38 +254,15 @@ class csocios extends cTable {
 		ew_AddFilter($sFilter, $this->CurrentFilter);
 		$sFilter = $this->ApplyUserIDFilters($sFilter);
 		$this->Recordset_Selecting($sFilter);
-		if ($this->UseVirtualFields()) {
-			$sSort = $this->getSessionOrderByList();
-			return ew_BuildSelectSql($this->getSqlSelectList(), $this->getSqlWhere(), $this->getSqlGroupBy(),
-				$this->getSqlHaving(), $this->getSqlOrderBy(), $sFilter, $sSort);
-		} else {
-			$sSort = $this->getSessionOrderBy();
-			return ew_BuildSelectSql($this->getSqlSelect(), $this->getSqlWhere(), $this->getSqlGroupBy(),
-				$this->getSqlHaving(), $this->getSqlOrderBy(), $sFilter, $sSort);
-		}
+		$sSort = $this->getSessionOrderBy();
+		return ew_BuildSelectSql($this->getSqlSelect(), $this->getSqlWhere(), $this->getSqlGroupBy(),
+			$this->getSqlHaving(), $this->getSqlOrderBy(), $sFilter, $sSort);
 	}
 
 	// Get ORDER BY clause
 	function GetOrderBy() {
-		$sSort = ($this->UseVirtualFields()) ? $this->getSessionOrderByList() : $this->getSessionOrderBy();
+		$sSort = $this->getSessionOrderBy();
 		return ew_BuildSelectSql("", "", "", "", $this->getSqlOrderBy(), "", $sSort);
-	}
-
-	// Check if virtual fields is used in SQL
-	function UseVirtualFields() {
-		$sWhere = $this->getSessionWhere();
-		$sOrderBy = $this->getSessionOrderByList();
-		if ($sWhere <> "")
-			$sWhere = " " . str_replace(array("(",")"), array("",""), $sWhere) . " ";
-		if ($sOrderBy <> "")
-			$sOrderBy = " " . str_replace(array("(",")"), array("",""), $sOrderBy) . " ";
-		if ($this->id_actividad->AdvancedSearch->SearchValue <> "" ||
-			$this->id_actividad->AdvancedSearch->SearchValue2 <> "" ||
-			strpos($sWhere, " " . $this->id_actividad->FldVirtualExpression . " ") !== FALSE)
-			return TRUE;
-		if (strpos($sOrderBy, " " . $this->id_actividad->FldVirtualExpression . " ") !== FALSE)
-			return TRUE;
-		return FALSE;
 	}
 
 	// Try to get record count
@@ -425,7 +320,7 @@ class csocios extends cTable {
 	}
 
 	// Update Table
-	var $UpdateTable = "`socios`";
+	var $UpdateTable = "`v_total_estado_cuenta_x_anio_mes`";
 
 	// INSERT statement
 	function InsertSQL(&$rs) {
@@ -471,30 +366,6 @@ class csocios extends cTable {
 	// Update
 	function Update(&$rs, $where = "", $rsold = NULL) {
 		global $conn;
-
-		// Cascade update detail field 'id_socio'
-		if (!is_null($rsold) && (isset($rs['socio_nro']) && $rsold['socio_nro'] <> $rs['socio_nro'])) {
-			if (!isset($GLOBALS["socios_detalles"])) $GLOBALS["socios_detalles"] = new csocios_detalles();
-			$rscascade = array();
-			$rscascade['id_socio'] = $rs['socio_nro']; 
-			$GLOBALS["socios_detalles"]->Update($rscascade, "`id_socio` = " . ew_QuotedValue($rsold['socio_nro'], EW_DATATYPE_NUMBER));
-		}
-
-		// Cascade update detail field 'id_socio'
-		if (!is_null($rsold) && (isset($rs['socio_nro']) && $rsold['socio_nro'] <> $rs['socio_nro'])) {
-			if (!isset($GLOBALS["socios_cuotas"])) $GLOBALS["socios_cuotas"] = new csocios_cuotas();
-			$rscascade = array();
-			$rscascade['id_socio'] = $rs['socio_nro']; 
-			$GLOBALS["socios_cuotas"]->Update($rscascade, "`id_socio` = " . ew_QuotedValue($rsold['socio_nro'], EW_DATATYPE_NUMBER));
-		}
-
-		// Cascade update detail field 'id_socio'
-		if (!is_null($rsold) && (isset($rs['socio_nro']) && $rsold['socio_nro'] <> $rs['socio_nro'])) {
-			if (!isset($GLOBALS["deudas"])) $GLOBALS["deudas"] = new cdeudas();
-			$rscascade = array();
-			$rscascade['id_socio'] = $rs['socio_nro']; 
-			$GLOBALS["deudas"]->Update($rscascade, "`id_socio` = " . ew_QuotedValue($rsold['socio_nro'], EW_DATATYPE_NUMBER));
-		}
 		return $conn->Execute($this->UpdateSQL($rs, $where));
 	}
 
@@ -502,8 +373,6 @@ class csocios extends cTable {
 	function DeleteSQL(&$rs, $where = "") {
 		$sql = "DELETE FROM " . $this->UpdateTable . " WHERE ";
 		if ($rs) {
-			if (array_key_exists('socio_nro', $rs))
-				ew_AddFilter($where, ew_QuotedName('socio_nro') . '=' . ew_QuotedValue($rs['socio_nro'], $this->socio_nro->FldDataType));
 		}
 		$filter = $this->CurrentFilter;
 		ew_AddFilter($filter, $where);
@@ -517,35 +386,17 @@ class csocios extends cTable {
 	// Delete
 	function Delete(&$rs, $where = "") {
 		global $conn;
-
-		// Cascade delete detail table 'socios_detalles'
-		if (!isset($GLOBALS["socios_detalles"])) $GLOBALS["socios_detalles"] = new csocios_detalles();
-		$rscascade = array();
-		$GLOBALS["socios_detalles"]->Delete($rscascade, "`id_socio` = " . ew_QuotedValue($rs['socio_nro'], EW_DATATYPE_NUMBER));
-
-		// Cascade delete detail table 'socios_cuotas'
-		if (!isset($GLOBALS["socios_cuotas"])) $GLOBALS["socios_cuotas"] = new csocios_cuotas();
-		$rscascade = array();
-		$GLOBALS["socios_cuotas"]->Delete($rscascade, "`id_socio` = " . ew_QuotedValue($rs['socio_nro'], EW_DATATYPE_NUMBER));
-
-		// Cascade delete detail table 'deudas'
-		if (!isset($GLOBALS["deudas"])) $GLOBALS["deudas"] = new cdeudas();
-		$rscascade = array();
-		$GLOBALS["deudas"]->Delete($rscascade, "`id_socio` = " . ew_QuotedValue($rs['socio_nro'], EW_DATATYPE_NUMBER));
 		return $conn->Execute($this->DeleteSQL($rs, $where));
 	}
 
 	// Key filter WHERE clause
 	function SqlKeyFilter() {
-		return "`socio_nro` = @socio_nro@";
+		return "";
 	}
 
 	// Key filter
 	function KeyFilter() {
 		$sKeyFilter = $this->SqlKeyFilter();
-		if (!is_numeric($this->socio_nro->CurrentValue))
-			$sKeyFilter = "0=1"; // Invalid key
-		$sKeyFilter = str_replace("@socio_nro@", ew_AdjustSql($this->socio_nro->CurrentValue), $sKeyFilter); // Replace key value
 		return $sKeyFilter;
 	}
 
@@ -559,7 +410,7 @@ class csocios extends cTable {
 		if (@$_SESSION[$name] <> "") {
 			return $_SESSION[$name];
 		} else {
-			return "cciag_socioslist.php";
+			return "cciag_v_total_estado_cuenta_x_anio_meslist.php";
 		}
 	}
 
@@ -569,31 +420,28 @@ class csocios extends cTable {
 
 	// List URL
 	function GetListUrl() {
-		return "cciag_socioslist.php";
+		return "cciag_v_total_estado_cuenta_x_anio_meslist.php";
 	}
 
 	// View URL
 	function GetViewUrl($parm = "") {
 		if ($parm <> "")
-			return $this->KeyUrl("cciag_sociosview.php", $this->UrlParm($parm));
+			return $this->KeyUrl("cciag_v_total_estado_cuenta_x_anio_mesview.php", $this->UrlParm($parm));
 		else
-			return $this->KeyUrl("cciag_sociosview.php", $this->UrlParm(EW_TABLE_SHOW_DETAIL . "="));
+			return $this->KeyUrl("cciag_v_total_estado_cuenta_x_anio_mesview.php", $this->UrlParm(EW_TABLE_SHOW_DETAIL . "="));
 	}
 
 	// Add URL
 	function GetAddUrl($parm = "") {
 		if ($parm <> "")
-			return "cciag_sociosadd.php?" . $this->UrlParm($parm);
+			return "cciag_v_total_estado_cuenta_x_anio_mesadd.php?" . $this->UrlParm($parm);
 		else
-			return "cciag_sociosadd.php";
+			return "cciag_v_total_estado_cuenta_x_anio_mesadd.php";
 	}
 
 	// Edit URL
 	function GetEditUrl($parm = "") {
-		if ($parm <> "")
-			return $this->KeyUrl("cciag_sociosedit.php", $this->UrlParm($parm));
-		else
-			return $this->KeyUrl("cciag_sociosedit.php", $this->UrlParm(EW_TABLE_SHOW_DETAIL . "="));
+		return $this->KeyUrl("cciag_v_total_estado_cuenta_x_anio_mesedit.php", $this->UrlParm($parm));
 	}
 
 	// Inline edit URL
@@ -603,10 +451,7 @@ class csocios extends cTable {
 
 	// Copy URL
 	function GetCopyUrl($parm = "") {
-		if ($parm <> "")
-			return $this->KeyUrl("cciag_sociosadd.php", $this->UrlParm($parm));
-		else
-			return $this->KeyUrl("cciag_sociosadd.php", $this->UrlParm(EW_TABLE_SHOW_DETAIL . "="));
+		return $this->KeyUrl("cciag_v_total_estado_cuenta_x_anio_mesadd.php", $this->UrlParm($parm));
 	}
 
 	// Inline copy URL
@@ -616,18 +461,13 @@ class csocios extends cTable {
 
 	// Delete URL
 	function GetDeleteUrl() {
-		return $this->KeyUrl("cciag_sociosdelete.php", $this->UrlParm());
+		return $this->KeyUrl("cciag_v_total_estado_cuenta_x_anio_mesdelete.php", $this->UrlParm());
 	}
 
 	// Add key value to URL
 	function KeyUrl($url, $parm = "") {
 		$sUrl = $url . "?";
 		if ($parm <> "") $sUrl .= $parm . "&";
-		if (!is_null($this->socio_nro->CurrentValue)) {
-			$sUrl .= "socio_nro=" . urlencode($this->socio_nro->CurrentValue);
-		} else {
-			return "javascript:alert(ewLanguage.Phrase('InvalidRecord'));";
-		}
 		return $sUrl;
 	}
 
@@ -656,7 +496,6 @@ class csocios extends cTable {
 			$arKeys = ew_StripSlashes($_GET["key_m"]);
 			$cnt = count($arKeys);
 		} elseif (isset($_GET)) {
-			$arKeys[] = @$_GET["socio_nro"]; // socio_nro
 
 			//return $arKeys; // Do not return yet, so the values will also be checked by the following code
 		}
@@ -664,8 +503,6 @@ class csocios extends cTable {
 		// Check keys
 		$ar = array();
 		foreach ($arKeys as $key) {
-			if (!is_numeric($key))
-				continue;
 			$ar[] = $key;
 		}
 		return $ar;
@@ -677,7 +514,6 @@ class csocios extends cTable {
 		$sKeyFilter = "";
 		foreach ($arKeys as $key) {
 			if ($sKeyFilter <> "") $sKeyFilter .= " OR ";
-			$this->socio_nro->CurrentValue = $key;
 			$sKeyFilter .= "(" . $this->KeyFilter() . ")";
 		}
 		return $sKeyFilter;
@@ -700,15 +536,12 @@ class csocios extends cTable {
 	function LoadListRowValues(&$rs) {
 		$this->socio_nro->setDbValue($rs->fields('socio_nro'));
 		$this->cuit_cuil->setDbValue($rs->fields('cuit_cuil'));
-		$this->id_actividad->setDbValue($rs->fields('id_actividad'));
 		$this->propietario->setDbValue($rs->fields('propietario'));
 		$this->comercio->setDbValue($rs->fields('comercio'));
-		$this->direccion_comercio->setDbValue($rs->fields('direccion_comercio'));
-		$this->mail->setDbValue($rs->fields('mail'));
-		$this->tel->setDbValue($rs->fields('tel'));
-		$this->cel->setDbValue($rs->fields('cel'));
-		$this->activo->setDbValue($rs->fields('activo'));
-		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
+		$this->mes->setDbValue($rs->fields('mes'));
+		$this->anio->setDbValue($rs->fields('anio'));
+		$this->deuda->setDbValue($rs->fields('deuda'));
+		$this->pago->setDbValue($rs->fields('pago'));
 	}
 
 	// Render list row values
@@ -721,107 +554,185 @@ class csocios extends cTable {
    // Common render codes
 		// socio_nro
 		// cuit_cuil
-		// id_actividad
-
-		$this->id_actividad->CellCssStyle = "white-space: nowrap;";
-
 		// propietario
 		// comercio
-		// direccion_comercio
-		// mail
-		// tel
-		// cel
-		// activo
-		// id_usuario
-
-		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
-
+		// mes
+		// anio
+		// deuda
+		// pago
 		// socio_nro
-		$this->socio_nro->ViewValue = $this->socio_nro->CurrentValue;
-		$this->socio_nro->ViewCustomAttributes = "";
 
-		// cuit_cuil
-		$this->cuit_cuil->ViewValue = $this->cuit_cuil->CurrentValue;
-		$this->cuit_cuil->ViewValue = ew_FormatNumber($this->cuit_cuil->ViewValue, 0, -2, -2, -2);
-		$this->cuit_cuil->ViewCustomAttributes = "";
-
-		// id_actividad
-		if ($this->id_actividad->VirtualValue <> "") {
-			$this->id_actividad->ViewValue = $this->id_actividad->VirtualValue;
-		} else {
-		if (strval($this->id_actividad->CurrentValue) <> "") {
-			$sFilterWrk = "`id_actividad`" . ew_SearchString("=", $this->id_actividad->CurrentValue, EW_DATATYPE_NUMBER);
-		$sSqlWrk = "SELECT `id_actividad`, `rubro` AS `DispFld`, `actividad` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `v_db_rubro_actividad`";
+		if (strval($this->socio_nro->CurrentValue) <> "") {
+			$sFilterWrk = "`socio_nro`" . ew_SearchString("=", $this->socio_nro->CurrentValue, EW_DATATYPE_NUMBER);
+		$sSqlWrk = "SELECT `socio_nro`, `socio_nro` AS `DispFld`, `comercio` AS `Disp2Fld`, `propietario` AS `Disp3Fld`, '' AS `Disp4Fld` FROM `socios`";
 		$sWhereWrk = "";
 		if ($sFilterWrk <> "") {
 			ew_AddFilter($sWhereWrk, $sFilterWrk);
 		}
 
 		// Call Lookup selecting
-		$this->Lookup_Selecting($this->id_actividad, $sWhereWrk);
+		$this->Lookup_Selecting($this->socio_nro, $sWhereWrk);
 		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-		$sSqlWrk .= " ORDER BY `rubro` ASC";
+		$sSqlWrk .= " ORDER BY `comercio` DESC";
 			$rswrk = $conn->Execute($sSqlWrk);
 			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$this->id_actividad->ViewValue = $rswrk->fields('DispFld');
-				$this->id_actividad->ViewValue .= ew_ValueSeparator(1,$this->id_actividad) . $rswrk->fields('Disp2Fld');
+				$this->socio_nro->ViewValue = $rswrk->fields('DispFld');
+				$this->socio_nro->ViewValue .= ew_ValueSeparator(1,$this->socio_nro) . $rswrk->fields('Disp2Fld');
+				$this->socio_nro->ViewValue .= ew_ValueSeparator(2,$this->socio_nro) . $rswrk->fields('Disp3Fld');
 				$rswrk->Close();
 			} else {
-				$this->id_actividad->ViewValue = $this->id_actividad->CurrentValue;
+				$this->socio_nro->ViewValue = $this->socio_nro->CurrentValue;
 			}
 		} else {
-			$this->id_actividad->ViewValue = NULL;
+			$this->socio_nro->ViewValue = NULL;
 		}
-		}
-		$this->id_actividad->ViewCustomAttributes = "";
+		$this->socio_nro->ViewValue = ew_FormatNumber($this->socio_nro->ViewValue, 0, -2, -2, -2);
+		$this->socio_nro->ViewCustomAttributes = "";
+
+		// cuit_cuil
+		$this->cuit_cuil->ViewValue = $this->cuit_cuil->CurrentValue;
+		$this->cuit_cuil->ViewCustomAttributes = "";
 
 		// propietario
-		$this->propietario->ViewValue = $this->propietario->CurrentValue;
+		if (strval($this->propietario->CurrentValue) <> "") {
+			$sFilterWrk = "`socio_nro`" . ew_SearchString("=", $this->propietario->CurrentValue, EW_DATATYPE_NUMBER);
+		$sSqlWrk = "SELECT `socio_nro`, `socio_nro` AS `DispFld`, `propietario` AS `Disp2Fld`, '' AS `Disp3Fld`, `comercio` AS `Disp4Fld` FROM `socios`";
+		$sWhereWrk = "";
+		if ($sFilterWrk <> "") {
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+		}
+
+		// Call Lookup selecting
+		$this->Lookup_Selecting($this->propietario, $sWhereWrk);
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = $conn->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$this->propietario->ViewValue = $rswrk->fields('DispFld');
+				$this->propietario->ViewValue .= ew_ValueSeparator(1,$this->propietario) . $rswrk->fields('Disp2Fld');
+				$this->propietario->ViewValue .= ew_ValueSeparator(3,$this->propietario) . $rswrk->fields('Disp4Fld');
+				$rswrk->Close();
+			} else {
+				$this->propietario->ViewValue = $this->propietario->CurrentValue;
+			}
+		} else {
+			$this->propietario->ViewValue = NULL;
+		}
 		$this->propietario->ViewCustomAttributes = "";
 
 		// comercio
-		$this->comercio->ViewValue = $this->comercio->CurrentValue;
-		$this->comercio->ViewCustomAttributes = "";
+		if (strval($this->comercio->CurrentValue) <> "") {
+			$sFilterWrk = "`socio_nro`" . ew_SearchString("=", $this->comercio->CurrentValue, EW_DATATYPE_NUMBER);
+		$sSqlWrk = "SELECT `socio_nro`, `socio_nro` AS `DispFld`, `propietario` AS `Disp2Fld`, '' AS `Disp3Fld`, `comercio` AS `Disp4Fld` FROM `socios`";
+		$sWhereWrk = "";
+		if ($sFilterWrk <> "") {
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+		}
 
-		// direccion_comercio
-		$this->direccion_comercio->ViewValue = $this->direccion_comercio->CurrentValue;
-		$this->direccion_comercio->ViewCustomAttributes = "";
-
-		// mail
-		$this->mail->ViewValue = $this->mail->CurrentValue;
-		$this->mail->ViewValue = strtolower($this->mail->ViewValue);
-		$this->mail->ViewCustomAttributes = "";
-
-		// tel
-		$this->tel->ViewValue = $this->tel->CurrentValue;
-		$this->tel->ViewValue = trim($this->tel->ViewValue);
-		$this->tel->ViewCustomAttributes = "";
-
-		// cel
-		$this->cel->ViewValue = $this->cel->CurrentValue;
-		$this->cel->ViewValue = trim($this->cel->ViewValue);
-		$this->cel->ViewCustomAttributes = "";
-
-		// activo
-		if (strval($this->activo->CurrentValue) <> "") {
-			switch ($this->activo->CurrentValue) {
-				case $this->activo->FldTagValue(1):
-					$this->activo->ViewValue = $this->activo->FldTagCaption(1) <> "" ? $this->activo->FldTagCaption(1) : $this->activo->CurrentValue;
-					break;
-				case $this->activo->FldTagValue(2):
-					$this->activo->ViewValue = $this->activo->FldTagCaption(2) <> "" ? $this->activo->FldTagCaption(2) : $this->activo->CurrentValue;
-					break;
-				default:
-					$this->activo->ViewValue = $this->activo->CurrentValue;
+		// Call Lookup selecting
+		$this->Lookup_Selecting($this->comercio, $sWhereWrk);
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = $conn->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$this->comercio->ViewValue = $rswrk->fields('DispFld');
+				$this->comercio->ViewValue .= ew_ValueSeparator(1,$this->comercio) . $rswrk->fields('Disp2Fld');
+				$this->comercio->ViewValue .= ew_ValueSeparator(3,$this->comercio) . $rswrk->fields('Disp4Fld');
+				$rswrk->Close();
+			} else {
+				$this->comercio->ViewValue = $this->comercio->CurrentValue;
 			}
 		} else {
-			$this->activo->ViewValue = NULL;
+			$this->comercio->ViewValue = NULL;
 		}
-		$this->activo->ViewCustomAttributes = "";
+		$this->comercio->ViewCustomAttributes = "";
 
-		// id_usuario
-		$this->id_usuario->ViewValue = $this->id_usuario->CurrentValue;
-		$this->id_usuario->ViewCustomAttributes = "";
+		// mes
+		if (strval($this->mes->CurrentValue) <> "") {
+			switch ($this->mes->CurrentValue) {
+				case $this->mes->FldTagValue(1):
+					$this->mes->ViewValue = $this->mes->FldTagCaption(1) <> "" ? $this->mes->FldTagCaption(1) : $this->mes->CurrentValue;
+					break;
+				case $this->mes->FldTagValue(2):
+					$this->mes->ViewValue = $this->mes->FldTagCaption(2) <> "" ? $this->mes->FldTagCaption(2) : $this->mes->CurrentValue;
+					break;
+				case $this->mes->FldTagValue(3):
+					$this->mes->ViewValue = $this->mes->FldTagCaption(3) <> "" ? $this->mes->FldTagCaption(3) : $this->mes->CurrentValue;
+					break;
+				case $this->mes->FldTagValue(4):
+					$this->mes->ViewValue = $this->mes->FldTagCaption(4) <> "" ? $this->mes->FldTagCaption(4) : $this->mes->CurrentValue;
+					break;
+				case $this->mes->FldTagValue(5):
+					$this->mes->ViewValue = $this->mes->FldTagCaption(5) <> "" ? $this->mes->FldTagCaption(5) : $this->mes->CurrentValue;
+					break;
+				case $this->mes->FldTagValue(6):
+					$this->mes->ViewValue = $this->mes->FldTagCaption(6) <> "" ? $this->mes->FldTagCaption(6) : $this->mes->CurrentValue;
+					break;
+				case $this->mes->FldTagValue(7):
+					$this->mes->ViewValue = $this->mes->FldTagCaption(7) <> "" ? $this->mes->FldTagCaption(7) : $this->mes->CurrentValue;
+					break;
+				case $this->mes->FldTagValue(8):
+					$this->mes->ViewValue = $this->mes->FldTagCaption(8) <> "" ? $this->mes->FldTagCaption(8) : $this->mes->CurrentValue;
+					break;
+				case $this->mes->FldTagValue(9):
+					$this->mes->ViewValue = $this->mes->FldTagCaption(9) <> "" ? $this->mes->FldTagCaption(9) : $this->mes->CurrentValue;
+					break;
+				case $this->mes->FldTagValue(10):
+					$this->mes->ViewValue = $this->mes->FldTagCaption(10) <> "" ? $this->mes->FldTagCaption(10) : $this->mes->CurrentValue;
+					break;
+				case $this->mes->FldTagValue(11):
+					$this->mes->ViewValue = $this->mes->FldTagCaption(11) <> "" ? $this->mes->FldTagCaption(11) : $this->mes->CurrentValue;
+					break;
+				case $this->mes->FldTagValue(12):
+					$this->mes->ViewValue = $this->mes->FldTagCaption(12) <> "" ? $this->mes->FldTagCaption(12) : $this->mes->CurrentValue;
+					break;
+				default:
+					$this->mes->ViewValue = $this->mes->CurrentValue;
+			}
+		} else {
+			$this->mes->ViewValue = NULL;
+		}
+		$this->mes->ViewValue = ew_FormatNumber($this->mes->ViewValue, 0, -2, -2, -2);
+		$this->mes->ViewCustomAttributes = "";
+
+		// anio
+		if (strval($this->anio->CurrentValue) <> "") {
+			switch ($this->anio->CurrentValue) {
+				case $this->anio->FldTagValue(1):
+					$this->anio->ViewValue = $this->anio->FldTagCaption(1) <> "" ? $this->anio->FldTagCaption(1) : $this->anio->CurrentValue;
+					break;
+				case $this->anio->FldTagValue(2):
+					$this->anio->ViewValue = $this->anio->FldTagCaption(2) <> "" ? $this->anio->FldTagCaption(2) : $this->anio->CurrentValue;
+					break;
+				case $this->anio->FldTagValue(3):
+					$this->anio->ViewValue = $this->anio->FldTagCaption(3) <> "" ? $this->anio->FldTagCaption(3) : $this->anio->CurrentValue;
+					break;
+				case $this->anio->FldTagValue(4):
+					$this->anio->ViewValue = $this->anio->FldTagCaption(4) <> "" ? $this->anio->FldTagCaption(4) : $this->anio->CurrentValue;
+					break;
+				case $this->anio->FldTagValue(5):
+					$this->anio->ViewValue = $this->anio->FldTagCaption(5) <> "" ? $this->anio->FldTagCaption(5) : $this->anio->CurrentValue;
+					break;
+				case $this->anio->FldTagValue(6):
+					$this->anio->ViewValue = $this->anio->FldTagCaption(6) <> "" ? $this->anio->FldTagCaption(6) : $this->anio->CurrentValue;
+					break;
+				case $this->anio->FldTagValue(7):
+					$this->anio->ViewValue = $this->anio->FldTagCaption(7) <> "" ? $this->anio->FldTagCaption(7) : $this->anio->CurrentValue;
+					break;
+				default:
+					$this->anio->ViewValue = $this->anio->CurrentValue;
+			}
+		} else {
+			$this->anio->ViewValue = NULL;
+		}
+		$this->anio->ViewValue = ew_FormatNumber($this->anio->ViewValue, 0, -2, -2, -2);
+		$this->anio->ViewCustomAttributes = "";
+
+		// deuda
+		$this->deuda->ViewValue = $this->deuda->CurrentValue;
+		$this->deuda->ViewCustomAttributes = "";
+
+		// pago
+		$this->pago->ViewValue = $this->pago->CurrentValue;
+		$this->pago->ViewCustomAttributes = "";
 
 		// socio_nro
 		$this->socio_nro->LinkCustomAttributes = "";
@@ -833,11 +744,6 @@ class csocios extends cTable {
 		$this->cuit_cuil->HrefValue = "";
 		$this->cuit_cuil->TooltipValue = "";
 
-		// id_actividad
-		$this->id_actividad->LinkCustomAttributes = "";
-		$this->id_actividad->HrefValue = "";
-		$this->id_actividad->TooltipValue = "";
-
 		// propietario
 		$this->propietario->LinkCustomAttributes = "";
 		$this->propietario->HrefValue = "";
@@ -848,35 +754,25 @@ class csocios extends cTable {
 		$this->comercio->HrefValue = "";
 		$this->comercio->TooltipValue = "";
 
-		// direccion_comercio
-		$this->direccion_comercio->LinkCustomAttributes = "";
-		$this->direccion_comercio->HrefValue = "";
-		$this->direccion_comercio->TooltipValue = "";
+		// mes
+		$this->mes->LinkCustomAttributes = "";
+		$this->mes->HrefValue = "";
+		$this->mes->TooltipValue = "";
 
-		// mail
-		$this->mail->LinkCustomAttributes = "";
-		$this->mail->HrefValue = "";
-		$this->mail->TooltipValue = "";
+		// anio
+		$this->anio->LinkCustomAttributes = "";
+		$this->anio->HrefValue = "";
+		$this->anio->TooltipValue = "";
 
-		// tel
-		$this->tel->LinkCustomAttributes = "";
-		$this->tel->HrefValue = "";
-		$this->tel->TooltipValue = "";
+		// deuda
+		$this->deuda->LinkCustomAttributes = "";
+		$this->deuda->HrefValue = "";
+		$this->deuda->TooltipValue = "";
 
-		// cel
-		$this->cel->LinkCustomAttributes = "";
-		$this->cel->HrefValue = "";
-		$this->cel->TooltipValue = "";
-
-		// activo
-		$this->activo->LinkCustomAttributes = "";
-		$this->activo->HrefValue = "";
-		$this->activo->TooltipValue = "";
-
-		// id_usuario
-		$this->id_usuario->LinkCustomAttributes = "";
-		$this->id_usuario->HrefValue = "";
-		$this->id_usuario->TooltipValue = "";
+		// pago
+		$this->pago->LinkCustomAttributes = "";
+		$this->pago->HrefValue = "";
+		$this->pago->TooltipValue = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -892,8 +788,6 @@ class csocios extends cTable {
 		// socio_nro
 		$this->socio_nro->EditAttrs["class"] = "form-control";
 		$this->socio_nro->EditCustomAttributes = "";
-		$this->socio_nro->EditValue = $this->socio_nro->CurrentValue;
-		$this->socio_nro->ViewCustomAttributes = "";
 
 		// cuit_cuil
 		$this->cuit_cuil->EditAttrs["class"] = "form-control";
@@ -901,65 +795,83 @@ class csocios extends cTable {
 		$this->cuit_cuil->EditValue = ew_HtmlEncode($this->cuit_cuil->CurrentValue);
 		$this->cuit_cuil->PlaceHolder = ew_RemoveHtml($this->cuit_cuil->FldCaption());
 
-		// id_actividad
-		$this->id_actividad->EditAttrs["class"] = "form-control";
-		$this->id_actividad->EditCustomAttributes = "";
-
 		// propietario
 		$this->propietario->EditAttrs["class"] = "form-control";
 		$this->propietario->EditCustomAttributes = "";
-		$this->propietario->EditValue = ew_HtmlEncode($this->propietario->CurrentValue);
-		$this->propietario->PlaceHolder = ew_RemoveHtml($this->propietario->FldCaption());
 
 		// comercio
 		$this->comercio->EditAttrs["class"] = "form-control";
 		$this->comercio->EditCustomAttributes = "";
-		$this->comercio->EditValue = ew_HtmlEncode($this->comercio->CurrentValue);
-		$this->comercio->PlaceHolder = ew_RemoveHtml($this->comercio->FldCaption());
 
-		// direccion_comercio
-		$this->direccion_comercio->EditAttrs["class"] = "form-control";
-		$this->direccion_comercio->EditCustomAttributes = "";
-		$this->direccion_comercio->EditValue = ew_HtmlEncode($this->direccion_comercio->CurrentValue);
-		$this->direccion_comercio->PlaceHolder = ew_RemoveHtml($this->direccion_comercio->FldCaption());
-
-		// mail
-		$this->mail->EditAttrs["class"] = "form-control";
-		$this->mail->EditCustomAttributes = "";
-		$this->mail->EditValue = ew_HtmlEncode($this->mail->CurrentValue);
-		$this->mail->PlaceHolder = ew_RemoveHtml($this->mail->FldCaption());
-
-		// tel
-		$this->tel->EditAttrs["class"] = "form-control";
-		$this->tel->EditCustomAttributes = "";
-		$this->tel->EditValue = ew_HtmlEncode($this->tel->CurrentValue);
-		$this->tel->PlaceHolder = ew_RemoveHtml($this->tel->FldCaption());
-
-		// cel
-		$this->cel->EditAttrs["class"] = "form-control";
-		$this->cel->EditCustomAttributes = "";
-		$this->cel->EditValue = ew_HtmlEncode($this->cel->CurrentValue);
-		$this->cel->PlaceHolder = ew_RemoveHtml($this->cel->FldCaption());
-
-		// activo
-		$this->activo->EditCustomAttributes = "";
+		// mes
+		$this->mes->EditAttrs["class"] = "form-control";
+		$this->mes->EditCustomAttributes = "";
 		$arwrk = array();
-		$arwrk[] = array($this->activo->FldTagValue(1), $this->activo->FldTagCaption(1) <> "" ? $this->activo->FldTagCaption(1) : $this->activo->FldTagValue(1));
-		$arwrk[] = array($this->activo->FldTagValue(2), $this->activo->FldTagCaption(2) <> "" ? $this->activo->FldTagCaption(2) : $this->activo->FldTagValue(2));
-		$this->activo->EditValue = $arwrk;
+		$arwrk[] = array($this->mes->FldTagValue(1), $this->mes->FldTagCaption(1) <> "" ? $this->mes->FldTagCaption(1) : $this->mes->FldTagValue(1));
+		$arwrk[] = array($this->mes->FldTagValue(2), $this->mes->FldTagCaption(2) <> "" ? $this->mes->FldTagCaption(2) : $this->mes->FldTagValue(2));
+		$arwrk[] = array($this->mes->FldTagValue(3), $this->mes->FldTagCaption(3) <> "" ? $this->mes->FldTagCaption(3) : $this->mes->FldTagValue(3));
+		$arwrk[] = array($this->mes->FldTagValue(4), $this->mes->FldTagCaption(4) <> "" ? $this->mes->FldTagCaption(4) : $this->mes->FldTagValue(4));
+		$arwrk[] = array($this->mes->FldTagValue(5), $this->mes->FldTagCaption(5) <> "" ? $this->mes->FldTagCaption(5) : $this->mes->FldTagValue(5));
+		$arwrk[] = array($this->mes->FldTagValue(6), $this->mes->FldTagCaption(6) <> "" ? $this->mes->FldTagCaption(6) : $this->mes->FldTagValue(6));
+		$arwrk[] = array($this->mes->FldTagValue(7), $this->mes->FldTagCaption(7) <> "" ? $this->mes->FldTagCaption(7) : $this->mes->FldTagValue(7));
+		$arwrk[] = array($this->mes->FldTagValue(8), $this->mes->FldTagCaption(8) <> "" ? $this->mes->FldTagCaption(8) : $this->mes->FldTagValue(8));
+		$arwrk[] = array($this->mes->FldTagValue(9), $this->mes->FldTagCaption(9) <> "" ? $this->mes->FldTagCaption(9) : $this->mes->FldTagValue(9));
+		$arwrk[] = array($this->mes->FldTagValue(10), $this->mes->FldTagCaption(10) <> "" ? $this->mes->FldTagCaption(10) : $this->mes->FldTagValue(10));
+		$arwrk[] = array($this->mes->FldTagValue(11), $this->mes->FldTagCaption(11) <> "" ? $this->mes->FldTagCaption(11) : $this->mes->FldTagValue(11));
+		$arwrk[] = array($this->mes->FldTagValue(12), $this->mes->FldTagCaption(12) <> "" ? $this->mes->FldTagCaption(12) : $this->mes->FldTagValue(12));
+		array_unshift($arwrk, array("", $Language->Phrase("PleaseSelect")));
+		$this->mes->EditValue = $arwrk;
 
-		// id_usuario
+		// anio
+		$this->anio->EditAttrs["class"] = "form-control";
+		$this->anio->EditCustomAttributes = "";
+		$arwrk = array();
+		$arwrk[] = array($this->anio->FldTagValue(1), $this->anio->FldTagCaption(1) <> "" ? $this->anio->FldTagCaption(1) : $this->anio->FldTagValue(1));
+		$arwrk[] = array($this->anio->FldTagValue(2), $this->anio->FldTagCaption(2) <> "" ? $this->anio->FldTagCaption(2) : $this->anio->FldTagValue(2));
+		$arwrk[] = array($this->anio->FldTagValue(3), $this->anio->FldTagCaption(3) <> "" ? $this->anio->FldTagCaption(3) : $this->anio->FldTagValue(3));
+		$arwrk[] = array($this->anio->FldTagValue(4), $this->anio->FldTagCaption(4) <> "" ? $this->anio->FldTagCaption(4) : $this->anio->FldTagValue(4));
+		$arwrk[] = array($this->anio->FldTagValue(5), $this->anio->FldTagCaption(5) <> "" ? $this->anio->FldTagCaption(5) : $this->anio->FldTagValue(5));
+		$arwrk[] = array($this->anio->FldTagValue(6), $this->anio->FldTagCaption(6) <> "" ? $this->anio->FldTagCaption(6) : $this->anio->FldTagValue(6));
+		$arwrk[] = array($this->anio->FldTagValue(7), $this->anio->FldTagCaption(7) <> "" ? $this->anio->FldTagCaption(7) : $this->anio->FldTagValue(7));
+		array_unshift($arwrk, array("", $Language->Phrase("PleaseSelect")));
+		$this->anio->EditValue = $arwrk;
+
+		// deuda
+		$this->deuda->EditAttrs["class"] = "form-control";
+		$this->deuda->EditCustomAttributes = "";
+		$this->deuda->EditValue = ew_HtmlEncode($this->deuda->CurrentValue);
+		$this->deuda->PlaceHolder = ew_RemoveHtml($this->deuda->FldCaption());
+		if (strval($this->deuda->EditValue) <> "" && is_numeric($this->deuda->EditValue)) $this->deuda->EditValue = ew_FormatNumber($this->deuda->EditValue, -2, -1, -2, 0);
+
+		// pago
+		$this->pago->EditAttrs["class"] = "form-control";
+		$this->pago->EditCustomAttributes = "";
+		$this->pago->EditValue = ew_HtmlEncode($this->pago->CurrentValue);
+		$this->pago->PlaceHolder = ew_RemoveHtml($this->pago->FldCaption());
+		if (strval($this->pago->EditValue) <> "" && is_numeric($this->pago->EditValue)) $this->pago->EditValue = ew_FormatNumber($this->pago->EditValue, -2, -1, -2, 0);
+
 		// Call Row Rendered event
-
 		$this->Row_Rendered();
 	}
 
 	// Aggregate list row values
 	function AggregateListRowValues() {
+			if (is_numeric($this->deuda->CurrentValue))
+				$this->deuda->Total += $this->deuda->CurrentValue; // Accumulate total
+			if (is_numeric($this->pago->CurrentValue))
+				$this->pago->Total += $this->pago->CurrentValue; // Accumulate total
 	}
 
 	// Aggregate list row (for rendering)
 	function AggregateListRow() {
+			$this->deuda->CurrentValue = $this->deuda->Total;
+			$this->deuda->ViewValue = $this->deuda->CurrentValue;
+			$this->deuda->ViewCustomAttributes = "";
+			$this->deuda->HrefValue = ""; // Clear href value
+			$this->pago->CurrentValue = $this->pago->Total;
+			$this->pago->ViewValue = $this->pago->CurrentValue;
+			$this->pago->ViewCustomAttributes = "";
+			$this->pago->HrefValue = ""; // Clear href value
 	}
 	var $ExportDoc;
 
@@ -978,21 +890,19 @@ class csocios extends cTable {
 					if ($this->cuit_cuil->Exportable) $Doc->ExportCaption($this->cuit_cuil);
 					if ($this->propietario->Exportable) $Doc->ExportCaption($this->propietario);
 					if ($this->comercio->Exportable) $Doc->ExportCaption($this->comercio);
-					if ($this->direccion_comercio->Exportable) $Doc->ExportCaption($this->direccion_comercio);
-					if ($this->mail->Exportable) $Doc->ExportCaption($this->mail);
-					if ($this->tel->Exportable) $Doc->ExportCaption($this->tel);
-					if ($this->cel->Exportable) $Doc->ExportCaption($this->cel);
-					if ($this->activo->Exportable) $Doc->ExportCaption($this->activo);
+					if ($this->mes->Exportable) $Doc->ExportCaption($this->mes);
+					if ($this->anio->Exportable) $Doc->ExportCaption($this->anio);
+					if ($this->deuda->Exportable) $Doc->ExportCaption($this->deuda);
+					if ($this->pago->Exportable) $Doc->ExportCaption($this->pago);
 				} else {
 					if ($this->socio_nro->Exportable) $Doc->ExportCaption($this->socio_nro);
 					if ($this->cuit_cuil->Exportable) $Doc->ExportCaption($this->cuit_cuil);
 					if ($this->propietario->Exportable) $Doc->ExportCaption($this->propietario);
 					if ($this->comercio->Exportable) $Doc->ExportCaption($this->comercio);
-					if ($this->direccion_comercio->Exportable) $Doc->ExportCaption($this->direccion_comercio);
-					if ($this->mail->Exportable) $Doc->ExportCaption($this->mail);
-					if ($this->tel->Exportable) $Doc->ExportCaption($this->tel);
-					if ($this->cel->Exportable) $Doc->ExportCaption($this->cel);
-					if ($this->activo->Exportable) $Doc->ExportCaption($this->activo);
+					if ($this->mes->Exportable) $Doc->ExportCaption($this->mes);
+					if ($this->anio->Exportable) $Doc->ExportCaption($this->anio);
+					if ($this->deuda->Exportable) $Doc->ExportCaption($this->deuda);
+					if ($this->pago->Exportable) $Doc->ExportCaption($this->pago);
 				}
 				$Doc->EndExportRow();
 			}
@@ -1016,6 +926,7 @@ class csocios extends cTable {
 						$Doc->ExportPageBreak();
 				}
 				$this->LoadListRowValues($Recordset);
+				$this->AggregateListRowValues(); // Aggregate row values
 
 				// Render row
 				$this->RowType = EW_ROWTYPE_VIEW; // Render view
@@ -1028,21 +939,19 @@ class csocios extends cTable {
 						if ($this->cuit_cuil->Exportable) $Doc->ExportField($this->cuit_cuil);
 						if ($this->propietario->Exportable) $Doc->ExportField($this->propietario);
 						if ($this->comercio->Exportable) $Doc->ExportField($this->comercio);
-						if ($this->direccion_comercio->Exportable) $Doc->ExportField($this->direccion_comercio);
-						if ($this->mail->Exportable) $Doc->ExportField($this->mail);
-						if ($this->tel->Exportable) $Doc->ExportField($this->tel);
-						if ($this->cel->Exportable) $Doc->ExportField($this->cel);
-						if ($this->activo->Exportable) $Doc->ExportField($this->activo);
+						if ($this->mes->Exportable) $Doc->ExportField($this->mes);
+						if ($this->anio->Exportable) $Doc->ExportField($this->anio);
+						if ($this->deuda->Exportable) $Doc->ExportField($this->deuda);
+						if ($this->pago->Exportable) $Doc->ExportField($this->pago);
 					} else {
 						if ($this->socio_nro->Exportable) $Doc->ExportField($this->socio_nro);
 						if ($this->cuit_cuil->Exportable) $Doc->ExportField($this->cuit_cuil);
 						if ($this->propietario->Exportable) $Doc->ExportField($this->propietario);
 						if ($this->comercio->Exportable) $Doc->ExportField($this->comercio);
-						if ($this->direccion_comercio->Exportable) $Doc->ExportField($this->direccion_comercio);
-						if ($this->mail->Exportable) $Doc->ExportField($this->mail);
-						if ($this->tel->Exportable) $Doc->ExportField($this->tel);
-						if ($this->cel->Exportable) $Doc->ExportField($this->cel);
-						if ($this->activo->Exportable) $Doc->ExportField($this->activo);
+						if ($this->mes->Exportable) $Doc->ExportField($this->mes);
+						if ($this->anio->Exportable) $Doc->ExportField($this->anio);
+						if ($this->deuda->Exportable) $Doc->ExportField($this->deuda);
+						if ($this->pago->Exportable) $Doc->ExportField($this->pago);
 					}
 					$Doc->EndExportRow();
 				}
@@ -1053,61 +962,61 @@ class csocios extends cTable {
 				$this->Row_Export($Recordset->fields);
 			$Recordset->MoveNext();
 		}
+
+		// Export aggregates (horizontal format only)
+		if ($Doc->Horizontal) {
+			$this->RowType = EW_ROWTYPE_AGGREGATE;
+			$this->ResetAttrs();
+			$this->AggregateListRow();
+			if (!$Doc->ExportCustom) {
+				$Doc->BeginExportRow(-1);
+				$Doc->ExportAggregate($this->socio_nro, '');
+				$Doc->ExportAggregate($this->cuit_cuil, '');
+				$Doc->ExportAggregate($this->propietario, '');
+				$Doc->ExportAggregate($this->comercio, '');
+				$Doc->ExportAggregate($this->mes, '');
+				$Doc->ExportAggregate($this->anio, '');
+				$Doc->ExportAggregate($this->deuda, 'TOTAL');
+				$Doc->ExportAggregate($this->pago, 'TOTAL');
+				$Doc->EndExportRow();
+			}
+		}
 		if (!$Doc->ExportCustom) {
 			$Doc->ExportTableFooter();
 		}
-	}
-
-	// Add User ID filter
-	function AddUserIDFilter($sFilter) {
-		global $Security;
-		$sFilterWrk = "";
-		$id = (CurrentPageID() == "list") ? $this->CurrentAction : CurrentPageID();
-		if (!$this->UserIDAllow($id) && !$Security->IsAdmin()) {
-			$sFilterWrk = $Security->UserIDList();
-			if ($sFilterWrk <> "")
-				$sFilterWrk = '`id_usuario` IN (' . $sFilterWrk . ')';
-		}
-
-		// Call User ID Filtering event
-		$this->UserID_Filtering($sFilterWrk);
-		ew_AddFilter($sFilter, $sFilterWrk);
-		return $sFilter;
-	}
-
-	// User ID subquery
-	function GetUserIDSubquery(&$fld, &$masterfld) {
-		global $conn;
-		$sWrk = "";
-		$sSql = "SELECT " . $masterfld->FldExpression . " FROM `socios`";
-		$sFilter = $this->AddUserIDFilter("");
-		if ($sFilter <> "") $sSql .= " WHERE " . $sFilter;
-
-		// Use subquery
-		if (EW_USE_SUBQUERY_FOR_MASTER_USER_ID) {
-			$sWrk = $sSql;
-		} else {
-
-			// List all values
-			if ($rs = $conn->Execute($sSql)) {
-				while (!$rs->EOF) {
-					if ($sWrk <> "") $sWrk .= ",";
-					$sWrk .= ew_QuotedValue($rs->fields[0], $masterfld->FldDataType);
-					$rs->MoveNext();
-				}
-				$rs->Close();
-			}
-		}
-		if ($sWrk <> "") {
-			$sWrk = $fld->FldExpression . " IN (" . $sWrk . ")";
-		}
-		return $sWrk;
 	}
 
 	// Get auto fill value
 	function GetAutoFill($id, $val) {
 		$rsarr = array();
 		$rowcnt = 0;
+		if (preg_match('/^x(\d)*_socio_nro$/', $id)) {
+			$sSqlWrk = "SELECT `cuit_cuil` AS FIELD0, `propietario` AS FIELD1, `comercio` AS FIELD2 FROM `socios`";
+			$sWhereWrk = "(`socio_nro` = " . ew_AdjustSql($val) . ")";
+			if (!$GLOBALS["v_total_estado_cuenta_x_anio_mes"]->UserIDAllow("info")) $sWhereWrk = $GLOBALS["socios"]->AddUserIDFilter($sWhereWrk);
+
+			// Call Lookup selecting
+			$this->Lookup_Selecting($this->socio_nro, $sWhereWrk);
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$sSqlWrk .= " ORDER BY `comercio` DESC";
+			if ($rs = ew_LoadRecordset($sSqlWrk)) {
+				while ($rs && !$rs->EOF) {
+					$ar = array();
+					$this->cuit_cuil->setDbValue($rs->fields[0]);
+					$this->propietario->setDbValue($rs->fields[1]);
+					$this->comercio->setDbValue($rs->fields[2]);
+					$this->RowType == EW_ROWTYPE_EDIT;
+					$this->RenderEditRow();
+					$ar[] = ($this->cuit_cuil->AutoFillOriginalValue) ? $this->cuit_cuil->CurrentValue : $this->cuit_cuil->EditValue;
+					$ar[] = $this->propietario->CurrentValue;
+					$ar[] = $this->comercio->CurrentValue;
+					$rowcnt += 1;
+					$rsarr[] = $ar;
+					$rs->MoveNext();
+				}
+				$rs->Close();
+			}
+		}
 
 		// Output
 		if (is_array($rsarr) && $rowcnt > 0) {

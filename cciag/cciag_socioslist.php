@@ -9,8 +9,8 @@ $EW_RELATIVE_PATH = "";
 <?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_socios_detallesgridcls.php" ?>
-<?php include_once $EW_RELATIVE_PATH . "cciag_deudasgridcls.php" ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_socios_cuotasgridcls.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_deudasgridcls.php" ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
 
@@ -85,9 +85,6 @@ class csocios_list extends csocios {
 	var $GridEditUrl;
 	var $MultiDeleteUrl;
 	var $MultiUpdateUrl;
-	var $AuditTrailOnAdd = TRUE;
-	var $AuditTrailOnEdit = TRUE;
-	var $AuditTrailOnDelete = TRUE;
 
 	// Message
 	function getMessage() {
@@ -328,9 +325,6 @@ class csocios_list extends csocios {
 			$this->Page_Terminate();
 		}
 
-		// Create form object
-		$objForm = new cFormObj();
-
 		// Get export parameters
 		$custom = "";
 		if (@$_GET["export"] <> "") {
@@ -405,18 +399,18 @@ class csocios_list extends csocios {
 				exit();
 			}
 
-			// Process auto fill for detail table 'deudas'
-			if (@$_POST["grid"] == "fdeudasgrid") {
-				if (!isset($GLOBALS["deudas_grid"])) $GLOBALS["deudas_grid"] = new cdeudas_grid;
-				$GLOBALS["deudas_grid"]->Page_Init();
-				$this->Page_Terminate();
-				exit();
-			}
-
 			// Process auto fill for detail table 'socios_cuotas'
 			if (@$_POST["grid"] == "fsocios_cuotasgrid") {
 				if (!isset($GLOBALS["socios_cuotas_grid"])) $GLOBALS["socios_cuotas_grid"] = new csocios_cuotas_grid;
 				$GLOBALS["socios_cuotas_grid"]->Page_Init();
+				$this->Page_Terminate();
+				exit();
+			}
+
+			// Process auto fill for detail table 'deudas'
+			if (@$_POST["grid"] == "fdeudasgrid") {
+				if (!isset($GLOBALS["deudas_grid"])) $GLOBALS["deudas_grid"] = new cdeudas_grid;
+				$GLOBALS["deudas_grid"]->Page_Init();
 				$this->Page_Terminate();
 				exit();
 			}
@@ -549,71 +543,6 @@ class csocios_list extends csocios {
 			if ($this->Export == "")
 				$this->SetupBreadcrumb();
 
-			// Check QueryString parameters
-			if (@$_GET["a"] <> "") {
-				$this->CurrentAction = $_GET["a"];
-
-				// Clear inline mode
-				if ($this->CurrentAction == "cancel")
-					$this->ClearInlineMode();
-
-				// Switch to grid edit mode
-				if ($this->CurrentAction == "gridedit")
-					$this->GridEditMode();
-
-				// Switch to inline edit mode
-				if ($this->CurrentAction == "edit")
-					$this->InlineEditMode();
-
-				// Switch to inline add mode
-				if ($this->CurrentAction == "add" || $this->CurrentAction == "copy")
-					$this->InlineAddMode();
-
-				// Switch to grid add mode
-				if ($this->CurrentAction == "gridadd")
-					$this->GridAddMode();
-			} else {
-				if (@$_POST["a_list"] <> "") {
-					$this->CurrentAction = $_POST["a_list"]; // Get action
-
-					// Grid Update
-					if (($this->CurrentAction == "gridupdate" || $this->CurrentAction == "gridoverwrite") && @$_SESSION[EW_SESSION_INLINE_MODE] == "gridedit") {
-						if ($this->ValidateGridForm()) {
-							$bGridUpdate = $this->GridUpdate();
-						} else {
-							$bGridUpdate = FALSE;
-							$this->setFailureMessage($gsFormError);
-						}
-						if (!$bGridUpdate) {
-							$this->EventCancelled = TRUE;
-							$this->CurrentAction = "gridedit"; // Stay in Grid Edit mode
-						}
-					}
-
-					// Inline Update
-					if (($this->CurrentAction == "update" || $this->CurrentAction == "overwrite") && @$_SESSION[EW_SESSION_INLINE_MODE] == "edit")
-						$this->InlineUpdate();
-
-					// Insert Inline
-					if ($this->CurrentAction == "insert" && @$_SESSION[EW_SESSION_INLINE_MODE] == "add")
-						$this->InlineInsert();
-
-					// Grid Insert
-					if ($this->CurrentAction == "gridinsert" && @$_SESSION[EW_SESSION_INLINE_MODE] == "gridadd") {
-						if ($this->ValidateGridForm()) {
-							$bGridInsert = $this->GridInsert();
-						} else {
-							$bGridInsert = FALSE;
-							$this->setFailureMessage($gsFormError);
-						}
-						if (!$bGridInsert) {
-							$this->EventCancelled = TRUE;
-							$this->CurrentAction = "gridadd"; // Stay in Grid Add mode
-						}
-					}
-				}
-			}
-
 			// Hide list options
 			if ($this->Export <> "") {
 				$this->ListOptions->HideAllOptions(array("sequence"));
@@ -633,14 +562,6 @@ class csocios_list extends csocios {
 			if ($this->Export <> "") {
 				foreach ($this->OtherOptions as &$option)
 					$option->HideAllOptions();
-			}
-
-			// Show grid delete link for grid add / grid edit
-			if ($this->AllowAddDeleteRow) {
-				if ($this->CurrentAction == "gridadd" || $this->CurrentAction == "gridedit") {
-					$item = $this->ListOptions->GetItem("griddelete");
-					if ($item) $item->Visible = TRUE;
-				}
 			}
 
 			// Get default search criteria
@@ -720,6 +641,10 @@ class csocios_list extends csocios {
 			$sFilter = "(0=1)"; // Filter all records
 		ew_AddFilter($sFilter, $this->DbDetailFilter);
 		ew_AddFilter($sFilter, $this->SearchWhere);
+		if ($sFilter == "") {
+			$sFilter = "0=101";
+			$this->SearchWhere = $sFilter;
+		}
 
 		// Set up filter in session
 		$this->setSessionWhere($sFilter);
@@ -743,249 +668,6 @@ class csocios_list extends csocios {
 
 		// Search options
 		$this->SetupSearchOptions();
-	}
-
-	//  Exit inline mode
-	function ClearInlineMode() {
-		$this->setKey("socio_nro", ""); // Clear inline edit key
-		$this->LastAction = $this->CurrentAction; // Save last action
-		$this->CurrentAction = ""; // Clear action
-		$_SESSION[EW_SESSION_INLINE_MODE] = ""; // Clear inline mode
-	}
-
-	// Switch to Grid Add mode
-	function GridAddMode() {
-		$_SESSION[EW_SESSION_INLINE_MODE] = "gridadd"; // Enabled grid add
-	}
-
-	// Switch to Grid Edit mode
-	function GridEditMode() {
-		$_SESSION[EW_SESSION_INLINE_MODE] = "gridedit"; // Enable grid edit
-	}
-
-	// Switch to Inline Edit mode
-	function InlineEditMode() {
-		global $Security, $Language;
-		if (!$Security->CanEdit())
-			$this->Page_Terminate("cciag_login.php"); // Go to login page
-		$bInlineEdit = TRUE;
-		if (@$_GET["socio_nro"] <> "") {
-			$this->socio_nro->setQueryStringValue($_GET["socio_nro"]);
-		} else {
-			$bInlineEdit = FALSE;
-		}
-		if ($bInlineEdit) {
-			if ($this->LoadRow()) {
-
-				// Check if valid user id
-				if (!$this->ShowOptionLink('edit')) {
-					$sUserIdMsg = $Language->Phrase("NoEditPermission");
-					$this->setFailureMessage($sUserIdMsg);
-					$this->ClearInlineMode(); // Clear inline edit mode
-					return;
-				}
-				$this->setKey("socio_nro", $this->socio_nro->CurrentValue); // Set up inline edit key
-				$_SESSION[EW_SESSION_INLINE_MODE] = "edit"; // Enable inline edit
-			}
-		}
-	}
-
-	// Perform update to Inline Edit record
-	function InlineUpdate() {
-		global $Language, $objForm, $gsFormError;
-		$objForm->Index = 1; 
-		$this->LoadFormValues(); // Get form values
-
-		// Validate form
-		$bInlineUpdate = TRUE;
-		if (!$this->ValidateForm()) {	
-			$bInlineUpdate = FALSE; // Form error, reset action
-			$this->setFailureMessage($gsFormError);
-		} else {
-			$bInlineUpdate = FALSE;
-			$rowkey = strval($objForm->GetValue($this->FormKeyName));
-			if ($this->SetupKeyValues($rowkey)) { // Set up key values
-				if ($this->CheckInlineEditKey()) { // Check key
-					$this->SendEmail = TRUE; // Send email on update success
-					$bInlineUpdate = $this->EditRow(); // Update record
-				} else {
-					$bInlineUpdate = FALSE;
-				}
-			}
-		}
-		if ($bInlineUpdate) { // Update success
-			if ($this->getSuccessMessage() == "")
-				$this->setSuccessMessage($Language->Phrase("UpdateSuccess")); // Set up success message
-			$this->ClearInlineMode(); // Clear inline edit mode
-		} else {
-			if ($this->getFailureMessage() == "")
-				$this->setFailureMessage($Language->Phrase("UpdateFailed")); // Set update failed message
-			$this->EventCancelled = TRUE; // Cancel event
-			$this->CurrentAction = "edit"; // Stay in edit mode
-		}
-	}
-
-	// Check Inline Edit key
-	function CheckInlineEditKey() {
-
-		//CheckInlineEditKey = True
-		if (strval($this->getKey("socio_nro")) <> strval($this->socio_nro->CurrentValue))
-			return FALSE;
-		return TRUE;
-	}
-
-	// Switch to Inline Add mode
-	function InlineAddMode() {
-		global $Security, $Language;
-		if (!$Security->CanAdd())
-			$this->Page_Terminate("cciag_login.php"); // Return to login page
-		if ($this->CurrentAction == "copy") {
-			if (@$_GET["socio_nro"] <> "") {
-				$this->socio_nro->setQueryStringValue($_GET["socio_nro"]);
-				$this->setKey("socio_nro", $this->socio_nro->CurrentValue); // Set up key
-			} else {
-				$this->setKey("socio_nro", ""); // Clear key
-				$this->CurrentAction = "add";
-			}
-		}
-
-		// Check if valid user id
-		if ($this->LoadRow() && !$this->ShowOptionLink('add')) {
-			$sUserIdMsg = $Language->Phrase("NoAddPermission");
-			$this->setFailureMessage($sUserIdMsg);
-			$this->ClearInlineMode(); // Clear inline edit mode
-			return;
-		}
-		$_SESSION[EW_SESSION_INLINE_MODE] = "add"; // Enable inline add
-	}
-
-	// Perform update to Inline Add/Copy record
-	function InlineInsert() {
-		global $Language, $objForm, $gsFormError;
-		$this->LoadOldRecord(); // Load old recordset
-		$objForm->Index = 0;
-		$this->LoadFormValues(); // Get form values
-
-		// Validate form
-		if (!$this->ValidateForm()) {
-			$this->setFailureMessage($gsFormError); // Set validation error message
-			$this->EventCancelled = TRUE; // Set event cancelled
-			$this->CurrentAction = "add"; // Stay in add mode
-			return;
-		}
-		$this->SendEmail = TRUE; // Send email on add success
-		if ($this->AddRow($this->OldRecordset)) { // Add record
-			if ($this->getSuccessMessage() == "")
-				$this->setSuccessMessage($Language->Phrase("AddSuccess")); // Set up add success message
-			$this->ClearInlineMode(); // Clear inline add mode
-		} else { // Add failed
-			$this->EventCancelled = TRUE; // Set event cancelled
-			$this->CurrentAction = "add"; // Stay in add mode
-		}
-	}
-
-	// Perform update to grid
-	function GridUpdate() {
-		global $conn, $Language, $objForm, $gsFormError;
-		$bGridUpdate = TRUE;
-
-		// Get old recordset
-		$this->CurrentFilter = $this->BuildKeyFilter();
-		if ($this->CurrentFilter == "")
-			$this->CurrentFilter = "0=1";
-		$sSql = $this->SQL();
-		if ($rs = $conn->Execute($sSql)) {
-			$rsold = $rs->GetRows();
-			$rs->Close();
-		}
-
-		// Call Grid Updating event
-		if (!$this->Grid_Updating($rsold)) {
-			if ($this->getFailureMessage() == "")
-				$this->setFailureMessage($Language->Phrase("GridEditCancelled")); // Set grid edit cancelled message
-			return FALSE;
-		}
-
-		// Begin transaction
-		$conn->BeginTrans();
-		if ($this->AuditTrailOnEdit) $this->WriteAuditTrailDummy($Language->Phrase("BatchUpdateBegin")); // Batch update begin
-		$sKey = "";
-
-		// Update row index and get row key
-		$objForm->Index = -1;
-		$rowcnt = strval($objForm->GetValue($this->FormKeyCountName));
-		if ($rowcnt == "" || !is_numeric($rowcnt))
-			$rowcnt = 0;
-
-		// Update all rows based on key
-		for ($rowindex = 1; $rowindex <= $rowcnt; $rowindex++) {
-			$objForm->Index = $rowindex;
-			$rowkey = strval($objForm->GetValue($this->FormKeyName));
-			$rowaction = strval($objForm->GetValue($this->FormActionName));
-
-			// Load all values and keys
-			if ($rowaction <> "insertdelete") { // Skip insert then deleted rows
-				$this->LoadFormValues(); // Get form values
-				if ($rowaction == "" || $rowaction == "edit" || $rowaction == "delete") {
-					$bGridUpdate = $this->SetupKeyValues($rowkey); // Set up key values
-				} else {
-					$bGridUpdate = TRUE;
-				}
-
-				// Skip empty row
-				if ($rowaction == "insert" && $this->EmptyRow()) {
-
-					// No action required
-				// Validate form and insert/update/delete record
-
-				} elseif ($bGridUpdate) {
-					if ($rowaction == "delete") {
-						$this->CurrentFilter = $this->KeyFilter();
-						$bGridUpdate = $this->DeleteRows(); // Delete this row
-					} else if (!$this->ValidateForm()) {
-						$bGridUpdate = FALSE; // Form error, reset action
-						$this->setFailureMessage($gsFormError);
-					} else {
-						if ($rowaction == "insert") {
-							$bGridUpdate = $this->AddRow(); // Insert this row
-						} else {
-							if ($rowkey <> "") {
-								$this->SendEmail = FALSE; // Do not send email on update success
-								$bGridUpdate = $this->EditRow(); // Update this row
-							}
-						} // End update
-					}
-				}
-				if ($bGridUpdate) {
-					if ($sKey <> "") $sKey .= ", ";
-					$sKey .= $rowkey;
-				} else {
-					break;
-				}
-			}
-		}
-		if ($bGridUpdate) {
-			$conn->CommitTrans(); // Commit transaction
-
-			// Get new recordset
-			if ($rs = $conn->Execute($sSql)) {
-				$rsnew = $rs->GetRows();
-				$rs->Close();
-			}
-
-			// Call Grid_Updated event
-			$this->Grid_Updated($rsold, $rsnew);
-			if ($this->AuditTrailOnEdit) $this->WriteAuditTrailDummy($Language->Phrase("BatchUpdateSuccess")); // Batch update success
-			if ($this->getSuccessMessage() == "")
-				$this->setSuccessMessage($Language->Phrase("UpdateSuccess")); // Set up update success message
-			$this->ClearInlineMode(); // Clear inline edit mode
-		} else {
-			$conn->RollbackTrans(); // Rollback transaction
-			if ($this->AuditTrailOnEdit) $this->WriteAuditTrailDummy($Language->Phrase("BatchUpdateRollback")); // Batch update rollback
-			if ($this->getFailureMessage() == "")
-				$this->setFailureMessage($Language->Phrase("UpdateFailed")); // Set update failed message
-		}
-		return $bGridUpdate;
 	}
 
 	// Build filter for all keys
@@ -1026,204 +708,21 @@ class csocios_list extends csocios {
 		return TRUE;
 	}
 
-	// Perform Grid Add
-	function GridInsert() {
-		global $conn, $Language, $objForm, $gsFormError;
-		$rowindex = 1;
-		$bGridInsert = FALSE;
-
-		// Call Grid Inserting event
-		if (!$this->Grid_Inserting()) {
-			if ($this->getFailureMessage() == "") {
-				$this->setFailureMessage($Language->Phrase("GridAddCancelled")); // Set grid add cancelled message
-			}
-			return FALSE;
-		}
-
-		// Begin transaction
-		$conn->BeginTrans();
-
-		// Init key filter
-		$sWrkFilter = "";
-		$addcnt = 0;
-		if ($this->AuditTrailOnAdd) $this->WriteAuditTrailDummy($Language->Phrase("BatchInsertBegin")); // Batch insert begin
-		$sKey = "";
-
-		// Get row count
-		$objForm->Index = -1;
-		$rowcnt = strval($objForm->GetValue($this->FormKeyCountName));
-		if ($rowcnt == "" || !is_numeric($rowcnt))
-			$rowcnt = 0;
-
-		// Insert all rows
-		for ($rowindex = 1; $rowindex <= $rowcnt; $rowindex++) {
-
-			// Load current row values
-			$objForm->Index = $rowindex;
-			$rowaction = strval($objForm->GetValue($this->FormActionName));
-			if ($rowaction <> "" && $rowaction <> "insert")
-				continue; // Skip
-			$this->LoadFormValues(); // Get form values
-			if (!$this->EmptyRow()) {
-				$addcnt++;
-				$this->SendEmail = FALSE; // Do not send email on insert success
-
-				// Validate form
-				if (!$this->ValidateForm()) {
-					$bGridInsert = FALSE; // Form error, reset action
-					$this->setFailureMessage($gsFormError);
-				} else {
-					$bGridInsert = $this->AddRow($this->OldRecordset); // Insert this row
-				}
-				if ($bGridInsert) {
-					if ($sKey <> "") $sKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
-					$sKey .= $this->socio_nro->CurrentValue;
-
-					// Add filter for this record
-					$sFilter = $this->KeyFilter();
-					if ($sWrkFilter <> "") $sWrkFilter .= " OR ";
-					$sWrkFilter .= $sFilter;
-				} else {
-					break;
-				}
-			}
-		}
-		if ($addcnt == 0) { // No record inserted
-			$this->setFailureMessage($Language->Phrase("NoAddRecord"));
-			$bGridInsert = FALSE;
-		}
-		if ($bGridInsert) {
-			$conn->CommitTrans(); // Commit transaction
-
-			// Get new recordset
-			$this->CurrentFilter = $sWrkFilter;
-			$sSql = $this->SQL();
-			if ($rs = $conn->Execute($sSql)) {
-				$rsnew = $rs->GetRows();
-				$rs->Close();
-			}
-
-			// Call Grid_Inserted event
-			$this->Grid_Inserted($rsnew);
-			if ($this->AuditTrailOnAdd) $this->WriteAuditTrailDummy($Language->Phrase("BatchInsertSuccess")); // Batch insert success
-			if ($this->getSuccessMessage() == "")
-				$this->setSuccessMessage($Language->Phrase("InsertSuccess")); // Set up insert success message
-			$this->ClearInlineMode(); // Clear grid add mode
-		} else {
-			$conn->RollbackTrans(); // Rollback transaction
-			if ($this->AuditTrailOnAdd) $this->WriteAuditTrailDummy($Language->Phrase("BatchInsertRollback")); // Batch insert rollback
-			if ($this->getFailureMessage() == "") {
-				$this->setFailureMessage($Language->Phrase("InsertFailed")); // Set insert failed message
-			}
-		}
-		return $bGridInsert;
-	}
-
-	// Check if empty row
-	function EmptyRow() {
-		global $objForm;
-		if ($objForm->HasValue("x_propietario") && $objForm->HasValue("o_propietario") && $this->propietario->CurrentValue <> $this->propietario->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_comercio") && $objForm->HasValue("o_comercio") && $this->comercio->CurrentValue <> $this->comercio->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_direccion_comercio") && $objForm->HasValue("o_direccion_comercio") && $this->direccion_comercio->CurrentValue <> $this->direccion_comercio->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_activo") && $objForm->HasValue("o_activo") && $this->activo->CurrentValue <> $this->activo->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_mail") && $objForm->HasValue("o_mail") && $this->mail->CurrentValue <> $this->mail->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_tel") && $objForm->HasValue("o_tel") && $this->tel->CurrentValue <> $this->tel->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_cel") && $objForm->HasValue("o_cel") && $this->cel->CurrentValue <> $this->cel->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_cuit_cuil") && $objForm->HasValue("o_cuit_cuil") && $this->cuit_cuil->CurrentValue <> $this->cuit_cuil->OldValue)
-			return FALSE;
-		return TRUE;
-	}
-
-	// Validate grid form
-	function ValidateGridForm() {
-		global $objForm;
-
-		// Get row count
-		$objForm->Index = -1;
-		$rowcnt = strval($objForm->GetValue($this->FormKeyCountName));
-		if ($rowcnt == "" || !is_numeric($rowcnt))
-			$rowcnt = 0;
-
-		// Validate all records
-		for ($rowindex = 1; $rowindex <= $rowcnt; $rowindex++) {
-
-			// Load current row values
-			$objForm->Index = $rowindex;
-			$rowaction = strval($objForm->GetValue($this->FormActionName));
-			if ($rowaction <> "delete" && $rowaction <> "insertdelete") {
-				$this->LoadFormValues(); // Get form values
-				if ($rowaction == "insert" && $this->EmptyRow()) {
-
-					// Ignore
-				} else if (!$this->ValidateForm()) {
-					return FALSE;
-				}
-			}
-		}
-		return TRUE;
-	}
-
-	// Get all form values of the grid
-	function GetGridFormValues() {
-		global $objForm;
-
-		// Get row count
-		$objForm->Index = -1;
-		$rowcnt = strval($objForm->GetValue($this->FormKeyCountName));
-		if ($rowcnt == "" || !is_numeric($rowcnt))
-			$rowcnt = 0;
-		$rows = array();
-
-		// Loop through all records
-		for ($rowindex = 1; $rowindex <= $rowcnt; $rowindex++) {
-
-			// Load current row values
-			$objForm->Index = $rowindex;
-			$rowaction = strval($objForm->GetValue($this->FormActionName));
-			if ($rowaction <> "delete" && $rowaction <> "insertdelete") {
-				$this->LoadFormValues(); // Get form values
-				if ($rowaction == "insert" && $this->EmptyRow()) {
-
-					// Ignore
-				} else {
-					$rows[] = $this->GetFieldValues("FormValue"); // Return row as array
-				}
-			}
-		}
-		return $rows; // Return as array of array
-	}
-
-	// Restore form values for current row
-	function RestoreCurrentRowFormValues($idx) {
-		global $objForm;
-
-		// Get row based on current index
-		$objForm->Index = $idx;
-		$this->LoadFormValues(); // Load form values
-	}
-
 	// Advanced search WHERE clause based on QueryString
 	function AdvancedSearchWhere($Default = FALSE) {
 		global $Security;
 		$sWhere = "";
 		if (!$Security->CanSearch()) return "";
 		$this->BuildSearchSql($sWhere, $this->socio_nro, $Default, FALSE); // socio_nro
+		$this->BuildSearchSql($sWhere, $this->cuit_cuil, $Default, FALSE); // cuit_cuil
 		$this->BuildSearchSql($sWhere, $this->id_actividad, $Default, FALSE); // id_actividad
 		$this->BuildSearchSql($sWhere, $this->propietario, $Default, FALSE); // propietario
 		$this->BuildSearchSql($sWhere, $this->comercio, $Default, FALSE); // comercio
 		$this->BuildSearchSql($sWhere, $this->direccion_comercio, $Default, FALSE); // direccion_comercio
-		$this->BuildSearchSql($sWhere, $this->activo, $Default, FALSE); // activo
 		$this->BuildSearchSql($sWhere, $this->mail, $Default, FALSE); // mail
 		$this->BuildSearchSql($sWhere, $this->tel, $Default, FALSE); // tel
 		$this->BuildSearchSql($sWhere, $this->cel, $Default, FALSE); // cel
-		$this->BuildSearchSql($sWhere, $this->cuit_cuil, $Default, FALSE); // cuit_cuil
+		$this->BuildSearchSql($sWhere, $this->activo, $Default, FALSE); // activo
 
 		// Set up search parm
 		if (!$Default && $sWhere <> "") {
@@ -1231,15 +730,15 @@ class csocios_list extends csocios {
 		}
 		if (!$Default && $this->Command == "search") {
 			$this->socio_nro->AdvancedSearch->Save(); // socio_nro
+			$this->cuit_cuil->AdvancedSearch->Save(); // cuit_cuil
 			$this->id_actividad->AdvancedSearch->Save(); // id_actividad
 			$this->propietario->AdvancedSearch->Save(); // propietario
 			$this->comercio->AdvancedSearch->Save(); // comercio
 			$this->direccion_comercio->AdvancedSearch->Save(); // direccion_comercio
-			$this->activo->AdvancedSearch->Save(); // activo
 			$this->mail->AdvancedSearch->Save(); // mail
 			$this->tel->AdvancedSearch->Save(); // tel
 			$this->cel->AdvancedSearch->Save(); // cel
-			$this->cuit_cuil->AdvancedSearch->Save(); // cuit_cuil
+			$this->activo->AdvancedSearch->Save(); // activo
 		}
 		return $sWhere;
 	}
@@ -1296,14 +795,14 @@ class csocios_list extends csocios {
 	// Return basic search SQL
 	function BasicSearchSQL($arKeywords, $type) {
 		$sWhere = "";
+		$this->BuildBasicSearchSQL($sWhere, $this->cuit_cuil, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->propietario, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->comercio, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->direccion_comercio, $arKeywords, $type);
-		$this->BuildBasicSearchSQL($sWhere, $this->activo, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->mail, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->tel, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->cel, $arKeywords, $type);
-		$this->BuildBasicSearchSQL($sWhere, $this->cuit_cuil, $arKeywords, $type);
+		$this->BuildBasicSearchSQL($sWhere, $this->activo, $arKeywords, $type);
 		return $sWhere;
 	}
 
@@ -1420,6 +919,8 @@ class csocios_list extends csocios {
 			return TRUE;
 		if ($this->socio_nro->AdvancedSearch->IssetSession())
 			return TRUE;
+		if ($this->cuit_cuil->AdvancedSearch->IssetSession())
+			return TRUE;
 		if ($this->id_actividad->AdvancedSearch->IssetSession())
 			return TRUE;
 		if ($this->propietario->AdvancedSearch->IssetSession())
@@ -1428,15 +929,13 @@ class csocios_list extends csocios {
 			return TRUE;
 		if ($this->direccion_comercio->AdvancedSearch->IssetSession())
 			return TRUE;
-		if ($this->activo->AdvancedSearch->IssetSession())
-			return TRUE;
 		if ($this->mail->AdvancedSearch->IssetSession())
 			return TRUE;
 		if ($this->tel->AdvancedSearch->IssetSession())
 			return TRUE;
 		if ($this->cel->AdvancedSearch->IssetSession())
 			return TRUE;
-		if ($this->cuit_cuil->AdvancedSearch->IssetSession())
+		if ($this->activo->AdvancedSearch->IssetSession())
 			return TRUE;
 		return FALSE;
 	}
@@ -1468,15 +967,15 @@ class csocios_list extends csocios {
 	// Clear all advanced search parameters
 	function ResetAdvancedSearchParms() {
 		$this->socio_nro->AdvancedSearch->UnsetSession();
+		$this->cuit_cuil->AdvancedSearch->UnsetSession();
 		$this->id_actividad->AdvancedSearch->UnsetSession();
 		$this->propietario->AdvancedSearch->UnsetSession();
 		$this->comercio->AdvancedSearch->UnsetSession();
 		$this->direccion_comercio->AdvancedSearch->UnsetSession();
-		$this->activo->AdvancedSearch->UnsetSession();
 		$this->mail->AdvancedSearch->UnsetSession();
 		$this->tel->AdvancedSearch->UnsetSession();
 		$this->cel->AdvancedSearch->UnsetSession();
-		$this->cuit_cuil->AdvancedSearch->UnsetSession();
+		$this->activo->AdvancedSearch->UnsetSession();
 	}
 
 	// Restore all search parameters
@@ -1488,15 +987,15 @@ class csocios_list extends csocios {
 
 		// Restore advanced search values
 		$this->socio_nro->AdvancedSearch->Load();
+		$this->cuit_cuil->AdvancedSearch->Load();
 		$this->id_actividad->AdvancedSearch->Load();
 		$this->propietario->AdvancedSearch->Load();
 		$this->comercio->AdvancedSearch->Load();
 		$this->direccion_comercio->AdvancedSearch->Load();
-		$this->activo->AdvancedSearch->Load();
 		$this->mail->AdvancedSearch->Load();
 		$this->tel->AdvancedSearch->Load();
 		$this->cel->AdvancedSearch->Load();
-		$this->cuit_cuil->AdvancedSearch->Load();
+		$this->activo->AdvancedSearch->Load();
 	}
 
 	// Set up sort parameters
@@ -1507,14 +1006,14 @@ class csocios_list extends csocios {
 			$this->CurrentOrder = ew_StripSlashes(@$_GET["order"]);
 			$this->CurrentOrderType = @$_GET["ordertype"];
 			$this->UpdateSort($this->socio_nro); // socio_nro
+			$this->UpdateSort($this->cuit_cuil); // cuit_cuil
 			$this->UpdateSort($this->propietario); // propietario
 			$this->UpdateSort($this->comercio); // comercio
 			$this->UpdateSort($this->direccion_comercio); // direccion_comercio
-			$this->UpdateSort($this->activo); // activo
 			$this->UpdateSort($this->mail); // mail
 			$this->UpdateSort($this->tel); // tel
 			$this->UpdateSort($this->cel); // cel
-			$this->UpdateSort($this->cuit_cuil); // cuit_cuil
+			$this->UpdateSort($this->activo); // activo
 			$this->setStartRecordNumber(1); // Reset start position
 		}
 	}
@@ -1549,14 +1048,14 @@ class csocios_list extends csocios {
 				$this->setSessionOrderBy($sOrderBy);
 				$this->setSessionOrderByList($sOrderBy);
 				$this->socio_nro->setSort("");
+				$this->cuit_cuil->setSort("");
 				$this->propietario->setSort("");
 				$this->comercio->setSort("");
 				$this->direccion_comercio->setSort("");
-				$this->activo->setSort("");
 				$this->mail->setSort("");
 				$this->tel->setSort("");
 				$this->cel->setSort("");
-				$this->cuit_cuil->setSort("");
+				$this->activo->setSort("");
 			}
 
 			// Reset start position
@@ -1568,14 +1067,6 @@ class csocios_list extends csocios {
 	// Set up list options
 	function SetupListOptions() {
 		global $Security, $Language;
-
-		// "griddelete"
-		if ($this->AllowAddDeleteRow) {
-			$item = &$this->ListOptions->Add("griddelete");
-			$item->CssStyle = "white-space: nowrap;";
-			$item->OnLeft = FALSE;
-			$item->Visible = FALSE; // Default hidden
-		}
 
 		// Add group option item
 		$item = &$this->ListOptions->Add($this->ListOptions->GroupOptionName);
@@ -1615,14 +1106,6 @@ class csocios_list extends csocios {
 		$item->ShowInButtonGroup = FALSE;
 		if (!isset($GLOBALS["socios_detalles_grid"])) $GLOBALS["socios_detalles_grid"] = new csocios_detalles_grid;
 
-		// "detail_deudas"
-		$item = &$this->ListOptions->Add("detail_deudas");
-		$item->CssStyle = "white-space: nowrap;";
-		$item->Visible = $Security->AllowList(CurrentProjectID() . 'deudas') && !$this->ShowMultipleDetails;
-		$item->OnLeft = FALSE;
-		$item->ShowInButtonGroup = FALSE;
-		if (!isset($GLOBALS["deudas_grid"])) $GLOBALS["deudas_grid"] = new cdeudas_grid;
-
 		// "detail_socios_cuotas"
 		$item = &$this->ListOptions->Add("detail_socios_cuotas");
 		$item->CssStyle = "white-space: nowrap;";
@@ -1630,6 +1113,14 @@ class csocios_list extends csocios {
 		$item->OnLeft = FALSE;
 		$item->ShowInButtonGroup = FALSE;
 		if (!isset($GLOBALS["socios_cuotas_grid"])) $GLOBALS["socios_cuotas_grid"] = new csocios_cuotas_grid;
+
+		// "detail_deudas"
+		$item = &$this->ListOptions->Add("detail_deudas");
+		$item->CssStyle = "white-space: nowrap;";
+		$item->Visible = $Security->AllowList(CurrentProjectID() . 'deudas') && !$this->ShowMultipleDetails;
+		$item->OnLeft = FALSE;
+		$item->ShowInButtonGroup = FALSE;
+		if (!isset($GLOBALS["deudas_grid"])) $GLOBALS["deudas_grid"] = new cdeudas_grid;
 
 		// Multiple details
 		if ($this->ShowMultipleDetails) {
@@ -1642,7 +1133,7 @@ class csocios_list extends csocios {
 
 		// "checkbox"
 		$item = &$this->ListOptions->Add("checkbox");
-		$item->Visible = FALSE;
+		$item->Visible = $Security->CanEdit();
 		$item->OnLeft = FALSE;
 		$item->Header = "<input type=\"checkbox\" name=\"key\" id=\"key\" onclick=\"ew_SelectAllKey(this);\">";
 		$item->ShowInDropDown = FALSE;
@@ -1669,61 +1160,6 @@ class csocios_list extends csocios {
 		global $Security, $Language, $objForm;
 		$this->ListOptions->LoadDefault();
 
-		// Set up row action and key
-		if (is_numeric($this->RowIndex) && $this->CurrentMode <> "view") {
-			$objForm->Index = $this->RowIndex;
-			$ActionName = str_replace("k_", "k" . $this->RowIndex . "_", $this->FormActionName);
-			$OldKeyName = str_replace("k_", "k" . $this->RowIndex . "_", $this->FormOldKeyName);
-			$KeyName = str_replace("k_", "k" . $this->RowIndex . "_", $this->FormKeyName);
-			$BlankRowName = str_replace("k_", "k" . $this->RowIndex . "_", $this->FormBlankRowName);
-			if ($this->RowAction <> "")
-				$this->MultiSelectKey .= "<input type=\"hidden\" name=\"" . $ActionName . "\" id=\"" . $ActionName . "\" value=\"" . $this->RowAction . "\">";
-			if ($this->RowAction == "delete") {
-				$rowkey = $objForm->GetValue($this->FormKeyName);
-				$this->SetupKeyValues($rowkey);
-			}
-			if ($this->RowAction == "insert" && $this->CurrentAction == "F" && $this->EmptyRow())
-				$this->MultiSelectKey .= "<input type=\"hidden\" name=\"" . $BlankRowName . "\" id=\"" . $BlankRowName . "\" value=\"1\">";
-		}
-
-		// "delete"
-		if ($this->AllowAddDeleteRow) {
-			if ($this->CurrentAction == "gridadd" || $this->CurrentAction == "gridedit") {
-				$option = &$this->ListOptions;
-				$option->UseButtonGroup = TRUE; // Use button group for grid delete button
-				$option->UseImageAndText = TRUE; // Use image and text for grid delete button
-				$oListOpt = &$option->Items["griddelete"];
-				if (!$Security->CanDelete() && is_numeric($this->RowIndex) && ($this->RowAction == "" || $this->RowAction == "edit")) { // Do not allow delete existing record
-					$oListOpt->Body = "&nbsp;";
-				} else {
-					$oListOpt->Body = "<a class=\"ewGridLink ewGridDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" href=\"javascript:void(0);\" onclick=\"ew_DeleteGridRow(this, " . $this->RowIndex . ");\">" . $Language->Phrase("DeleteLink") . "</a>";
-				}
-			}
-		}
-
-		// "copy"
-		$oListOpt = &$this->ListOptions->Items["copy"];
-		if (($this->CurrentAction == "add" || $this->CurrentAction == "copy") && $this->RowType == EW_ROWTYPE_ADD) { // Inline Add/Copy
-			$this->ListOptions->CustomItem = "copy"; // Show copy column only
-			$oListOpt->Body = "<div" . (($oListOpt->OnLeft) ? " style=\"text-align: right\"" : "") . ">" .
-				"<a class=\"ewGridLink ewInlineInsert\" title=\"" . ew_HtmlTitle($Language->Phrase("InsertLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("InsertLink")) . "\" href=\"\" onclick=\"return ewForms(this).Submit();\">" . $Language->Phrase("InsertLink") . "</a>&nbsp;" .
-				"<a class=\"ewGridLink ewInlineCancel\" title=\"" . ew_HtmlTitle($Language->Phrase("CancelLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("CancelLink")) . "\" href=\"" . $this->PageUrl() . "a=cancel\">" . $Language->Phrase("CancelLink") . "</a>" .
-				"<input type=\"hidden\" name=\"a_list\" id=\"a_list\" value=\"insert\"></div>";
-			return;
-		}
-
-		// "edit"
-		$oListOpt = &$this->ListOptions->Items["edit"];
-		if ($this->CurrentAction == "edit" && $this->RowType == EW_ROWTYPE_EDIT) { // Inline-Edit
-			$this->ListOptions->CustomItem = "edit"; // Show edit column only
-				$oListOpt->Body = "<div" . (($oListOpt->OnLeft) ? " style=\"text-align: right\"" : "") . ">" .
-					"<a class=\"ewGridLink ewInlineUpdate\" title=\"" . ew_HtmlTitle($Language->Phrase("UpdateLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("UpdateLink")) . "\" href=\"\" onclick=\"return ewForms(this).Submit('" . ew_GetHashUrl($this->PageName(), $this->PageObjName . "_row_" . $this->RowCnt) . "');\">" . $Language->Phrase("UpdateLink") . "</a>&nbsp;" .
-					"<a class=\"ewGridLink ewInlineCancel\" title=\"" . ew_HtmlTitle($Language->Phrase("CancelLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("CancelLink")) . "\" href=\"" . $this->PageUrl() . "a=cancel\">" . $Language->Phrase("CancelLink") . "</a>" .
-					"<input type=\"hidden\" name=\"a_list\" id=\"a_list\" value=\"update\"></div>";
-			$oListOpt->Body .= "<input type=\"hidden\" name=\"k" . $this->RowIndex . "_key\" id=\"k" . $this->RowIndex . "_key\" value=\"" . ew_HtmlEncode($this->socio_nro->CurrentValue) . "\">";
-			return;
-		}
-
 		// "view"
 		$oListOpt = &$this->ListOptions->Items["view"];
 		if ($Security->CanView() && $this->ShowOptionLink('view'))
@@ -1735,7 +1171,6 @@ class csocios_list extends csocios {
 		$oListOpt = &$this->ListOptions->Items["edit"];
 		if ($Security->CanEdit() && $this->ShowOptionLink('edit')) {
 			$oListOpt->Body = "<a class=\"ewRowLink ewEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" href=\"" . ew_HtmlEncode($this->EditUrl) . "\">" . $Language->Phrase("EditLink") . "</a>";
-			$oListOpt->Body .= "<a class=\"ewRowLink ewInlineEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("InlineEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("InlineEditLink")) . "\" href=\"" . ew_HtmlEncode(ew_GetHashUrl($this->InlineEditUrl, $this->PageObjName . "_row_" . $this->RowCnt)) . "\">" . $Language->Phrase("InlineEditLink") . "</a>";
 		} else {
 			$oListOpt->Body = "";
 		}
@@ -1744,7 +1179,6 @@ class csocios_list extends csocios {
 		$oListOpt = &$this->ListOptions->Items["copy"];
 		if ($Security->CanAdd() && $this->ShowOptionLink('add')) {
 			$oListOpt->Body = "<a class=\"ewRowLink ewCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("CopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("CopyLink")) . "\" href=\"" . ew_HtmlEncode($this->CopyUrl) . "\">" . $Language->Phrase("CopyLink") . "</a>";
-			$oListOpt->Body .= "<a class=\"ewRowLink ewInlineCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("InlineCopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("InlineCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->InlineCopyUrl) . "\">" . $Language->Phrase("InlineCopyLink") . "</a>";
 		} else {
 			$oListOpt->Body = "";
 		}
@@ -1789,36 +1223,6 @@ class csocios_list extends csocios {
 			if ($this->ShowMultipleDetails) $oListOpt->Visible = FALSE;
 		}
 
-		// "detail_deudas"
-		$oListOpt = &$this->ListOptions->Items["detail_deudas"];
-		if ($Security->AllowList(CurrentProjectID() . 'deudas') && $this->ShowOptionLink()) {
-			$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("deudas", "TblCaption");
-			$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_deudaslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . strval($this->socio_nro->CurrentValue) . "") . "\">" . $body . "</a>";
-			$links = "";
-			if ($GLOBALS["deudas_grid"]->DetailView && $Security->CanView() && $this->ShowOptionLink('view') && $Security->AllowView(CurrentProjectID() . 'deudas')) {
-				$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
-				if ($DetailViewTblVar <> "") $DetailViewTblVar .= ",";
-				$DetailViewTblVar .= "deudas";
-			}
-			if ($GLOBALS["deudas_grid"]->DetailEdit && $Security->CanEdit() && $this->ShowOptionLink('edit') && $Security->AllowEdit(CurrentProjectID() . 'deudas')) {
-				$links .= "<li><a class=\"ewRowLink ewDetailEdit\" data-action=\"edit\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailEditLink")) . "</a></li>";
-				if ($DetailEditTblVar <> "") $DetailEditTblVar .= ",";
-				$DetailEditTblVar .= "deudas";
-			}
-			if ($GLOBALS["deudas_grid"]->DetailAdd && $Security->CanAdd() && $this->ShowOptionLink('add') && $Security->AllowAdd(CurrentProjectID() . 'deudas')) {
-				$links .= "<li><a class=\"ewRowLink ewDetailCopy\" data-action=\"add\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailCopyLink")) . "</a></li>";
-				if ($DetailCopyTblVar <> "") $DetailCopyTblVar .= ",";
-				$DetailCopyTblVar .= "deudas";
-			}
-			if ($links <> "") {
-				$body .= "<button class=\"dropdown-toggle btn btn-default btn-sm ewDetail\" data-toggle=\"dropdown\"><b class=\"caret\"></b></button>";
-				$body .= "<ul class=\"dropdown-menu\">". $links . "</ul>";
-			}
-			$body = "<div class=\"btn-group\">" . $body . "</div>";
-			$oListOpt->Body = $body;
-			if ($this->ShowMultipleDetails) $oListOpt->Visible = FALSE;
-		}
-
 		// "detail_socios_cuotas"
 		$oListOpt = &$this->ListOptions->Items["detail_socios_cuotas"];
 		if ($Security->AllowList(CurrentProjectID() . 'socios_cuotas') && $this->ShowOptionLink()) {
@@ -1839,6 +1243,36 @@ class csocios_list extends csocios {
 				$links .= "<li><a class=\"ewRowLink ewDetailCopy\" data-action=\"add\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=socios_cuotas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailCopyLink")) . "</a></li>";
 				if ($DetailCopyTblVar <> "") $DetailCopyTblVar .= ",";
 				$DetailCopyTblVar .= "socios_cuotas";
+			}
+			if ($links <> "") {
+				$body .= "<button class=\"dropdown-toggle btn btn-default btn-sm ewDetail\" data-toggle=\"dropdown\"><b class=\"caret\"></b></button>";
+				$body .= "<ul class=\"dropdown-menu\">". $links . "</ul>";
+			}
+			$body = "<div class=\"btn-group\">" . $body . "</div>";
+			$oListOpt->Body = $body;
+			if ($this->ShowMultipleDetails) $oListOpt->Visible = FALSE;
+		}
+
+		// "detail_deudas"
+		$oListOpt = &$this->ListOptions->Items["detail_deudas"];
+		if ($Security->AllowList(CurrentProjectID() . 'deudas') && $this->ShowOptionLink()) {
+			$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("deudas", "TblCaption");
+			$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("cciag_deudaslist.php?" . EW_TABLE_SHOW_MASTER . "=socios&fk_socio_nro=" . strval($this->socio_nro->CurrentValue) . "") . "\">" . $body . "</a>";
+			$links = "";
+			if ($GLOBALS["deudas_grid"]->DetailView && $Security->CanView() && $this->ShowOptionLink('view') && $Security->AllowView(CurrentProjectID() . 'deudas')) {
+				$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
+				if ($DetailViewTblVar <> "") $DetailViewTblVar .= ",";
+				$DetailViewTblVar .= "deudas";
+			}
+			if ($GLOBALS["deudas_grid"]->DetailEdit && $Security->CanEdit() && $this->ShowOptionLink('edit') && $Security->AllowEdit(CurrentProjectID() . 'deudas')) {
+				$links .= "<li><a class=\"ewRowLink ewDetailEdit\" data-action=\"edit\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailEditLink")) . "</a></li>";
+				if ($DetailEditTblVar <> "") $DetailEditTblVar .= ",";
+				$DetailEditTblVar .= "deudas";
+			}
+			if ($GLOBALS["deudas_grid"]->DetailAdd && $Security->CanAdd() && $this->ShowOptionLink('add') && $Security->AllowAdd(CurrentProjectID() . 'deudas')) {
+				$links .= "<li><a class=\"ewRowLink ewDetailCopy\" data-action=\"add\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=deudas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailCopyLink")) . "</a></li>";
+				if ($DetailCopyTblVar <> "") $DetailCopyTblVar .= ",";
+				$DetailCopyTblVar .= "deudas";
 			}
 			if ($links <> "") {
 				$body .= "<button class=\"dropdown-toggle btn btn-default btn-sm ewDetail\" data-toggle=\"dropdown\"><b class=\"caret\"></b></button>";
@@ -1875,9 +1309,6 @@ class csocios_list extends csocios {
 		// "checkbox"
 		$oListOpt = &$this->ListOptions->Items["checkbox"];
 		$oListOpt->Body = "<input type=\"checkbox\" name=\"key_m[]\" value=\"" . ew_HtmlEncode($this->socio_nro->CurrentValue) . "\" onclick='ew_ClickMultiCheckbox(event, this);'>";
-		if ($this->CurrentAction == "gridedit" && is_numeric($this->RowIndex)) {
-			$this->MultiSelectKey .= "<input type=\"hidden\" name=\"" . $KeyName . "\" id=\"" . $KeyName . "\" value=\"" . $this->socio_nro->CurrentValue . "\">";
-		}
 		$this->RenderListOptionsExt();
 
 		// Call ListOptions_Rendered event
@@ -1894,14 +1325,6 @@ class csocios_list extends csocios {
 		$item = &$option->Add("add");
 		$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . ew_HtmlTitle($Language->Phrase("AddLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("AddLink")) . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
 		$item->Visible = ($this->AddUrl <> "" && $Security->CanAdd());
-
-		// Inline Add
-		$item = &$option->Add("inlineadd");
-		$item->Body = "<a class=\"ewAddEdit ewInlineAdd\" title=\"" . ew_HtmlTitle($Language->Phrase("InlineAddLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("InlineAddLink")) . "\" href=\"" . ew_HtmlEncode($this->InlineAddUrl) . "\">" .$Language->Phrase("InlineAddLink") . "</a>";
-		$item->Visible = ($this->InlineAddUrl <> "" && $Security->CanAdd());
-		$item = &$option->Add("gridadd");
-		$item->Body = "<a class=\"ewAddEdit ewGridAdd\" title=\"" . ew_HtmlTitle($Language->Phrase("GridAddLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridAddLink")) . "\" href=\"" . ew_HtmlEncode($this->GridAddUrl) . "\">" . $Language->Phrase("GridAddLink") . "</a>";
-		$item->Visible = ($this->GridAddUrl <> "" && $Security->CanAdd());
 		$option = $options["detail"];
 		$DetailTableLink = "";
 		$item = &$option->Add("detailadd_socios_detalles");
@@ -1911,19 +1334,19 @@ class csocios_list extends csocios {
 			if ($DetailTableLink <> "") $DetailTableLink .= ",";
 			$DetailTableLink .= "socios_detalles";
 		}
-		$item = &$option->Add("detailadd_deudas");
-		$item->Body = "<a class=\"ewDetailAddGroup ewDetailAdd\" title=\"" . ew_HtmlTitle($Language->Phrase("AddMasterDetailLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("AddMasterDetailLink")) . "\" href=\"" . ew_HtmlEncode($this->GetAddUrl() . "?" . EW_TABLE_SHOW_DETAIL . "=deudas") . "\">" . $Language->Phrase("Add") . "&nbsp;" . $this->TableCaption() . "/" . $GLOBALS["deudas"]->TableCaption() . "</a>";
-		$item->Visible = ($GLOBALS["deudas"]->DetailAdd && $Security->AllowAdd(CurrentProjectID() . 'deudas') && $Security->CanAdd());
-		if ($item->Visible) {
-			if ($DetailTableLink <> "") $DetailTableLink .= ",";
-			$DetailTableLink .= "deudas";
-		}
 		$item = &$option->Add("detailadd_socios_cuotas");
 		$item->Body = "<a class=\"ewDetailAddGroup ewDetailAdd\" title=\"" . ew_HtmlTitle($Language->Phrase("AddMasterDetailLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("AddMasterDetailLink")) . "\" href=\"" . ew_HtmlEncode($this->GetAddUrl() . "?" . EW_TABLE_SHOW_DETAIL . "=socios_cuotas") . "\">" . $Language->Phrase("Add") . "&nbsp;" . $this->TableCaption() . "/" . $GLOBALS["socios_cuotas"]->TableCaption() . "</a>";
 		$item->Visible = ($GLOBALS["socios_cuotas"]->DetailAdd && $Security->AllowAdd(CurrentProjectID() . 'socios_cuotas') && $Security->CanAdd());
 		if ($item->Visible) {
 			if ($DetailTableLink <> "") $DetailTableLink .= ",";
 			$DetailTableLink .= "socios_cuotas";
+		}
+		$item = &$option->Add("detailadd_deudas");
+		$item->Body = "<a class=\"ewDetailAddGroup ewDetailAdd\" title=\"" . ew_HtmlTitle($Language->Phrase("AddMasterDetailLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("AddMasterDetailLink")) . "\" href=\"" . ew_HtmlEncode($this->GetAddUrl() . "?" . EW_TABLE_SHOW_DETAIL . "=deudas") . "\">" . $Language->Phrase("Add") . "&nbsp;" . $this->TableCaption() . "/" . $GLOBALS["deudas"]->TableCaption() . "</a>";
+		$item->Visible = ($GLOBALS["deudas"]->DetailAdd && $Security->AllowAdd(CurrentProjectID() . 'deudas') && $Security->CanAdd());
+		if ($item->Visible) {
+			if ($DetailTableLink <> "") $DetailTableLink .= ",";
+			$DetailTableLink .= "deudas";
 		}
 
 		// Add multiple details
@@ -1940,13 +1363,12 @@ class csocios_list extends csocios {
 					$item->Visible = FALSE;
 			}
 		}
-
-		// Add grid edit
-		$option = $options["addedit"];
-		$item = &$option->Add("gridedit");
-		$item->Body = "<a class=\"ewAddEdit ewGridEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("GridEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GridEditUrl) . "\">" . $Language->Phrase("GridEditLink") . "</a>";
-		$item->Visible = ($this->GridEditUrl <> "" && $Security->CanEdit());
 		$option = $options["action"];
+
+		// Add multi update
+		$item = &$option->Add("multiupdate");
+		$item->Body = "<a class=\"ewAction ewMultiUpdate\" title=\"" . ew_HtmlTitle($Language->Phrase("UpdateSelectedLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("UpdateSelectedLink")) . "\" href=\"\" onclick=\"ew_SubmitSelected(document.fsocioslist, '" . $this->MultiUpdateUrl . "');return false;\">" . $Language->Phrase("UpdateSelectedLink") . "</a>";
+		$item->Visible = ($Security->CanEdit());
 
 		// Set up options default
 		foreach ($options as &$option) {
@@ -1967,7 +1389,6 @@ class csocios_list extends csocios {
 	function RenderOtherOptions() {
 		global $Language, $Security;
 		$options = &$this->OtherOptions;
-		if ($this->CurrentAction <> "gridadd" && $this->CurrentAction <> "gridedit") { // Not grid add/edit mode
 			$option = &$options["action"];
 			foreach ($this->CustomActions as $action => $name) {
 
@@ -1987,54 +1408,6 @@ class csocios_list extends csocios {
 				$item = &$option->GetItem("multiupdate");
 				if ($item) $item->Visible = FALSE;
 			}
-		} else { // Grid add/edit mode
-
-			// Hide all options first
-			foreach ($options as &$option)
-				$option->HideAllOptions();
-			if ($this->CurrentAction == "gridadd") {
-				if ($this->AllowAddDeleteRow) {
-
-					// Add add blank row
-					$option = &$options["addedit"];
-					$option->UseDropDownButton = FALSE;
-					$option->UseImageAndText = TRUE;
-					$item = &$option->Add("addblankrow");
-					$item->Body = "<a class=\"ewAddEdit ewAddBlankRow\" title=\"" . ew_HtmlTitle($Language->Phrase("AddBlankRow")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("AddBlankRow")) . "\" href=\"javascript:void(0);\" onclick=\"ew_AddGridRow(this);\">" . $Language->Phrase("AddBlankRow") . "</a>";
-					$item->Visible = $Security->CanAdd();
-				}
-				$option = &$options["action"];
-				$option->UseDropDownButton = FALSE;
-				$option->UseImageAndText = TRUE;
-
-				// Add grid insert
-				$item = &$option->Add("gridinsert");
-				$item->Body = "<a class=\"ewAction ewGridInsert\" title=\"" . ew_HtmlTitle($Language->Phrase("GridInsertLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridInsertLink")) . "\" href=\"\" onclick=\"return ewForms(this).Submit();\">" . $Language->Phrase("GridInsertLink") . "</a>";
-
-				// Add grid cancel
-				$item = &$option->Add("gridcancel");
-				$item->Body = "<a class=\"ewAction ewGridCancel\" title=\"" . ew_HtmlTitle($Language->Phrase("GridCancelLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridCancelLink")) . "\" href=\"" . $this->PageUrl() . "a=cancel\">" . $Language->Phrase("GridCancelLink") . "</a>";
-			}
-			if ($this->CurrentAction == "gridedit") {
-				if ($this->AllowAddDeleteRow) {
-
-					// Add add blank row
-					$option = &$options["addedit"];
-					$option->UseDropDownButton = FALSE;
-					$option->UseImageAndText = TRUE;
-					$item = &$option->Add("addblankrow");
-					$item->Body = "<a class=\"ewAddEdit ewAddBlankRow\" title=\"" . ew_HtmlTitle($Language->Phrase("AddBlankRow")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("AddBlankRow")) . "\" href=\"javascript:void(0);\" onclick=\"ew_AddGridRow(this);\">" . $Language->Phrase("AddBlankRow") . "</a>";
-					$item->Visible = $Security->CanAdd();
-				}
-				$option = &$options["action"];
-				$option->UseDropDownButton = FALSE;
-				$option->UseImageAndText = TRUE;
-					$item = &$option->Add("gridsave");
-					$item->Body = "<a class=\"ewAction ewGridSave\" title=\"" . ew_HtmlTitle($Language->Phrase("GridSaveLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridSaveLink")) . "\" href=\"\" onclick=\"return ewForms(this).Submit();\">" . $Language->Phrase("GridSaveLink") . "</a>";
-					$item = &$option->Add("gridcancel");
-					$item->Body = "<a class=\"ewAction ewGridCancel\" title=\"" . ew_HtmlTitle($Language->Phrase("GridCancelLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridCancelLink")) . "\" href=\"" . $this->PageUrl() . "a=cancel\">" . $Language->Phrase("GridCancelLink") . "</a>";
-			}
-		}
 	}
 
 	// Process custom action
@@ -2096,7 +1469,7 @@ class csocios_list extends csocios {
 
 		// Show all button
 		$item = &$this->SearchOptions->Add("showall");
-		$item->Body = "<a class=\"btn btn-default ewShowAll\" title=\"" . $Language->Phrase("ShowAll") . "\" data-caption=\"" . $Language->Phrase("ShowAll") . "\" href=\"" . $this->PageUrl() . "cmd=reset\">" . $Language->Phrase("ShowAllBtn") . "</a>";
+		$item->Body = "<a class=\"btn btn-default ewShowAll\" title=\"" . $Language->Phrase("ResetSearch") . "\" data-caption=\"" . $Language->Phrase("ResetSearch") . "\" href=\"" . $this->PageUrl() . "cmd=reset\">" . $Language->Phrase("ResetSearchBtn") . "</a>";
 		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere);
 
 		// Advanced search button
@@ -2172,28 +1545,6 @@ class csocios_list extends csocios {
 		}
 	}
 
-	// Load default values
-	function LoadDefaultValues() {
-		$this->socio_nro->CurrentValue = NULL;
-		$this->socio_nro->OldValue = $this->socio_nro->CurrentValue;
-		$this->propietario->CurrentValue = NULL;
-		$this->propietario->OldValue = $this->propietario->CurrentValue;
-		$this->comercio->CurrentValue = NULL;
-		$this->comercio->OldValue = $this->comercio->CurrentValue;
-		$this->direccion_comercio->CurrentValue = NULL;
-		$this->direccion_comercio->OldValue = $this->direccion_comercio->CurrentValue;
-		$this->activo->CurrentValue = 'S';
-		$this->activo->OldValue = $this->activo->CurrentValue;
-		$this->mail->CurrentValue = NULL;
-		$this->mail->OldValue = $this->mail->CurrentValue;
-		$this->tel->CurrentValue = NULL;
-		$this->tel->OldValue = $this->tel->CurrentValue;
-		$this->cel->CurrentValue = NULL;
-		$this->cel->OldValue = $this->cel->CurrentValue;
-		$this->cuit_cuil->CurrentValue = NULL;
-		$this->cuit_cuil->OldValue = $this->cuit_cuil->CurrentValue;
-	}
-
 	// Load basic search values
 	function LoadBasicSearchValues() {
 		$this->BasicSearch->Keyword = @$_GET[EW_TABLE_BASIC_SEARCH];
@@ -2211,6 +1562,11 @@ class csocios_list extends csocios {
 		$this->socio_nro->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_socio_nro"]);
 		if ($this->socio_nro->AdvancedSearch->SearchValue <> "") $this->Command = "search";
 		$this->socio_nro->AdvancedSearch->SearchOperator = @$_GET["z_socio_nro"];
+
+		// cuit_cuil
+		$this->cuit_cuil->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_cuit_cuil"]);
+		if ($this->cuit_cuil->AdvancedSearch->SearchValue <> "") $this->Command = "search";
+		$this->cuit_cuil->AdvancedSearch->SearchOperator = @$_GET["z_cuit_cuil"];
 
 		// id_actividad
 		$this->id_actividad->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_id_actividad"]);
@@ -2232,11 +1588,6 @@ class csocios_list extends csocios {
 		if ($this->direccion_comercio->AdvancedSearch->SearchValue <> "") $this->Command = "search";
 		$this->direccion_comercio->AdvancedSearch->SearchOperator = @$_GET["z_direccion_comercio"];
 
-		// activo
-		$this->activo->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_activo"]);
-		if ($this->activo->AdvancedSearch->SearchValue <> "") $this->Command = "search";
-		$this->activo->AdvancedSearch->SearchOperator = @$_GET["z_activo"];
-
 		// mail
 		$this->mail->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_mail"]);
 		if ($this->mail->AdvancedSearch->SearchValue <> "") $this->Command = "search";
@@ -2252,66 +1603,10 @@ class csocios_list extends csocios {
 		if ($this->cel->AdvancedSearch->SearchValue <> "") $this->Command = "search";
 		$this->cel->AdvancedSearch->SearchOperator = @$_GET["z_cel"];
 
-		// cuit_cuil
-		$this->cuit_cuil->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_cuit_cuil"]);
-		if ($this->cuit_cuil->AdvancedSearch->SearchValue <> "") $this->Command = "search";
-		$this->cuit_cuil->AdvancedSearch->SearchOperator = @$_GET["z_cuit_cuil"];
-	}
-
-	// Load form values
-	function LoadFormValues() {
-
-		// Load from form
-		global $objForm;
-		if (!$this->socio_nro->FldIsDetailKey && $this->CurrentAction <> "gridadd" && $this->CurrentAction <> "add")
-			$this->socio_nro->setFormValue($objForm->GetValue("x_socio_nro"));
-		if (!$this->propietario->FldIsDetailKey) {
-			$this->propietario->setFormValue($objForm->GetValue("x_propietario"));
-		}
-		$this->propietario->setOldValue($objForm->GetValue("o_propietario"));
-		if (!$this->comercio->FldIsDetailKey) {
-			$this->comercio->setFormValue($objForm->GetValue("x_comercio"));
-		}
-		$this->comercio->setOldValue($objForm->GetValue("o_comercio"));
-		if (!$this->direccion_comercio->FldIsDetailKey) {
-			$this->direccion_comercio->setFormValue($objForm->GetValue("x_direccion_comercio"));
-		}
-		$this->direccion_comercio->setOldValue($objForm->GetValue("o_direccion_comercio"));
-		if (!$this->activo->FldIsDetailKey) {
-			$this->activo->setFormValue($objForm->GetValue("x_activo"));
-		}
-		$this->activo->setOldValue($objForm->GetValue("o_activo"));
-		if (!$this->mail->FldIsDetailKey) {
-			$this->mail->setFormValue($objForm->GetValue("x_mail"));
-		}
-		$this->mail->setOldValue($objForm->GetValue("o_mail"));
-		if (!$this->tel->FldIsDetailKey) {
-			$this->tel->setFormValue($objForm->GetValue("x_tel"));
-		}
-		$this->tel->setOldValue($objForm->GetValue("o_tel"));
-		if (!$this->cel->FldIsDetailKey) {
-			$this->cel->setFormValue($objForm->GetValue("x_cel"));
-		}
-		$this->cel->setOldValue($objForm->GetValue("o_cel"));
-		if (!$this->cuit_cuil->FldIsDetailKey) {
-			$this->cuit_cuil->setFormValue($objForm->GetValue("x_cuit_cuil"));
-		}
-		$this->cuit_cuil->setOldValue($objForm->GetValue("o_cuit_cuil"));
-	}
-
-	// Restore form values
-	function RestoreFormValues() {
-		global $objForm;
-		if ($this->CurrentAction <> "gridadd" && $this->CurrentAction <> "add")
-			$this->socio_nro->CurrentValue = $this->socio_nro->FormValue;
-		$this->propietario->CurrentValue = $this->propietario->FormValue;
-		$this->comercio->CurrentValue = $this->comercio->FormValue;
-		$this->direccion_comercio->CurrentValue = $this->direccion_comercio->FormValue;
-		$this->activo->CurrentValue = $this->activo->FormValue;
-		$this->mail->CurrentValue = $this->mail->FormValue;
-		$this->tel->CurrentValue = $this->tel->FormValue;
-		$this->cel->CurrentValue = $this->cel->FormValue;
-		$this->cuit_cuil->CurrentValue = $this->cuit_cuil->FormValue;
+		// activo
+		$this->activo->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_activo"]);
+		if ($this->activo->AdvancedSearch->SearchValue <> "") $this->Command = "search";
+		$this->activo->AdvancedSearch->SearchOperator = @$_GET["z_activo"];
 	}
 
 	// Load recordset
@@ -2361,21 +1656,21 @@ class csocios_list extends csocios {
 		$row = &$rs->fields;
 		$this->Row_Selected($row);
 		$this->socio_nro->setDbValue($rs->fields('socio_nro'));
+		$this->cuit_cuil->setDbValue($rs->fields('cuit_cuil'));
 		$this->id_actividad->setDbValue($rs->fields('id_actividad'));
 		if (array_key_exists('EV__id_actividad', $rs->fields)) {
 			$this->id_actividad->VirtualValue = $rs->fields('EV__id_actividad'); // Set up virtual field value
 		} else {
 			$this->id_actividad->VirtualValue = ""; // Clear value
 		}
-		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 		$this->propietario->setDbValue($rs->fields('propietario'));
 		$this->comercio->setDbValue($rs->fields('comercio'));
 		$this->direccion_comercio->setDbValue($rs->fields('direccion_comercio'));
-		$this->activo->setDbValue($rs->fields('activo'));
 		$this->mail->setDbValue($rs->fields('mail'));
 		$this->tel->setDbValue($rs->fields('tel'));
 		$this->cel->setDbValue($rs->fields('cel'));
-		$this->cuit_cuil->setDbValue($rs->fields('cuit_cuil'));
+		$this->activo->setDbValue($rs->fields('activo'));
+		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
 	}
 
 	// Load DbValue from recordset
@@ -2383,16 +1678,16 @@ class csocios_list extends csocios {
 		if (!$rs || !is_array($rs) && $rs->EOF) return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->socio_nro->DbValue = $row['socio_nro'];
+		$this->cuit_cuil->DbValue = $row['cuit_cuil'];
 		$this->id_actividad->DbValue = $row['id_actividad'];
-		$this->id_usuario->DbValue = $row['id_usuario'];
 		$this->propietario->DbValue = $row['propietario'];
 		$this->comercio->DbValue = $row['comercio'];
 		$this->direccion_comercio->DbValue = $row['direccion_comercio'];
-		$this->activo->DbValue = $row['activo'];
 		$this->mail->DbValue = $row['mail'];
 		$this->tel->DbValue = $row['tel'];
 		$this->cel->DbValue = $row['cel'];
-		$this->cuit_cuil->DbValue = $row['cuit_cuil'];
+		$this->activo->DbValue = $row['activo'];
+		$this->id_usuario->DbValue = $row['id_usuario'];
 	}
 
 	// Load old record
@@ -2435,27 +1730,31 @@ class csocios_list extends csocios {
 
 		// Common render codes for all row types
 		// socio_nro
+		// cuit_cuil
 		// id_actividad
 
 		$this->id_actividad->CellCssStyle = "white-space: nowrap;";
 
-		// id_usuario
-		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
-
 		// propietario
 		// comercio
 		// direccion_comercio
-		// activo
 		// mail
 		// tel
 		// cel
-		// cuit_cuil
+		// activo
+		// id_usuario
 
+		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
 			// socio_nro
 			$this->socio_nro->ViewValue = $this->socio_nro->CurrentValue;
 			$this->socio_nro->ViewCustomAttributes = "";
+
+			// cuit_cuil
+			$this->cuit_cuil->ViewValue = $this->cuit_cuil->CurrentValue;
+			$this->cuit_cuil->ViewValue = ew_FormatNumber($this->cuit_cuil->ViewValue, 0, -2, -2, -2);
+			$this->cuit_cuil->ViewCustomAttributes = "";
 
 			// propietario
 			$this->propietario->ViewValue = $this->propietario->CurrentValue;
@@ -2468,6 +1767,21 @@ class csocios_list extends csocios {
 			// direccion_comercio
 			$this->direccion_comercio->ViewValue = $this->direccion_comercio->CurrentValue;
 			$this->direccion_comercio->ViewCustomAttributes = "";
+
+			// mail
+			$this->mail->ViewValue = $this->mail->CurrentValue;
+			$this->mail->ViewValue = strtolower($this->mail->ViewValue);
+			$this->mail->ViewCustomAttributes = "";
+
+			// tel
+			$this->tel->ViewValue = $this->tel->CurrentValue;
+			$this->tel->ViewValue = trim($this->tel->ViewValue);
+			$this->tel->ViewCustomAttributes = "";
+
+			// cel
+			$this->cel->ViewValue = $this->cel->CurrentValue;
+			$this->cel->ViewValue = trim($this->cel->ViewValue);
+			$this->cel->ViewCustomAttributes = "";
 
 			// activo
 			if (strval($this->activo->CurrentValue) <> "") {
@@ -2486,32 +1800,17 @@ class csocios_list extends csocios {
 			}
 			$this->activo->ViewCustomAttributes = "";
 
-			// mail
-			$this->mail->ViewValue = $this->mail->CurrentValue;
-			$this->mail->ViewValue = strtolower($this->mail->ViewValue);
-			$this->mail->ViewCustomAttributes = "";
-
-			// tel
-			$this->tel->ViewValue = $this->tel->CurrentValue;
-			$this->tel->ViewValue = trim($this->tel->ViewValue);
-			$this->tel->ViewCustomAttributes = "";
-
-			// cel
-			$this->cel->ViewValue = $this->cel->CurrentValue;
-			$this->cel->ViewValue = trim($this->cel->ViewValue);
-			$this->cel->ViewCustomAttributes = "";
-
-			// cuit_cuil
-			$this->cuit_cuil->ViewValue = $this->cuit_cuil->CurrentValue;
-			$this->cuit_cuil->ViewValue = ew_FormatNumber($this->cuit_cuil->ViewValue, 0, -2, -2, -2);
-			$this->cuit_cuil->ViewCustomAttributes = "";
-
 			// socio_nro
 			$this->socio_nro->LinkCustomAttributes = "";
 			$this->socio_nro->HrefValue = "";
 			$this->socio_nro->TooltipValue = "";
 			if ($this->Export == "")
 				$this->socio_nro->ViewValue = ew_Highlight($this->HighlightName(), $this->socio_nro->ViewValue, "", "", $this->socio_nro->AdvancedSearch->getValue("x"), "");
+
+			// cuit_cuil
+			$this->cuit_cuil->LinkCustomAttributes = "";
+			$this->cuit_cuil->HrefValue = "";
+			$this->cuit_cuil->TooltipValue = "";
 
 			// propietario
 			$this->propietario->LinkCustomAttributes = "";
@@ -2534,11 +1833,6 @@ class csocios_list extends csocios {
 			if ($this->Export == "")
 				$this->direccion_comercio->ViewValue = ew_Highlight($this->HighlightName(), $this->direccion_comercio->ViewValue, $this->BasicSearch->getKeyword(), $this->BasicSearch->getType(), $this->direccion_comercio->AdvancedSearch->getValue("x"), "");
 
-			// activo
-			$this->activo->LinkCustomAttributes = "";
-			$this->activo->HrefValue = "";
-			$this->activo->TooltipValue = "";
-
 			// mail
 			$this->mail->LinkCustomAttributes = "";
 			$this->mail->HrefValue = "";
@@ -2554,181 +1848,10 @@ class csocios_list extends csocios {
 			$this->cel->HrefValue = "";
 			$this->cel->TooltipValue = "";
 
-			// cuit_cuil
-			$this->cuit_cuil->LinkCustomAttributes = "";
-			$this->cuit_cuil->HrefValue = "";
-			$this->cuit_cuil->TooltipValue = "";
-		} elseif ($this->RowType == EW_ROWTYPE_ADD) { // Add row
-
-			// socio_nro
-			// propietario
-
-			$this->propietario->EditAttrs["class"] = "form-control";
-			$this->propietario->EditCustomAttributes = "";
-			$this->propietario->EditValue = ew_HtmlEncode($this->propietario->CurrentValue);
-			$this->propietario->PlaceHolder = ew_RemoveHtml($this->propietario->FldCaption());
-
-			// comercio
-			$this->comercio->EditAttrs["class"] = "form-control";
-			$this->comercio->EditCustomAttributes = "";
-			$this->comercio->EditValue = ew_HtmlEncode($this->comercio->CurrentValue);
-			$this->comercio->PlaceHolder = ew_RemoveHtml($this->comercio->FldCaption());
-
-			// direccion_comercio
-			$this->direccion_comercio->EditAttrs["class"] = "form-control";
-			$this->direccion_comercio->EditCustomAttributes = "";
-			$this->direccion_comercio->EditValue = ew_HtmlEncode($this->direccion_comercio->CurrentValue);
-			$this->direccion_comercio->PlaceHolder = ew_RemoveHtml($this->direccion_comercio->FldCaption());
-
 			// activo
-			$this->activo->EditCustomAttributes = "";
-			$arwrk = array();
-			$arwrk[] = array($this->activo->FldTagValue(1), $this->activo->FldTagCaption(1) <> "" ? $this->activo->FldTagCaption(1) : $this->activo->FldTagValue(1));
-			$arwrk[] = array($this->activo->FldTagValue(2), $this->activo->FldTagCaption(2) <> "" ? $this->activo->FldTagCaption(2) : $this->activo->FldTagValue(2));
-			$this->activo->EditValue = $arwrk;
-
-			// mail
-			$this->mail->EditAttrs["class"] = "form-control";
-			$this->mail->EditCustomAttributes = "";
-			$this->mail->EditValue = ew_HtmlEncode($this->mail->CurrentValue);
-			$this->mail->PlaceHolder = ew_RemoveHtml($this->mail->FldCaption());
-
-			// tel
-			$this->tel->EditAttrs["class"] = "form-control";
-			$this->tel->EditCustomAttributes = "";
-			$this->tel->EditValue = ew_HtmlEncode($this->tel->CurrentValue);
-			$this->tel->PlaceHolder = ew_RemoveHtml($this->tel->FldCaption());
-
-			// cel
-			$this->cel->EditAttrs["class"] = "form-control";
-			$this->cel->EditCustomAttributes = "";
-			$this->cel->EditValue = ew_HtmlEncode($this->cel->CurrentValue);
-			$this->cel->PlaceHolder = ew_RemoveHtml($this->cel->FldCaption());
-
-			// cuit_cuil
-			$this->cuit_cuil->EditAttrs["class"] = "form-control";
-			$this->cuit_cuil->EditCustomAttributes = "";
-			$this->cuit_cuil->EditValue = ew_HtmlEncode($this->cuit_cuil->CurrentValue);
-			$this->cuit_cuil->PlaceHolder = ew_RemoveHtml($this->cuit_cuil->FldCaption());
-
-			// Edit refer script
-			// socio_nro
-
-			$this->socio_nro->HrefValue = "";
-
-			// propietario
-			$this->propietario->HrefValue = "";
-
-			// comercio
-			$this->comercio->HrefValue = "";
-
-			// direccion_comercio
-			$this->direccion_comercio->HrefValue = "";
-
-			// activo
+			$this->activo->LinkCustomAttributes = "";
 			$this->activo->HrefValue = "";
-
-			// mail
-			$this->mail->HrefValue = "";
-
-			// tel
-			$this->tel->HrefValue = "";
-
-			// cel
-			$this->cel->HrefValue = "";
-
-			// cuit_cuil
-			$this->cuit_cuil->HrefValue = "";
-		} elseif ($this->RowType == EW_ROWTYPE_EDIT) { // Edit row
-
-			// socio_nro
-			$this->socio_nro->EditAttrs["class"] = "form-control";
-			$this->socio_nro->EditCustomAttributes = "";
-			$this->socio_nro->EditValue = $this->socio_nro->CurrentValue;
-			$this->socio_nro->ViewCustomAttributes = "";
-
-			// propietario
-			$this->propietario->EditAttrs["class"] = "form-control";
-			$this->propietario->EditCustomAttributes = "";
-			$this->propietario->EditValue = ew_HtmlEncode($this->propietario->CurrentValue);
-			$this->propietario->PlaceHolder = ew_RemoveHtml($this->propietario->FldCaption());
-
-			// comercio
-			$this->comercio->EditAttrs["class"] = "form-control";
-			$this->comercio->EditCustomAttributes = "";
-			$this->comercio->EditValue = ew_HtmlEncode($this->comercio->CurrentValue);
-			$this->comercio->PlaceHolder = ew_RemoveHtml($this->comercio->FldCaption());
-
-			// direccion_comercio
-			$this->direccion_comercio->EditAttrs["class"] = "form-control";
-			$this->direccion_comercio->EditCustomAttributes = "";
-			$this->direccion_comercio->EditValue = ew_HtmlEncode($this->direccion_comercio->CurrentValue);
-			$this->direccion_comercio->PlaceHolder = ew_RemoveHtml($this->direccion_comercio->FldCaption());
-
-			// activo
-			$this->activo->EditCustomAttributes = "";
-			$arwrk = array();
-			$arwrk[] = array($this->activo->FldTagValue(1), $this->activo->FldTagCaption(1) <> "" ? $this->activo->FldTagCaption(1) : $this->activo->FldTagValue(1));
-			$arwrk[] = array($this->activo->FldTagValue(2), $this->activo->FldTagCaption(2) <> "" ? $this->activo->FldTagCaption(2) : $this->activo->FldTagValue(2));
-			$this->activo->EditValue = $arwrk;
-
-			// mail
-			$this->mail->EditAttrs["class"] = "form-control";
-			$this->mail->EditCustomAttributes = "";
-			$this->mail->EditValue = ew_HtmlEncode($this->mail->CurrentValue);
-			$this->mail->PlaceHolder = ew_RemoveHtml($this->mail->FldCaption());
-
-			// tel
-			$this->tel->EditAttrs["class"] = "form-control";
-			$this->tel->EditCustomAttributes = "";
-			$this->tel->EditValue = ew_HtmlEncode($this->tel->CurrentValue);
-			$this->tel->PlaceHolder = ew_RemoveHtml($this->tel->FldCaption());
-
-			// cel
-			$this->cel->EditAttrs["class"] = "form-control";
-			$this->cel->EditCustomAttributes = "";
-			$this->cel->EditValue = ew_HtmlEncode($this->cel->CurrentValue);
-			$this->cel->PlaceHolder = ew_RemoveHtml($this->cel->FldCaption());
-
-			// cuit_cuil
-			$this->cuit_cuil->EditAttrs["class"] = "form-control";
-			$this->cuit_cuil->EditCustomAttributes = "";
-			$this->cuit_cuil->EditValue = ew_HtmlEncode($this->cuit_cuil->CurrentValue);
-			$this->cuit_cuil->PlaceHolder = ew_RemoveHtml($this->cuit_cuil->FldCaption());
-
-			// Edit refer script
-			// socio_nro
-
-			$this->socio_nro->HrefValue = "";
-
-			// propietario
-			$this->propietario->HrefValue = "";
-
-			// comercio
-			$this->comercio->HrefValue = "";
-
-			// direccion_comercio
-			$this->direccion_comercio->HrefValue = "";
-
-			// activo
-			$this->activo->HrefValue = "";
-
-			// mail
-			$this->mail->HrefValue = "";
-
-			// tel
-			$this->tel->HrefValue = "";
-
-			// cel
-			$this->cel->HrefValue = "";
-
-			// cuit_cuil
-			$this->cuit_cuil->HrefValue = "";
-		}
-		if ($this->RowType == EW_ROWTYPE_ADD ||
-			$this->RowType == EW_ROWTYPE_EDIT ||
-			$this->RowType == EW_ROWTYPE_SEARCH) { // Add / Edit / Search row
-			$this->SetupFieldTitles();
+			$this->activo->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -2759,305 +1882,18 @@ class csocios_list extends csocios {
 		return $ValidateSearch;
 	}
 
-	// Validate form
-	function ValidateForm() {
-		global $Language, $gsFormError;
-
-		// Initialize form error message
-		$gsFormError = "";
-
-		// Check if validation required
-		if (!EW_SERVER_VALIDATE)
-			return ($gsFormError == "");
-		if (!ew_CheckInteger($this->socio_nro->FormValue)) {
-			ew_AddMessage($gsFormError, $this->socio_nro->FldErrMsg());
-		}
-		if (!$this->propietario->FldIsDetailKey && !is_null($this->propietario->FormValue) && $this->propietario->FormValue == "") {
-			ew_AddMessage($gsFormError, str_replace("%s", $this->propietario->FldCaption(), $this->propietario->ReqErrMsg));
-		}
-		if (!$this->comercio->FldIsDetailKey && !is_null($this->comercio->FormValue) && $this->comercio->FormValue == "") {
-			ew_AddMessage($gsFormError, str_replace("%s", $this->comercio->FldCaption(), $this->comercio->ReqErrMsg));
-		}
-		if (!$this->direccion_comercio->FldIsDetailKey && !is_null($this->direccion_comercio->FormValue) && $this->direccion_comercio->FormValue == "") {
-			ew_AddMessage($gsFormError, str_replace("%s", $this->direccion_comercio->FldCaption(), $this->direccion_comercio->ReqErrMsg));
-		}
-		if (!ew_CheckEmail($this->mail->FormValue)) {
-			ew_AddMessage($gsFormError, $this->mail->FldErrMsg());
-		}
-		if (!ew_CheckPhone($this->tel->FormValue)) {
-			ew_AddMessage($gsFormError, $this->tel->FldErrMsg());
-		}
-		if (!ew_CheckPhone($this->cel->FormValue)) {
-			ew_AddMessage($gsFormError, $this->cel->FldErrMsg());
-		}
-		if (!$this->cuit_cuil->FldIsDetailKey && !is_null($this->cuit_cuil->FormValue) && $this->cuit_cuil->FormValue == "") {
-			ew_AddMessage($gsFormError, str_replace("%s", $this->cuit_cuil->FldCaption(), $this->cuit_cuil->ReqErrMsg));
-		}
-
-		// Return validate result
-		$ValidateForm = ($gsFormError == "");
-
-		// Call Form_CustomValidate event
-		$sFormCustomError = "";
-		$ValidateForm = $ValidateForm && $this->Form_CustomValidate($sFormCustomError);
-		if ($sFormCustomError <> "") {
-			ew_AddMessage($gsFormError, $sFormCustomError);
-		}
-		return $ValidateForm;
-	}
-
-	//
-	// Delete records based on current filter
-	//
-	function DeleteRows() {
-		global $conn, $Language, $Security;
-		if (!$Security->CanDelete()) {
-			$this->setFailureMessage($Language->Phrase("NoDeletePermission")); // No delete permission
-			return FALSE;
-		}
-		$DeleteRows = TRUE;
-		$sSql = $this->SQL();
-		$conn->raiseErrorFn = 'ew_ErrorFn';
-		$rs = $conn->Execute($sSql);
-		$conn->raiseErrorFn = '';
-		if ($rs === FALSE) {
-			return FALSE;
-		} elseif ($rs->EOF) {
-			$this->setFailureMessage($Language->Phrase("NoRecord")); // No record found
-			$rs->Close();
-			return FALSE;
-
-		//} else {
-		//	$this->LoadRowValues($rs); // Load row values
-
-		}
-		$rows = ($rs) ? $rs->GetRows() : array();
-		if ($this->AuditTrailOnDelete) $this->WriteAuditTrailDummy($Language->Phrase("BatchDeleteBegin")); // Batch delete begin
-
-		// Clone old rows
-		$rsold = $rows;
-		if ($rs)
-			$rs->Close();
-
-		// Call row deleting event
-		if ($DeleteRows) {
-			foreach ($rsold as $row) {
-				$DeleteRows = $this->Row_Deleting($row);
-				if (!$DeleteRows) break;
-			}
-		}
-		if ($DeleteRows) {
-			$sKey = "";
-			foreach ($rsold as $row) {
-				$sThisKey = "";
-				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
-				$sThisKey .= $row['socio_nro'];
-				$this->LoadDbValues($row);
-				$conn->raiseErrorFn = 'ew_ErrorFn';
-				$DeleteRows = $this->Delete($row); // Delete
-				$conn->raiseErrorFn = '';
-				if ($DeleteRows === FALSE)
-					break;
-				if ($sKey <> "") $sKey .= ", ";
-				$sKey .= $sThisKey;
-			}
-		} else {
-
-			// Set up error message
-			if ($this->getSuccessMessage() <> "" || $this->getFailureMessage() <> "") {
-
-				// Use the message, do nothing
-			} elseif ($this->CancelMessage <> "") {
-				$this->setFailureMessage($this->CancelMessage);
-				$this->CancelMessage = "";
-			} else {
-				$this->setFailureMessage($Language->Phrase("DeleteCancelled"));
-			}
-		}
-		if ($DeleteRows) {
-			if ($DeleteRows) {
-				foreach ($rsold as $row)
-					$this->WriteAuditTrailOnDelete($row);
-			}
-		} else {
-		}
-
-		// Call Row Deleted event
-		if ($DeleteRows) {
-			foreach ($rsold as $row) {
-				$this->Row_Deleted($row);
-			}
-		}
-		return $DeleteRows;
-	}
-
-	// Update record based on key values
-	function EditRow() {
-		global $conn, $Security, $Language;
-		$sFilter = $this->KeyFilter();
-		$this->CurrentFilter = $sFilter;
-		$sSql = $this->SQL();
-		$conn->raiseErrorFn = 'ew_ErrorFn';
-		$rs = $conn->Execute($sSql);
-		$conn->raiseErrorFn = '';
-		if ($rs === FALSE)
-			return FALSE;
-		if ($rs->EOF) {
-			$EditRow = FALSE; // Update Failed
-		} else {
-
-			// Save old values
-			$rsold = &$rs->fields;
-			$this->LoadDbValues($rsold);
-			$rsnew = array();
-
-			// propietario
-			$this->propietario->SetDbValueDef($rsnew, $this->propietario->CurrentValue, NULL, $this->propietario->ReadOnly);
-
-			// comercio
-			$this->comercio->SetDbValueDef($rsnew, $this->comercio->CurrentValue, NULL, $this->comercio->ReadOnly);
-
-			// direccion_comercio
-			$this->direccion_comercio->SetDbValueDef($rsnew, $this->direccion_comercio->CurrentValue, NULL, $this->direccion_comercio->ReadOnly);
-
-			// activo
-			$this->activo->SetDbValueDef($rsnew, $this->activo->CurrentValue, NULL, $this->activo->ReadOnly);
-
-			// mail
-			$this->mail->SetDbValueDef($rsnew, $this->mail->CurrentValue, NULL, $this->mail->ReadOnly);
-
-			// tel
-			$this->tel->SetDbValueDef($rsnew, $this->tel->CurrentValue, NULL, $this->tel->ReadOnly);
-
-			// cel
-			$this->cel->SetDbValueDef($rsnew, $this->cel->CurrentValue, NULL, $this->cel->ReadOnly);
-
-			// cuit_cuil
-			$this->cuit_cuil->SetDbValueDef($rsnew, $this->cuit_cuil->CurrentValue, NULL, $this->cuit_cuil->ReadOnly);
-
-			// Call Row Updating event
-			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
-			if ($bUpdateRow) {
-				$conn->raiseErrorFn = 'ew_ErrorFn';
-				if (count($rsnew) > 0)
-					$EditRow = $this->Update($rsnew, "", $rsold);
-				else
-					$EditRow = TRUE; // No field to update
-				$conn->raiseErrorFn = '';
-				if ($EditRow) {
-				}
-			} else {
-				if ($this->getSuccessMessage() <> "" || $this->getFailureMessage() <> "") {
-
-					// Use the message, do nothing
-				} elseif ($this->CancelMessage <> "") {
-					$this->setFailureMessage($this->CancelMessage);
-					$this->CancelMessage = "";
-				} else {
-					$this->setFailureMessage($Language->Phrase("UpdateCancelled"));
-				}
-				$EditRow = FALSE;
-			}
-		}
-
-		// Call Row_Updated event
-		if ($EditRow)
-			$this->Row_Updated($rsold, $rsnew);
-		if ($EditRow) {
-			$this->WriteAuditTrailOnEdit($rsold, $rsnew);
-		}
-		$rs->Close();
-		return $EditRow;
-	}
-
-	// Add record
-	function AddRow($rsold = NULL) {
-		global $conn, $Language, $Security;
-
-		// Load db values from rsold
-		if ($rsold) {
-			$this->LoadDbValues($rsold);
-		}
-		$rsnew = array();
-
-		// propietario
-		$this->propietario->SetDbValueDef($rsnew, $this->propietario->CurrentValue, NULL, FALSE);
-
-		// comercio
-		$this->comercio->SetDbValueDef($rsnew, $this->comercio->CurrentValue, NULL, FALSE);
-
-		// direccion_comercio
-		$this->direccion_comercio->SetDbValueDef($rsnew, $this->direccion_comercio->CurrentValue, NULL, FALSE);
-
-		// activo
-		$this->activo->SetDbValueDef($rsnew, $this->activo->CurrentValue, NULL, FALSE);
-
-		// mail
-		$this->mail->SetDbValueDef($rsnew, $this->mail->CurrentValue, NULL, FALSE);
-
-		// tel
-		$this->tel->SetDbValueDef($rsnew, $this->tel->CurrentValue, NULL, FALSE);
-
-		// cel
-		$this->cel->SetDbValueDef($rsnew, $this->cel->CurrentValue, NULL, FALSE);
-
-		// cuit_cuil
-		$this->cuit_cuil->SetDbValueDef($rsnew, $this->cuit_cuil->CurrentValue, NULL, FALSE);
-
-		// id_usuario
-		if (!$Security->IsAdmin() && $Security->IsLoggedIn()) { // Non system admin
-			$rsnew['id_usuario'] = CurrentUserID();
-		}
-
-		// Call Row Inserting event
-		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
-		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
-		if ($bInsertRow) {
-			$conn->raiseErrorFn = 'ew_ErrorFn';
-			$AddRow = $this->Insert($rsnew);
-			$conn->raiseErrorFn = '';
-			if ($AddRow) {
-			}
-		} else {
-			if ($this->getSuccessMessage() <> "" || $this->getFailureMessage() <> "") {
-
-				// Use the message, do nothing
-			} elseif ($this->CancelMessage <> "") {
-				$this->setFailureMessage($this->CancelMessage);
-				$this->CancelMessage = "";
-			} else {
-				$this->setFailureMessage($Language->Phrase("InsertCancelled"));
-			}
-			$AddRow = FALSE;
-		}
-
-		// Get insert id if necessary
-		if ($AddRow) {
-			$this->socio_nro->setDbValue($conn->Insert_ID());
-			$rsnew['socio_nro'] = $this->socio_nro->DbValue;
-		}
-		if ($AddRow) {
-
-			// Call Row Inserted event
-			$rs = ($rsold == NULL) ? NULL : $rsold->fields;
-			$this->Row_Inserted($rs, $rsnew);
-			$this->WriteAuditTrailOnAdd($rsnew);
-		}
-		return $AddRow;
-	}
-
 	// Load advanced search
 	function LoadAdvancedSearch() {
 		$this->socio_nro->AdvancedSearch->Load();
+		$this->cuit_cuil->AdvancedSearch->Load();
 		$this->id_actividad->AdvancedSearch->Load();
 		$this->propietario->AdvancedSearch->Load();
 		$this->comercio->AdvancedSearch->Load();
 		$this->direccion_comercio->AdvancedSearch->Load();
-		$this->activo->AdvancedSearch->Load();
 		$this->mail->AdvancedSearch->Load();
 		$this->tel->AdvancedSearch->Load();
 		$this->cel->AdvancedSearch->Load();
-		$this->cuit_cuil->AdvancedSearch->Load();
+		$this->activo->AdvancedSearch->Load();
 	}
 
 	// Set up export options
@@ -3304,15 +2140,15 @@ class csocios_list extends csocios {
 			$sQry .= "&" . EW_TABLE_BASIC_SEARCH . "=" . urlencode($this->BasicSearch->getKeyword()) . "&" . EW_TABLE_BASIC_SEARCH_TYPE . "=" . urlencode($this->BasicSearch->getType());
 		}
 		$this->AddSearchQueryString($sQry, $this->socio_nro); // socio_nro
+		$this->AddSearchQueryString($sQry, $this->cuit_cuil); // cuit_cuil
 		$this->AddSearchQueryString($sQry, $this->id_actividad); // id_actividad
 		$this->AddSearchQueryString($sQry, $this->propietario); // propietario
 		$this->AddSearchQueryString($sQry, $this->comercio); // comercio
 		$this->AddSearchQueryString($sQry, $this->direccion_comercio); // direccion_comercio
-		$this->AddSearchQueryString($sQry, $this->activo); // activo
 		$this->AddSearchQueryString($sQry, $this->mail); // mail
 		$this->AddSearchQueryString($sQry, $this->tel); // tel
 		$this->AddSearchQueryString($sQry, $this->cel); // cel
-		$this->AddSearchQueryString($sQry, $this->cuit_cuil); // cuit_cuil
+		$this->AddSearchQueryString($sQry, $this->activo); // activo
 
 		// Build QueryString for pager
 		$sQry .= "&" . EW_TABLE_REC_PER_PAGE . "=" . urlencode($this->getRecordsPerPage()) . "&" . EW_TABLE_START_REC . "=" . urlencode($this->getStartRecordNumber());
@@ -3350,119 +2186,6 @@ class csocios_list extends csocios {
 		$url = ew_CurrentUrl();
 		$url = preg_replace('/\?cmd=reset(all){0,1}$/i', '', $url); // Remove cmd=reset / cmd=resetall
 		$Breadcrumb->Add("list", $this->TableVar, $url, "", $this->TableVar, TRUE);
-	}
-
-	// Write Audit Trail start/end for grid update
-	function WriteAuditTrailDummy($typ) {
-		$table = 'socios';
-	  $usr = CurrentUserID();
-		ew_WriteAuditTrail("log", ew_StdCurrentDateTime(), ew_ScriptName(), $usr, $typ, $table, "", "", "", "");
-	}
-
-	// Write Audit Trail (add page)
-	function WriteAuditTrailOnAdd(&$rs) {
-		if (!$this->AuditTrailOnAdd) return;
-		$table = 'socios';
-
-		// Get key value
-		$key = "";
-		if ($key <> "") $key .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
-		$key .= $rs['socio_nro'];
-
-		// Write Audit Trail
-		$dt = ew_StdCurrentDateTime();
-		$id = ew_ScriptName();
-	  $usr = CurrentUserID();
-		foreach (array_keys($rs) as $fldname) {
-			if ($this->fields[$fldname]->FldDataType <> EW_DATATYPE_BLOB) { // Ignore BLOB fields
-				if ($this->fields[$fldname]->FldDataType == EW_DATATYPE_MEMO) {
-					if (EW_AUDIT_TRAIL_TO_DATABASE)
-						$newvalue = $rs[$fldname];
-					else
-						$newvalue = "[MEMO]"; // Memo Field
-				} elseif ($this->fields[$fldname]->FldDataType == EW_DATATYPE_XML) {
-					$newvalue = "[XML]"; // XML Field
-				} else {
-					$newvalue = $rs[$fldname];
-				}
-				ew_WriteAuditTrail("log", $dt, $id, $usr, "A", $table, $fldname, $key, "", $newvalue);
-			}
-		}
-	}
-
-	// Write Audit Trail (edit page)
-	function WriteAuditTrailOnEdit(&$rsold, &$rsnew) {
-		if (!$this->AuditTrailOnEdit) return;
-		$table = 'socios';
-
-		// Get key value
-		$key = "";
-		if ($key <> "") $key .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
-		$key .= $rsold['socio_nro'];
-
-		// Write Audit Trail
-		$dt = ew_StdCurrentDateTime();
-		$id = ew_ScriptName();
-	  $usr = CurrentUserID();
-		foreach (array_keys($rsnew) as $fldname) {
-			if ($this->fields[$fldname]->FldDataType <> EW_DATATYPE_BLOB) { // Ignore BLOB fields
-				if ($this->fields[$fldname]->FldDataType == EW_DATATYPE_DATE) { // DateTime field
-					$modified = (ew_FormatDateTime($rsold[$fldname], 0) <> ew_FormatDateTime($rsnew[$fldname], 0));
-				} else {
-					$modified = !ew_CompareValue($rsold[$fldname], $rsnew[$fldname]);
-				}
-				if ($modified) {
-					if ($this->fields[$fldname]->FldDataType == EW_DATATYPE_MEMO) { // Memo field
-						if (EW_AUDIT_TRAIL_TO_DATABASE) {
-							$oldvalue = $rsold[$fldname];
-							$newvalue = $rsnew[$fldname];
-						} else {
-							$oldvalue = "[MEMO]";
-							$newvalue = "[MEMO]";
-						}
-					} elseif ($this->fields[$fldname]->FldDataType == EW_DATATYPE_XML) { // XML field
-						$oldvalue = "[XML]";
-						$newvalue = "[XML]";
-					} else {
-						$oldvalue = $rsold[$fldname];
-						$newvalue = $rsnew[$fldname];
-					}
-					ew_WriteAuditTrail("log", $dt, $id, $usr, "U", $table, $fldname, $key, $oldvalue, $newvalue);
-				}
-			}
-		}
-	}
-
-	// Write Audit Trail (delete page)
-	function WriteAuditTrailOnDelete(&$rs) {
-		if (!$this->AuditTrailOnDelete) return;
-		$table = 'socios';
-
-		// Get key value
-		$key = "";
-		if ($key <> "")
-			$key .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
-		$key .= $rs['socio_nro'];
-
-		// Write Audit Trail
-		$dt = ew_StdCurrentDateTime();
-		$id = ew_ScriptName();
-	  $curUser = CurrentUserID();
-		foreach (array_keys($rs) as $fldname) {
-			if (array_key_exists($fldname, $this->fields) && $this->fields[$fldname]->FldDataType <> EW_DATATYPE_BLOB) { // Ignore BLOB fields
-				if ($this->fields[$fldname]->FldDataType == EW_DATATYPE_MEMO) {
-					if (EW_AUDIT_TRAIL_TO_DATABASE)
-						$oldvalue = $rs[$fldname];
-					else
-						$oldvalue = "[MEMO]"; // Memo field
-				} elseif ($this->fields[$fldname]->FldDataType == EW_DATATYPE_XML) {
-					$oldvalue = "[XML]"; // XML field
-				} else {
-					$oldvalue = $rs[$fldname];
-				}
-				ew_WriteAuditTrail("log", $dt, $id, $curUser, "D", $table, $fldname, $key, $oldvalue, "");
-			}
-		}
 	}
 
 	// Page Load event
@@ -3616,79 +2339,6 @@ var EW_PAGE_ID = socios_list.PageID; // For backward compatibility
 var fsocioslist = new ew_Form("fsocioslist");
 fsocioslist.FormKeyCountName = '<?php echo $socios_list->FormKeyCountName ?>';
 
-// Validate form
-fsocioslist.Validate = function() {
-	if (!this.ValidateRequired)
-		return true; // Ignore validation
-	var $ = jQuery, fobj = this.GetForm(), $fobj = $(fobj);
-	this.PostAutoSuggest();
-	if ($fobj.find("#a_confirm").val() == "F")
-		return true;
-	var elm, felm, uelm, addcnt = 0;
-	var $k = $fobj.find("#" + this.FormKeyCountName); // Get key_count
-	var rowcnt = ($k[0]) ? parseInt($k.val(), 10) : 1;
-	var startcnt = (rowcnt == 0) ? 0 : 1; // Check rowcnt == 0 => Inline-Add
-	var gridinsert = $fobj.find("#a_list").val() == "gridinsert";
-	for (var i = startcnt; i <= rowcnt; i++) {
-		var infix = ($k[0]) ? String(i) : "";
-		$fobj.data("rowindex", infix);
-		var checkrow = (gridinsert) ? !this.EmptyRow(infix) : true;
-		if (checkrow) {
-			addcnt++;
-			elm = this.GetElements("x" + infix + "_socio_nro");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($socios->socio_nro->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_propietario");
-			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
-				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->propietario->FldCaption(), $socios->propietario->ReqErrMsg)) ?>");
-			elm = this.GetElements("x" + infix + "_comercio");
-			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
-				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->comercio->FldCaption(), $socios->comercio->ReqErrMsg)) ?>");
-			elm = this.GetElements("x" + infix + "_direccion_comercio");
-			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
-				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->direccion_comercio->FldCaption(), $socios->direccion_comercio->ReqErrMsg)) ?>");
-			elm = this.GetElements("x" + infix + "_mail");
-			if (elm && !ew_CheckEmail(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($socios->mail->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_tel");
-			if (elm && !ew_CheckPhone(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($socios->tel->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_cel");
-			if (elm && !ew_CheckPhone(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($socios->cel->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_cuit_cuil");
-			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
-				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->cuit_cuil->FldCaption(), $socios->cuit_cuil->ReqErrMsg)) ?>");
-
-			// Set up row object
-			ew_ElementsToRow(fobj);
-
-			// Fire Form_CustomValidate event
-			if (!this.Form_CustomValidate(fobj))
-				return false;
-		} // End Grid Add checking
-	}
-	if (gridinsert && addcnt == 0) { // No row added
-		alert(ewLanguage.Phrase("NoAddRecord"));
-		return false;
-	}
-	return true;
-}
-
-// Check empty row
-fsocioslist.EmptyRow = function(infix) {
-	var fobj = this.Form;
-	if (ew_ValueChanged(fobj, infix, "propietario", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "comercio", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "direccion_comercio", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "activo", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "mail", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "tel", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "cel", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "cuit_cuil", false)) return false;
-	return true;
-}
-
 // Form_CustomValidate event
 fsocioslist.Form_CustomValidate = 
  function(fobj) { // DO NOT CHANGE THIS LINE!
@@ -3732,13 +2382,6 @@ var fsocioslistsrch = new ew_Form("fsocioslistsrch");
 </div>
 <?php } ?>
 <?php
-if ($socios->CurrentAction == "gridadd") {
-	$socios->CurrentFilter = "0=1";
-	$socios_list->StartRec = 1;
-	$socios_list->DisplayRecs = $socios->GridAddRowCount;
-	$socios_list->TotalRecs = $socios_list->DisplayRecs;
-	$socios_list->StopRec = $socios_list->DisplayRecs;
-} else {
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
 		$socios_list->TotalRecs = $socios->SelectRecordCount();
@@ -3763,7 +2406,6 @@ if ($socios->CurrentAction == "gridadd") {
 		else
 			$socios_list->setWarningMessage($Language->Phrase("NoRecord"));
 	}
-}
 $socios_list->RenderOtherOptions();
 ?>
 <?php if ($Security->CanSearch()) { ?>
@@ -3865,7 +2507,7 @@ $socios_list->ShowMessage();
 <?php } ?>
 <input type="hidden" name="t" value="socios">
 <div id="gmp_socios" class="<?php if (ew_IsResponsiveLayout()) { echo "table-responsive "; } ?>ewGridMiddlePanel">
-<?php if ($socios_list->TotalRecs > 0 || $socios->CurrentAction == "add" || $socios->CurrentAction == "copy") { ?>
+<?php if ($socios_list->TotalRecs > 0) { ?>
 <table id="tbl_socioslist" class="table ewTable">
 <?php echo $socios->TableCustomInnerHtml ?>
 <thead><!-- Table header -->
@@ -3884,6 +2526,15 @@ $socios_list->ListOptions->Render("header", "left");
 	<?php } else { ?>
 		<th data-name="socio_nro"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $socios->SortUrl($socios->socio_nro) ?>',1);"><div id="elh_socios_socio_nro" class="socios_socio_nro">
 			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $socios->socio_nro->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($socios->socio_nro->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($socios->socio_nro->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+        </div></div></th>
+	<?php } ?>
+<?php } ?>		
+<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
+	<?php if ($socios->SortUrl($socios->cuit_cuil) == "") { ?>
+		<th data-name="cuit_cuil"><div id="elh_socios_cuit_cuil" class="socios_cuit_cuil"><div class="ewTableHeaderCaption"><?php echo $socios->cuit_cuil->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="cuit_cuil"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $socios->SortUrl($socios->cuit_cuil) ?>',1);"><div id="elh_socios_cuit_cuil" class="socios_cuit_cuil">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $socios->cuit_cuil->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($socios->cuit_cuil->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($socios->cuit_cuil->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
         </div></div></th>
 	<?php } ?>
 <?php } ?>		
@@ -3914,15 +2565,6 @@ $socios_list->ListOptions->Render("header", "left");
         </div></div></th>
 	<?php } ?>
 <?php } ?>		
-<?php if ($socios->activo->Visible) { // activo ?>
-	<?php if ($socios->SortUrl($socios->activo) == "") { ?>
-		<th data-name="activo"><div id="elh_socios_activo" class="socios_activo"><div class="ewTableHeaderCaption"><?php echo $socios->activo->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="activo"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $socios->SortUrl($socios->activo) ?>',1);"><div id="elh_socios_activo" class="socios_activo">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $socios->activo->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($socios->activo->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($socios->activo->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-        </div></div></th>
-	<?php } ?>
-<?php } ?>		
 <?php if ($socios->mail->Visible) { // mail ?>
 	<?php if ($socios->SortUrl($socios->mail) == "") { ?>
 		<th data-name="mail"><div id="elh_socios_mail" class="socios_mail"><div class="ewTableHeaderCaption"><?php echo $socios->mail->FldCaption() ?></div></div></th>
@@ -3950,12 +2592,12 @@ $socios_list->ListOptions->Render("header", "left");
         </div></div></th>
 	<?php } ?>
 <?php } ?>		
-<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
-	<?php if ($socios->SortUrl($socios->cuit_cuil) == "") { ?>
-		<th data-name="cuit_cuil"><div id="elh_socios_cuit_cuil" class="socios_cuit_cuil"><div class="ewTableHeaderCaption"><?php echo $socios->cuit_cuil->FldCaption() ?></div></div></th>
+<?php if ($socios->activo->Visible) { // activo ?>
+	<?php if ($socios->SortUrl($socios->activo) == "") { ?>
+		<th data-name="activo"><div id="elh_socios_activo" class="socios_activo"><div class="ewTableHeaderCaption"><?php echo $socios->activo->FldCaption() ?></div></div></th>
 	<?php } else { ?>
-		<th data-name="cuit_cuil"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $socios->SortUrl($socios->cuit_cuil) ?>',1);"><div id="elh_socios_cuit_cuil" class="socios_cuit_cuil">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $socios->cuit_cuil->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($socios->cuit_cuil->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($socios->cuit_cuil->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		<th data-name="activo"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $socios->SortUrl($socios->activo) ?>',1);"><div id="elh_socios_activo" class="socios_activo">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $socios->activo->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($socios->activo->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($socios->activo->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
         </div></div></th>
 	<?php } ?>
 <?php } ?>		
@@ -3968,137 +2610,6 @@ $socios_list->ListOptions->Render("header", "right");
 </thead>
 <tbody>
 <?php
-	if ($socios->CurrentAction == "add" || $socios->CurrentAction == "copy") {
-		$socios_list->RowIndex = 0;
-		$socios_list->KeyCount = $socios_list->RowIndex;
-		if ($socios->CurrentAction == "copy" && !$socios_list->LoadRow())
-				$socios->CurrentAction = "add";
-		if ($socios->CurrentAction == "add")
-			$socios_list->LoadDefaultValues();
-		if ($socios->EventCancelled) // Insert failed
-			$socios_list->RestoreFormValues(); // Restore form values
-
-		// Set row properties
-		$socios->ResetAttrs();
-		$socios->RowAttrs = array_merge($socios->RowAttrs, array('data-rowindex'=>0, 'id'=>'r0_socios', 'data-rowtype'=>EW_ROWTYPE_ADD));
-		$socios->RowType = EW_ROWTYPE_ADD;
-
-		// Render row
-		$socios_list->RenderRow();
-
-		// Render list options
-		$socios_list->RenderListOptions();
-		$socios_list->StartRowCnt = 0;
-?>
-	<tr<?php echo $socios->RowAttributes() ?>>
-<?php
-
-// Render list options (body, left)
-$socios_list->ListOptions->Render("body", "left", $socios_list->RowCnt);
-?>
-	<?php if ($socios->socio_nro->Visible) { // socio_nro ?>
-		<td>
-<input type="hidden" data-field="x_socio_nro" name="o<?php echo $socios_list->RowIndex ?>_socio_nro" id="o<?php echo $socios_list->RowIndex ?>_socio_nro" value="<?php echo ew_HtmlEncode($socios->socio_nro->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->propietario->Visible) { // propietario ?>
-		<td>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_propietario" class="form-group socios_propietario">
-<input type="text" data-field="x_propietario" name="x<?php echo $socios_list->RowIndex ?>_propietario" id="x<?php echo $socios_list->RowIndex ?>_propietario" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->propietario->PlaceHolder) ?>" value="<?php echo $socios->propietario->EditValue ?>"<?php echo $socios->propietario->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_propietario" name="o<?php echo $socios_list->RowIndex ?>_propietario" id="o<?php echo $socios_list->RowIndex ?>_propietario" value="<?php echo ew_HtmlEncode($socios->propietario->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->comercio->Visible) { // comercio ?>
-		<td>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_comercio" class="form-group socios_comercio">
-<input type="text" data-field="x_comercio" name="x<?php echo $socios_list->RowIndex ?>_comercio" id="x<?php echo $socios_list->RowIndex ?>_comercio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->comercio->PlaceHolder) ?>" value="<?php echo $socios->comercio->EditValue ?>"<?php echo $socios->comercio->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_comercio" name="o<?php echo $socios_list->RowIndex ?>_comercio" id="o<?php echo $socios_list->RowIndex ?>_comercio" value="<?php echo ew_HtmlEncode($socios->comercio->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->direccion_comercio->Visible) { // direccion_comercio ?>
-		<td>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_direccion_comercio" class="form-group socios_direccion_comercio">
-<input type="text" data-field="x_direccion_comercio" name="x<?php echo $socios_list->RowIndex ?>_direccion_comercio" id="x<?php echo $socios_list->RowIndex ?>_direccion_comercio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->direccion_comercio->PlaceHolder) ?>" value="<?php echo $socios->direccion_comercio->EditValue ?>"<?php echo $socios->direccion_comercio->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_direccion_comercio" name="o<?php echo $socios_list->RowIndex ?>_direccion_comercio" id="o<?php echo $socios_list->RowIndex ?>_direccion_comercio" value="<?php echo ew_HtmlEncode($socios->direccion_comercio->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->activo->Visible) { // activo ?>
-		<td>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_activo" class="form-group socios_activo">
-<div id="tp_x<?php echo $socios_list->RowIndex ?>_activo" class="<?php echo EW_ITEM_TEMPLATE_CLASSNAME ?>"><input type="radio" name="x<?php echo $socios_list->RowIndex ?>_activo" id="x<?php echo $socios_list->RowIndex ?>_activo" value="{value}"<?php echo $socios->activo->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $socios_list->RowIndex ?>_activo" data-repeatcolumn="5" class="ewItemList">
-<?php
-$arwrk = $socios->activo->EditValue;
-if (is_array($arwrk)) {
-	$rowswrk = count($arwrk);
-	$emptywrk = TRUE;
-	for ($rowcntwrk = 0; $rowcntwrk < $rowswrk; $rowcntwrk++) {
-		$selwrk = (strval($socios->activo->CurrentValue) == strval($arwrk[$rowcntwrk][0])) ? " checked=\"checked\"" : "";
-		if ($selwrk <> "") $emptywrk = FALSE;
-
-		// Note: No spacing within the LABEL tag
-?>
-<?php echo ew_RepeatColumnTable($rowswrk, $rowcntwrk, 5, 1) ?>
-<label class="radio-inline"><input type="radio" data-field="x_activo" name="x<?php echo $socios_list->RowIndex ?>_activo" id="x<?php echo $socios_list->RowIndex ?>_activo_<?php echo $rowcntwrk ?>" value="<?php echo ew_HtmlEncode($arwrk[$rowcntwrk][0]) ?>"<?php echo $selwrk ?><?php echo $socios->activo->EditAttributes() ?>><?php echo $arwrk[$rowcntwrk][1] ?></label>
-<?php echo ew_RepeatColumnTable($rowswrk, $rowcntwrk, 5, 2) ?>
-<?php
-	}
-}
-if (@$emptywrk) $socios->activo->OldValue = "";
-?>
-</div>
-</span>
-<input type="hidden" data-field="x_activo" name="o<?php echo $socios_list->RowIndex ?>_activo" id="o<?php echo $socios_list->RowIndex ?>_activo" value="<?php echo ew_HtmlEncode($socios->activo->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->mail->Visible) { // mail ?>
-		<td>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_mail" class="form-group socios_mail">
-<input type="text" data-field="x_mail" name="x<?php echo $socios_list->RowIndex ?>_mail" id="x<?php echo $socios_list->RowIndex ?>_mail" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->mail->PlaceHolder) ?>" value="<?php echo $socios->mail->EditValue ?>"<?php echo $socios->mail->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_mail" name="o<?php echo $socios_list->RowIndex ?>_mail" id="o<?php echo $socios_list->RowIndex ?>_mail" value="<?php echo ew_HtmlEncode($socios->mail->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->tel->Visible) { // tel ?>
-		<td>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_tel" class="form-group socios_tel">
-<input type="text" data-field="x_tel" name="x<?php echo $socios_list->RowIndex ?>_tel" id="x<?php echo $socios_list->RowIndex ?>_tel" size="30" maxlength="40" placeholder="<?php echo ew_HtmlEncode($socios->tel->PlaceHolder) ?>" value="<?php echo $socios->tel->EditValue ?>"<?php echo $socios->tel->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_tel" name="o<?php echo $socios_list->RowIndex ?>_tel" id="o<?php echo $socios_list->RowIndex ?>_tel" value="<?php echo ew_HtmlEncode($socios->tel->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->cel->Visible) { // cel ?>
-		<td>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_cel" class="form-group socios_cel">
-<input type="text" data-field="x_cel" name="x<?php echo $socios_list->RowIndex ?>_cel" id="x<?php echo $socios_list->RowIndex ?>_cel" size="30" maxlength="40" placeholder="<?php echo ew_HtmlEncode($socios->cel->PlaceHolder) ?>" value="<?php echo $socios->cel->EditValue ?>"<?php echo $socios->cel->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_cel" name="o<?php echo $socios_list->RowIndex ?>_cel" id="o<?php echo $socios_list->RowIndex ?>_cel" value="<?php echo ew_HtmlEncode($socios->cel->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
-		<td>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_cuit_cuil" class="form-group socios_cuit_cuil">
-<input type="text" data-field="x_cuit_cuil" name="x<?php echo $socios_list->RowIndex ?>_cuit_cuil" id="x<?php echo $socios_list->RowIndex ?>_cuit_cuil" size="30" maxlength="14" placeholder="<?php echo ew_HtmlEncode($socios->cuit_cuil->PlaceHolder) ?>" value="<?php echo $socios->cuit_cuil->EditValue ?>"<?php echo $socios->cuit_cuil->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_cuit_cuil" name="o<?php echo $socios_list->RowIndex ?>_cuit_cuil" id="o<?php echo $socios_list->RowIndex ?>_cuit_cuil" value="<?php echo ew_HtmlEncode($socios->cuit_cuil->OldValue) ?>">
-</td>
-	<?php } ?>
-<?php
-
-// Render list options (body, right)
-$socios_list->ListOptions->Render("body", "right", $socios_list->RowCnt);
-?>
-<script type="text/javascript">
-fsocioslist.UpdateOpts(<?php echo $socios_list->RowIndex ?>);
-</script>
-	</tr>
-<?php
-}
-?>
-<?php
 if ($socios->ExportAll && $socios->Export <> "") {
 	$socios_list->StopRec = $socios_list->TotalRecs;
 } else {
@@ -4108,15 +2619,6 @@ if ($socios->ExportAll && $socios->Export <> "") {
 		$socios_list->StopRec = $socios_list->StartRec + $socios_list->DisplayRecs - 1;
 	else
 		$socios_list->StopRec = $socios_list->TotalRecs;
-}
-
-// Restore number of post back records
-if ($objForm) {
-	$objForm->Index = -1;
-	if ($objForm->HasValue($socios_list->FormKeyCountName) && ($socios->CurrentAction == "gridadd" || $socios->CurrentAction == "gridedit" || $socios->CurrentAction == "F")) {
-		$socios_list->KeyCount = $objForm->GetValue($socios_list->FormKeyCountName);
-		$socios_list->StopRec = $socios_list->StartRec + $socios_list->KeyCount - 1;
-	}
 }
 $socios_list->RecCnt = $socios_list->StartRec - 1;
 if ($socios_list->Recordset && !$socios_list->Recordset->EOF) {
@@ -4132,27 +2634,10 @@ if ($socios_list->Recordset && !$socios_list->Recordset->EOF) {
 $socios->RowType = EW_ROWTYPE_AGGREGATEINIT;
 $socios->ResetAttrs();
 $socios_list->RenderRow();
-$socios_list->EditRowCnt = 0;
-if ($socios->CurrentAction == "edit")
-	$socios_list->RowIndex = 1;
-if ($socios->CurrentAction == "gridadd")
-	$socios_list->RowIndex = 0;
-if ($socios->CurrentAction == "gridedit")
-	$socios_list->RowIndex = 0;
 while ($socios_list->RecCnt < $socios_list->StopRec) {
 	$socios_list->RecCnt++;
 	if (intval($socios_list->RecCnt) >= intval($socios_list->StartRec)) {
 		$socios_list->RowCnt++;
-		if ($socios->CurrentAction == "gridadd" || $socios->CurrentAction == "gridedit" || $socios->CurrentAction == "F") {
-			$socios_list->RowIndex++;
-			$objForm->Index = $socios_list->RowIndex;
-			if ($objForm->HasValue($socios_list->FormActionName))
-				$socios_list->RowAction = strval($objForm->GetValue($socios_list->FormActionName));
-			elseif ($socios->CurrentAction == "gridadd")
-				$socios_list->RowAction = "insert";
-			else
-				$socios_list->RowAction = "";
-		}
 
 		// Set up key count
 		$socios_list->KeyCount = $socios_list->RowIndex;
@@ -4161,37 +2646,10 @@ while ($socios_list->RecCnt < $socios_list->StopRec) {
 		$socios->ResetAttrs();
 		$socios->CssClass = "";
 		if ($socios->CurrentAction == "gridadd") {
-			$socios_list->LoadDefaultValues(); // Load default values
 		} else {
 			$socios_list->LoadRowValues($socios_list->Recordset); // Load row values
 		}
 		$socios->RowType = EW_ROWTYPE_VIEW; // Render view
-		if ($socios->CurrentAction == "gridadd") // Grid add
-			$socios->RowType = EW_ROWTYPE_ADD; // Render add
-		if ($socios->CurrentAction == "gridadd" && $socios->EventCancelled && !$objForm->HasValue("k_blankrow")) // Insert failed
-			$socios_list->RestoreCurrentRowFormValues($socios_list->RowIndex); // Restore form values
-		if ($socios->CurrentAction == "edit") {
-			if ($socios_list->CheckInlineEditKey() && $socios_list->EditRowCnt == 0) { // Inline edit
-				$socios->RowType = EW_ROWTYPE_EDIT; // Render edit
-			}
-		}
-		if ($socios->CurrentAction == "gridedit") { // Grid edit
-			if ($socios->EventCancelled) {
-				$socios_list->RestoreCurrentRowFormValues($socios_list->RowIndex); // Restore form values
-			}
-			if ($socios_list->RowAction == "insert")
-				$socios->RowType = EW_ROWTYPE_ADD; // Render add
-			else
-				$socios->RowType = EW_ROWTYPE_EDIT; // Render edit
-		}
-		if ($socios->CurrentAction == "edit" && $socios->RowType == EW_ROWTYPE_EDIT && $socios->EventCancelled) { // Update failed
-			$objForm->Index = 1;
-			$socios_list->RestoreFormValues(); // Restore form values
-		}
-		if ($socios->CurrentAction == "gridedit" && ($socios->RowType == EW_ROWTYPE_EDIT || $socios->RowType == EW_ROWTYPE_ADD) && $socios->EventCancelled) // Update failed
-			$socios_list->RestoreCurrentRowFormValues($socios_list->RowIndex); // Restore form values
-		if ($socios->RowType == EW_ROWTYPE_EDIT) // Edit row
-			$socios_list->EditRowCnt++;
 
 		// Set up row id / data-rowindex
 		$socios->RowAttrs = array_merge($socios->RowAttrs, array('data-rowindex'=>$socios_list->RowCnt, 'id'=>'r' . $socios_list->RowCnt . '_socios', 'data-rowtype'=>$socios->RowType));
@@ -4201,9 +2659,6 @@ while ($socios_list->RecCnt < $socios_list->StopRec) {
 
 		// Render list options
 		$socios_list->RenderListOptions();
-
-		// Skip delete row / empty row for confirm page
-		if ($socios_list->RowAction <> "delete" && $socios_list->RowAction <> "insertdelete" && !($socios_list->RowAction == "insert" && $socios->CurrentAction == "F" && $socios_list->EmptyRow())) {
 ?>
 	<tr<?php echo $socios->RowAttributes() ?>>
 <?php
@@ -4213,346 +2668,56 @@ $socios_list->ListOptions->Render("body", "left", $socios_list->RowCnt);
 ?>
 	<?php if ($socios->socio_nro->Visible) { // socio_nro ?>
 		<td data-name="socio_nro"<?php echo $socios->socio_nro->CellAttributes() ?>>
-<?php if ($socios->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<input type="hidden" data-field="x_socio_nro" name="o<?php echo $socios_list->RowIndex ?>_socio_nro" id="o<?php echo $socios_list->RowIndex ?>_socio_nro" value="<?php echo ew_HtmlEncode($socios->socio_nro->OldValue) ?>">
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_socio_nro" class="form-group socios_socio_nro">
-<span<?php echo $socios->socio_nro->ViewAttributes() ?>>
-<p class="form-control-static"><?php echo $socios->socio_nro->EditValue ?></p></span>
-</span>
-<input type="hidden" data-field="x_socio_nro" name="x<?php echo $socios_list->RowIndex ?>_socio_nro" id="x<?php echo $socios_list->RowIndex ?>_socio_nro" value="<?php echo ew_HtmlEncode($socios->socio_nro->CurrentValue) ?>">
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span<?php echo $socios->socio_nro->ViewAttributes() ?>>
 <?php echo $socios->socio_nro->ListViewValue() ?></span>
-<?php } ?>
 <a id="<?php echo $socios_list->PageObjName . "_row_" . $socios_list->RowCnt ?>"></a></td>
+	<?php } ?>
+	<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
+		<td data-name="cuit_cuil"<?php echo $socios->cuit_cuil->CellAttributes() ?>>
+<span<?php echo $socios->cuit_cuil->ViewAttributes() ?>>
+<?php echo $socios->cuit_cuil->ListViewValue() ?></span>
+</td>
 	<?php } ?>
 	<?php if ($socios->propietario->Visible) { // propietario ?>
 		<td data-name="propietario"<?php echo $socios->propietario->CellAttributes() ?>>
-<?php if ($socios->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_propietario" class="form-group socios_propietario">
-<input type="text" data-field="x_propietario" name="x<?php echo $socios_list->RowIndex ?>_propietario" id="x<?php echo $socios_list->RowIndex ?>_propietario" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->propietario->PlaceHolder) ?>" value="<?php echo $socios->propietario->EditValue ?>"<?php echo $socios->propietario->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_propietario" name="o<?php echo $socios_list->RowIndex ?>_propietario" id="o<?php echo $socios_list->RowIndex ?>_propietario" value="<?php echo ew_HtmlEncode($socios->propietario->OldValue) ?>">
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_propietario" class="form-group socios_propietario">
-<input type="text" data-field="x_propietario" name="x<?php echo $socios_list->RowIndex ?>_propietario" id="x<?php echo $socios_list->RowIndex ?>_propietario" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->propietario->PlaceHolder) ?>" value="<?php echo $socios->propietario->EditValue ?>"<?php echo $socios->propietario->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span<?php echo $socios->propietario->ViewAttributes() ?>>
 <?php echo $socios->propietario->ListViewValue() ?></span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($socios->comercio->Visible) { // comercio ?>
 		<td data-name="comercio"<?php echo $socios->comercio->CellAttributes() ?>>
-<?php if ($socios->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_comercio" class="form-group socios_comercio">
-<input type="text" data-field="x_comercio" name="x<?php echo $socios_list->RowIndex ?>_comercio" id="x<?php echo $socios_list->RowIndex ?>_comercio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->comercio->PlaceHolder) ?>" value="<?php echo $socios->comercio->EditValue ?>"<?php echo $socios->comercio->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_comercio" name="o<?php echo $socios_list->RowIndex ?>_comercio" id="o<?php echo $socios_list->RowIndex ?>_comercio" value="<?php echo ew_HtmlEncode($socios->comercio->OldValue) ?>">
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_comercio" class="form-group socios_comercio">
-<input type="text" data-field="x_comercio" name="x<?php echo $socios_list->RowIndex ?>_comercio" id="x<?php echo $socios_list->RowIndex ?>_comercio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->comercio->PlaceHolder) ?>" value="<?php echo $socios->comercio->EditValue ?>"<?php echo $socios->comercio->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span<?php echo $socios->comercio->ViewAttributes() ?>>
 <?php echo $socios->comercio->ListViewValue() ?></span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($socios->direccion_comercio->Visible) { // direccion_comercio ?>
 		<td data-name="direccion_comercio"<?php echo $socios->direccion_comercio->CellAttributes() ?>>
-<?php if ($socios->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_direccion_comercio" class="form-group socios_direccion_comercio">
-<input type="text" data-field="x_direccion_comercio" name="x<?php echo $socios_list->RowIndex ?>_direccion_comercio" id="x<?php echo $socios_list->RowIndex ?>_direccion_comercio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->direccion_comercio->PlaceHolder) ?>" value="<?php echo $socios->direccion_comercio->EditValue ?>"<?php echo $socios->direccion_comercio->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_direccion_comercio" name="o<?php echo $socios_list->RowIndex ?>_direccion_comercio" id="o<?php echo $socios_list->RowIndex ?>_direccion_comercio" value="<?php echo ew_HtmlEncode($socios->direccion_comercio->OldValue) ?>">
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_direccion_comercio" class="form-group socios_direccion_comercio">
-<input type="text" data-field="x_direccion_comercio" name="x<?php echo $socios_list->RowIndex ?>_direccion_comercio" id="x<?php echo $socios_list->RowIndex ?>_direccion_comercio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->direccion_comercio->PlaceHolder) ?>" value="<?php echo $socios->direccion_comercio->EditValue ?>"<?php echo $socios->direccion_comercio->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span<?php echo $socios->direccion_comercio->ViewAttributes() ?>>
 <?php echo $socios->direccion_comercio->ListViewValue() ?></span>
-<?php } ?>
-</td>
-	<?php } ?>
-	<?php if ($socios->activo->Visible) { // activo ?>
-		<td data-name="activo"<?php echo $socios->activo->CellAttributes() ?>>
-<?php if ($socios->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_activo" class="form-group socios_activo">
-<div id="tp_x<?php echo $socios_list->RowIndex ?>_activo" class="<?php echo EW_ITEM_TEMPLATE_CLASSNAME ?>"><input type="radio" name="x<?php echo $socios_list->RowIndex ?>_activo" id="x<?php echo $socios_list->RowIndex ?>_activo" value="{value}"<?php echo $socios->activo->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $socios_list->RowIndex ?>_activo" data-repeatcolumn="5" class="ewItemList">
-<?php
-$arwrk = $socios->activo->EditValue;
-if (is_array($arwrk)) {
-	$rowswrk = count($arwrk);
-	$emptywrk = TRUE;
-	for ($rowcntwrk = 0; $rowcntwrk < $rowswrk; $rowcntwrk++) {
-		$selwrk = (strval($socios->activo->CurrentValue) == strval($arwrk[$rowcntwrk][0])) ? " checked=\"checked\"" : "";
-		if ($selwrk <> "") $emptywrk = FALSE;
-
-		// Note: No spacing within the LABEL tag
-?>
-<?php echo ew_RepeatColumnTable($rowswrk, $rowcntwrk, 5, 1) ?>
-<label class="radio-inline"><input type="radio" data-field="x_activo" name="x<?php echo $socios_list->RowIndex ?>_activo" id="x<?php echo $socios_list->RowIndex ?>_activo_<?php echo $rowcntwrk ?>" value="<?php echo ew_HtmlEncode($arwrk[$rowcntwrk][0]) ?>"<?php echo $selwrk ?><?php echo $socios->activo->EditAttributes() ?>><?php echo $arwrk[$rowcntwrk][1] ?></label>
-<?php echo ew_RepeatColumnTable($rowswrk, $rowcntwrk, 5, 2) ?>
-<?php
-	}
-}
-if (@$emptywrk) $socios->activo->OldValue = "";
-?>
-</div>
-</span>
-<input type="hidden" data-field="x_activo" name="o<?php echo $socios_list->RowIndex ?>_activo" id="o<?php echo $socios_list->RowIndex ?>_activo" value="<?php echo ew_HtmlEncode($socios->activo->OldValue) ?>">
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_activo" class="form-group socios_activo">
-<div id="tp_x<?php echo $socios_list->RowIndex ?>_activo" class="<?php echo EW_ITEM_TEMPLATE_CLASSNAME ?>"><input type="radio" name="x<?php echo $socios_list->RowIndex ?>_activo" id="x<?php echo $socios_list->RowIndex ?>_activo" value="{value}"<?php echo $socios->activo->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $socios_list->RowIndex ?>_activo" data-repeatcolumn="5" class="ewItemList">
-<?php
-$arwrk = $socios->activo->EditValue;
-if (is_array($arwrk)) {
-	$rowswrk = count($arwrk);
-	$emptywrk = TRUE;
-	for ($rowcntwrk = 0; $rowcntwrk < $rowswrk; $rowcntwrk++) {
-		$selwrk = (strval($socios->activo->CurrentValue) == strval($arwrk[$rowcntwrk][0])) ? " checked=\"checked\"" : "";
-		if ($selwrk <> "") $emptywrk = FALSE;
-
-		// Note: No spacing within the LABEL tag
-?>
-<?php echo ew_RepeatColumnTable($rowswrk, $rowcntwrk, 5, 1) ?>
-<label class="radio-inline"><input type="radio" data-field="x_activo" name="x<?php echo $socios_list->RowIndex ?>_activo" id="x<?php echo $socios_list->RowIndex ?>_activo_<?php echo $rowcntwrk ?>" value="<?php echo ew_HtmlEncode($arwrk[$rowcntwrk][0]) ?>"<?php echo $selwrk ?><?php echo $socios->activo->EditAttributes() ?>><?php echo $arwrk[$rowcntwrk][1] ?></label>
-<?php echo ew_RepeatColumnTable($rowswrk, $rowcntwrk, 5, 2) ?>
-<?php
-	}
-}
-if (@$emptywrk) $socios->activo->OldValue = "";
-?>
-</div>
-</span>
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_VIEW) { // View record ?>
-<span<?php echo $socios->activo->ViewAttributes() ?>>
-<?php echo $socios->activo->ListViewValue() ?></span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($socios->mail->Visible) { // mail ?>
 		<td data-name="mail"<?php echo $socios->mail->CellAttributes() ?>>
-<?php if ($socios->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_mail" class="form-group socios_mail">
-<input type="text" data-field="x_mail" name="x<?php echo $socios_list->RowIndex ?>_mail" id="x<?php echo $socios_list->RowIndex ?>_mail" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->mail->PlaceHolder) ?>" value="<?php echo $socios->mail->EditValue ?>"<?php echo $socios->mail->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_mail" name="o<?php echo $socios_list->RowIndex ?>_mail" id="o<?php echo $socios_list->RowIndex ?>_mail" value="<?php echo ew_HtmlEncode($socios->mail->OldValue) ?>">
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_mail" class="form-group socios_mail">
-<input type="text" data-field="x_mail" name="x<?php echo $socios_list->RowIndex ?>_mail" id="x<?php echo $socios_list->RowIndex ?>_mail" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->mail->PlaceHolder) ?>" value="<?php echo $socios->mail->EditValue ?>"<?php echo $socios->mail->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span<?php echo $socios->mail->ViewAttributes() ?>>
 <?php echo $socios->mail->ListViewValue() ?></span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($socios->tel->Visible) { // tel ?>
 		<td data-name="tel"<?php echo $socios->tel->CellAttributes() ?>>
-<?php if ($socios->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_tel" class="form-group socios_tel">
-<input type="text" data-field="x_tel" name="x<?php echo $socios_list->RowIndex ?>_tel" id="x<?php echo $socios_list->RowIndex ?>_tel" size="30" maxlength="40" placeholder="<?php echo ew_HtmlEncode($socios->tel->PlaceHolder) ?>" value="<?php echo $socios->tel->EditValue ?>"<?php echo $socios->tel->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_tel" name="o<?php echo $socios_list->RowIndex ?>_tel" id="o<?php echo $socios_list->RowIndex ?>_tel" value="<?php echo ew_HtmlEncode($socios->tel->OldValue) ?>">
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_tel" class="form-group socios_tel">
-<input type="text" data-field="x_tel" name="x<?php echo $socios_list->RowIndex ?>_tel" id="x<?php echo $socios_list->RowIndex ?>_tel" size="30" maxlength="40" placeholder="<?php echo ew_HtmlEncode($socios->tel->PlaceHolder) ?>" value="<?php echo $socios->tel->EditValue ?>"<?php echo $socios->tel->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span<?php echo $socios->tel->ViewAttributes() ?>>
 <?php echo $socios->tel->ListViewValue() ?></span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($socios->cel->Visible) { // cel ?>
 		<td data-name="cel"<?php echo $socios->cel->CellAttributes() ?>>
-<?php if ($socios->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_cel" class="form-group socios_cel">
-<input type="text" data-field="x_cel" name="x<?php echo $socios_list->RowIndex ?>_cel" id="x<?php echo $socios_list->RowIndex ?>_cel" size="30" maxlength="40" placeholder="<?php echo ew_HtmlEncode($socios->cel->PlaceHolder) ?>" value="<?php echo $socios->cel->EditValue ?>"<?php echo $socios->cel->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_cel" name="o<?php echo $socios_list->RowIndex ?>_cel" id="o<?php echo $socios_list->RowIndex ?>_cel" value="<?php echo ew_HtmlEncode($socios->cel->OldValue) ?>">
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_cel" class="form-group socios_cel">
-<input type="text" data-field="x_cel" name="x<?php echo $socios_list->RowIndex ?>_cel" id="x<?php echo $socios_list->RowIndex ?>_cel" size="30" maxlength="40" placeholder="<?php echo ew_HtmlEncode($socios->cel->PlaceHolder) ?>" value="<?php echo $socios->cel->EditValue ?>"<?php echo $socios->cel->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span<?php echo $socios->cel->ViewAttributes() ?>>
 <?php echo $socios->cel->ListViewValue() ?></span>
-<?php } ?>
-</td>
-	<?php } ?>
-	<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
-		<td data-name="cuit_cuil"<?php echo $socios->cuit_cuil->CellAttributes() ?>>
-<?php if ($socios->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_cuit_cuil" class="form-group socios_cuit_cuil">
-<input type="text" data-field="x_cuit_cuil" name="x<?php echo $socios_list->RowIndex ?>_cuit_cuil" id="x<?php echo $socios_list->RowIndex ?>_cuit_cuil" size="30" maxlength="14" placeholder="<?php echo ew_HtmlEncode($socios->cuit_cuil->PlaceHolder) ?>" value="<?php echo $socios->cuit_cuil->EditValue ?>"<?php echo $socios->cuit_cuil->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_cuit_cuil" name="o<?php echo $socios_list->RowIndex ?>_cuit_cuil" id="o<?php echo $socios_list->RowIndex ?>_cuit_cuil" value="<?php echo ew_HtmlEncode($socios->cuit_cuil->OldValue) ?>">
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $socios_list->RowCnt ?>_socios_cuit_cuil" class="form-group socios_cuit_cuil">
-<input type="text" data-field="x_cuit_cuil" name="x<?php echo $socios_list->RowIndex ?>_cuit_cuil" id="x<?php echo $socios_list->RowIndex ?>_cuit_cuil" size="30" maxlength="14" placeholder="<?php echo ew_HtmlEncode($socios->cuit_cuil->PlaceHolder) ?>" value="<?php echo $socios->cuit_cuil->EditValue ?>"<?php echo $socios->cuit_cuil->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($socios->RowType == EW_ROWTYPE_VIEW) { // View record ?>
-<span<?php echo $socios->cuit_cuil->ViewAttributes() ?>>
-<?php echo $socios->cuit_cuil->ListViewValue() ?></span>
-<?php } ?>
-</td>
-	<?php } ?>
-<?php
-
-// Render list options (body, right)
-$socios_list->ListOptions->Render("body", "right", $socios_list->RowCnt);
-?>
-	</tr>
-<?php if ($socios->RowType == EW_ROWTYPE_ADD || $socios->RowType == EW_ROWTYPE_EDIT) { ?>
-<script type="text/javascript">
-fsocioslist.UpdateOpts(<?php echo $socios_list->RowIndex ?>);
-</script>
-<?php } ?>
-<?php
-	}
-	} // End delete row checking
-	if ($socios->CurrentAction <> "gridadd")
-		if (!$socios_list->Recordset->EOF) $socios_list->Recordset->MoveNext();
-}
-?>
-<?php
-	if ($socios->CurrentAction == "gridadd" || $socios->CurrentAction == "gridedit") {
-		$socios_list->RowIndex = '$rowindex$';
-		$socios_list->LoadDefaultValues();
-
-		// Set row properties
-		$socios->ResetAttrs();
-		$socios->RowAttrs = array_merge($socios->RowAttrs, array('data-rowindex'=>$socios_list->RowIndex, 'id'=>'r0_socios', 'data-rowtype'=>EW_ROWTYPE_ADD));
-		ew_AppendClass($socios->RowAttrs["class"], "ewTemplate");
-		$socios->RowType = EW_ROWTYPE_ADD;
-
-		// Render row
-		$socios_list->RenderRow();
-
-		// Render list options
-		$socios_list->RenderListOptions();
-		$socios_list->StartRowCnt = 0;
-?>
-	<tr<?php echo $socios->RowAttributes() ?>>
-<?php
-
-// Render list options (body, left)
-$socios_list->ListOptions->Render("body", "left", $socios_list->RowIndex);
-?>
-	<?php if ($socios->socio_nro->Visible) { // socio_nro ?>
-		<td>
-<input type="hidden" data-field="x_socio_nro" name="o<?php echo $socios_list->RowIndex ?>_socio_nro" id="o<?php echo $socios_list->RowIndex ?>_socio_nro" value="<?php echo ew_HtmlEncode($socios->socio_nro->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->propietario->Visible) { // propietario ?>
-		<td>
-<span id="el$rowindex$_socios_propietario" class="form-group socios_propietario">
-<input type="text" data-field="x_propietario" name="x<?php echo $socios_list->RowIndex ?>_propietario" id="x<?php echo $socios_list->RowIndex ?>_propietario" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->propietario->PlaceHolder) ?>" value="<?php echo $socios->propietario->EditValue ?>"<?php echo $socios->propietario->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_propietario" name="o<?php echo $socios_list->RowIndex ?>_propietario" id="o<?php echo $socios_list->RowIndex ?>_propietario" value="<?php echo ew_HtmlEncode($socios->propietario->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->comercio->Visible) { // comercio ?>
-		<td>
-<span id="el$rowindex$_socios_comercio" class="form-group socios_comercio">
-<input type="text" data-field="x_comercio" name="x<?php echo $socios_list->RowIndex ?>_comercio" id="x<?php echo $socios_list->RowIndex ?>_comercio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->comercio->PlaceHolder) ?>" value="<?php echo $socios->comercio->EditValue ?>"<?php echo $socios->comercio->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_comercio" name="o<?php echo $socios_list->RowIndex ?>_comercio" id="o<?php echo $socios_list->RowIndex ?>_comercio" value="<?php echo ew_HtmlEncode($socios->comercio->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->direccion_comercio->Visible) { // direccion_comercio ?>
-		<td>
-<span id="el$rowindex$_socios_direccion_comercio" class="form-group socios_direccion_comercio">
-<input type="text" data-field="x_direccion_comercio" name="x<?php echo $socios_list->RowIndex ?>_direccion_comercio" id="x<?php echo $socios_list->RowIndex ?>_direccion_comercio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->direccion_comercio->PlaceHolder) ?>" value="<?php echo $socios->direccion_comercio->EditValue ?>"<?php echo $socios->direccion_comercio->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_direccion_comercio" name="o<?php echo $socios_list->RowIndex ?>_direccion_comercio" id="o<?php echo $socios_list->RowIndex ?>_direccion_comercio" value="<?php echo ew_HtmlEncode($socios->direccion_comercio->OldValue) ?>">
 </td>
 	<?php } ?>
 	<?php if ($socios->activo->Visible) { // activo ?>
-		<td>
-<span id="el$rowindex$_socios_activo" class="form-group socios_activo">
-<div id="tp_x<?php echo $socios_list->RowIndex ?>_activo" class="<?php echo EW_ITEM_TEMPLATE_CLASSNAME ?>"><input type="radio" name="x<?php echo $socios_list->RowIndex ?>_activo" id="x<?php echo $socios_list->RowIndex ?>_activo" value="{value}"<?php echo $socios->activo->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $socios_list->RowIndex ?>_activo" data-repeatcolumn="5" class="ewItemList">
-<?php
-$arwrk = $socios->activo->EditValue;
-if (is_array($arwrk)) {
-	$rowswrk = count($arwrk);
-	$emptywrk = TRUE;
-	for ($rowcntwrk = 0; $rowcntwrk < $rowswrk; $rowcntwrk++) {
-		$selwrk = (strval($socios->activo->CurrentValue) == strval($arwrk[$rowcntwrk][0])) ? " checked=\"checked\"" : "";
-		if ($selwrk <> "") $emptywrk = FALSE;
-
-		// Note: No spacing within the LABEL tag
-?>
-<?php echo ew_RepeatColumnTable($rowswrk, $rowcntwrk, 5, 1) ?>
-<label class="radio-inline"><input type="radio" data-field="x_activo" name="x<?php echo $socios_list->RowIndex ?>_activo" id="x<?php echo $socios_list->RowIndex ?>_activo_<?php echo $rowcntwrk ?>" value="<?php echo ew_HtmlEncode($arwrk[$rowcntwrk][0]) ?>"<?php echo $selwrk ?><?php echo $socios->activo->EditAttributes() ?>><?php echo $arwrk[$rowcntwrk][1] ?></label>
-<?php echo ew_RepeatColumnTable($rowswrk, $rowcntwrk, 5, 2) ?>
-<?php
-	}
-}
-if (@$emptywrk) $socios->activo->OldValue = "";
-?>
-</div>
-</span>
-<input type="hidden" data-field="x_activo" name="o<?php echo $socios_list->RowIndex ?>_activo" id="o<?php echo $socios_list->RowIndex ?>_activo" value="<?php echo ew_HtmlEncode($socios->activo->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->mail->Visible) { // mail ?>
-		<td>
-<span id="el$rowindex$_socios_mail" class="form-group socios_mail">
-<input type="text" data-field="x_mail" name="x<?php echo $socios_list->RowIndex ?>_mail" id="x<?php echo $socios_list->RowIndex ?>_mail" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->mail->PlaceHolder) ?>" value="<?php echo $socios->mail->EditValue ?>"<?php echo $socios->mail->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_mail" name="o<?php echo $socios_list->RowIndex ?>_mail" id="o<?php echo $socios_list->RowIndex ?>_mail" value="<?php echo ew_HtmlEncode($socios->mail->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->tel->Visible) { // tel ?>
-		<td>
-<span id="el$rowindex$_socios_tel" class="form-group socios_tel">
-<input type="text" data-field="x_tel" name="x<?php echo $socios_list->RowIndex ?>_tel" id="x<?php echo $socios_list->RowIndex ?>_tel" size="30" maxlength="40" placeholder="<?php echo ew_HtmlEncode($socios->tel->PlaceHolder) ?>" value="<?php echo $socios->tel->EditValue ?>"<?php echo $socios->tel->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_tel" name="o<?php echo $socios_list->RowIndex ?>_tel" id="o<?php echo $socios_list->RowIndex ?>_tel" value="<?php echo ew_HtmlEncode($socios->tel->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->cel->Visible) { // cel ?>
-		<td>
-<span id="el$rowindex$_socios_cel" class="form-group socios_cel">
-<input type="text" data-field="x_cel" name="x<?php echo $socios_list->RowIndex ?>_cel" id="x<?php echo $socios_list->RowIndex ?>_cel" size="30" maxlength="40" placeholder="<?php echo ew_HtmlEncode($socios->cel->PlaceHolder) ?>" value="<?php echo $socios->cel->EditValue ?>"<?php echo $socios->cel->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_cel" name="o<?php echo $socios_list->RowIndex ?>_cel" id="o<?php echo $socios_list->RowIndex ?>_cel" value="<?php echo ew_HtmlEncode($socios->cel->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
-		<td>
-<span id="el$rowindex$_socios_cuit_cuil" class="form-group socios_cuit_cuil">
-<input type="text" data-field="x_cuit_cuil" name="x<?php echo $socios_list->RowIndex ?>_cuit_cuil" id="x<?php echo $socios_list->RowIndex ?>_cuit_cuil" size="30" maxlength="14" placeholder="<?php echo ew_HtmlEncode($socios->cuit_cuil->PlaceHolder) ?>" value="<?php echo $socios->cuit_cuil->EditValue ?>"<?php echo $socios->cuit_cuil->EditAttributes() ?>>
-</span>
-<input type="hidden" data-field="x_cuit_cuil" name="o<?php echo $socios_list->RowIndex ?>_cuit_cuil" id="o<?php echo $socios_list->RowIndex ?>_cuit_cuil" value="<?php echo ew_HtmlEncode($socios->cuit_cuil->OldValue) ?>">
+		<td data-name="activo"<?php echo $socios->activo->CellAttributes() ?>>
+<span<?php echo $socios->activo->ViewAttributes() ?>>
+<?php echo $socios->activo->ListViewValue() ?></span>
 </td>
 	<?php } ?>
 <?php
@@ -4560,31 +2725,15 @@ if (@$emptywrk) $socios->activo->OldValue = "";
 // Render list options (body, right)
 $socios_list->ListOptions->Render("body", "right", $socios_list->RowCnt);
 ?>
-<script type="text/javascript">
-fsocioslist.UpdateOpts(<?php echo $socios_list->RowIndex ?>);
-</script>
 	</tr>
 <?php
+	}
+	if ($socios->CurrentAction <> "gridadd")
+		$socios_list->Recordset->MoveNext();
 }
 ?>
 </tbody>
 </table>
-<?php } ?>
-<?php if ($socios->CurrentAction == "add" || $socios->CurrentAction == "copy") { ?>
-<input type="hidden" name="<?php echo $socios_list->FormKeyCountName ?>" id="<?php echo $socios_list->FormKeyCountName ?>" value="<?php echo $socios_list->KeyCount ?>">
-<?php } ?>
-<?php if ($socios->CurrentAction == "gridadd") { ?>
-<input type="hidden" name="a_list" id="a_list" value="gridinsert">
-<input type="hidden" name="<?php echo $socios_list->FormKeyCountName ?>" id="<?php echo $socios_list->FormKeyCountName ?>" value="<?php echo $socios_list->KeyCount ?>">
-<?php echo $socios_list->MultiSelectKey ?>
-<?php } ?>
-<?php if ($socios->CurrentAction == "edit") { ?>
-<input type="hidden" name="<?php echo $socios_list->FormKeyCountName ?>" id="<?php echo $socios_list->FormKeyCountName ?>" value="<?php echo $socios_list->KeyCount ?>">
-<?php } ?>
-<?php if ($socios->CurrentAction == "gridedit") { ?>
-<input type="hidden" name="a_list" id="a_list" value="gridupdate">
-<input type="hidden" name="<?php echo $socios_list->FormKeyCountName ?>" id="<?php echo $socios_list->FormKeyCountName ?>" value="<?php echo $socios_list->KeyCount ?>">
-<?php echo $socios_list->MultiSelectKey ?>
 <?php } ?>
 <?php if ($socios->CurrentAction == "") { ?>
 <input type="hidden" name="a_list" id="a_list" value="">

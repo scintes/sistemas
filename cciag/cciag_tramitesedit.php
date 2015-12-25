@@ -1130,13 +1130,10 @@ $tramites_edit->ShowMessage();
 <?php } ?>
 <?php if ($tramites->Descripcion->Visible) { // Descripcion ?>
 	<div id="r_Descripcion" class="form-group">
-		<label id="elh_tramites_Descripcion" class="col-sm-2 control-label ewLabel"><?php echo $tramites->Descripcion->FldCaption() ?></label>
+		<label id="elh_tramites_Descripcion" for="x_Descripcion" class="col-sm-2 control-label ewLabel"><?php echo $tramites->Descripcion->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $tramites->Descripcion->CellAttributes() ?>>
 <span id="el_tramites_Descripcion">
-<textarea data-field="x_Descripcion" class="editor" name="x_Descripcion" id="x_Descripcion" cols="35" rows="4" placeholder="<?php echo ew_HtmlEncode($tramites->Descripcion->PlaceHolder) ?>"<?php echo $tramites->Descripcion->EditAttributes() ?>><?php echo $tramites->Descripcion->EditValue ?></textarea>
-<script type="text/javascript">
-ew_CreateEditor("ftramitesedit", "x_Descripcion", 35, 4, <?php echo ($tramites->Descripcion->ReadOnly || FALSE) ? "true" : "false" ?>);
-</script>
+<textarea data-field="x_Descripcion" name="x_Descripcion" id="x_Descripcion" cols="35" rows="4" placeholder="<?php echo ew_HtmlEncode($tramites->Descripcion->PlaceHolder) ?>"<?php echo $tramites->Descripcion->EditAttributes() ?>><?php echo $tramites->Descripcion->EditValue ?></textarea>
 </span>
 <?php echo $tramites->Descripcion->CustomMsg ?></div></div>
 	</div>

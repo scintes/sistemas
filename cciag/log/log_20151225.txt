@@ -1,0 +1,5 @@
+date/time	script	user	action	table	field	key value	old value	new value
+2015/12/25 05:43:17	/cciag/cciag_login.php	sergio	login	::1				
+2015/12/25 08:39:12	/cciag/cciag_login.php	sergio	login	::1				
+2015/12/25 16:10:25	/cciag/cciag_login.php	sergio	login	::1				
+2015/12/25 16:17:00	/cciag/cciag_login.php	sergio	login	::1				

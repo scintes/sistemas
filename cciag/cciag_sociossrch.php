@@ -276,18 +276,18 @@ class csocios_search extends csocios {
 				exit();
 			}
 
-			// Process auto fill for detail table 'deudas'
-			if (@$_POST["grid"] == "fdeudasgrid") {
-				if (!isset($GLOBALS["deudas_grid"])) $GLOBALS["deudas_grid"] = new cdeudas_grid;
-				$GLOBALS["deudas_grid"]->Page_Init();
-				$this->Page_Terminate();
-				exit();
-			}
-
 			// Process auto fill for detail table 'socios_cuotas'
 			if (@$_POST["grid"] == "fsocios_cuotasgrid") {
 				if (!isset($GLOBALS["socios_cuotas_grid"])) $GLOBALS["socios_cuotas_grid"] = new csocios_cuotas_grid;
 				$GLOBALS["socios_cuotas_grid"]->Page_Init();
+				$this->Page_Terminate();
+				exit();
+			}
+
+			// Process auto fill for detail table 'deudas'
+			if (@$_POST["grid"] == "fdeudasgrid") {
+				if (!isset($GLOBALS["deudas_grid"])) $GLOBALS["deudas_grid"] = new cdeudas_grid;
+				$GLOBALS["deudas_grid"]->Page_Init();
 				$this->Page_Terminate();
 				exit();
 			}
@@ -412,15 +412,15 @@ class csocios_search extends csocios {
 	function BuildAdvancedSearch() {
 		$sSrchUrl = "";
 		$this->BuildSearchUrl($sSrchUrl, $this->socio_nro); // socio_nro
+		$this->BuildSearchUrl($sSrchUrl, $this->cuit_cuil); // cuit_cuil
 		$this->BuildSearchUrl($sSrchUrl, $this->id_actividad); // id_actividad
 		$this->BuildSearchUrl($sSrchUrl, $this->propietario); // propietario
 		$this->BuildSearchUrl($sSrchUrl, $this->comercio); // comercio
 		$this->BuildSearchUrl($sSrchUrl, $this->direccion_comercio); // direccion_comercio
-		$this->BuildSearchUrl($sSrchUrl, $this->activo); // activo
 		$this->BuildSearchUrl($sSrchUrl, $this->mail); // mail
 		$this->BuildSearchUrl($sSrchUrl, $this->tel); // tel
 		$this->BuildSearchUrl($sSrchUrl, $this->cel); // cel
-		$this->BuildSearchUrl($sSrchUrl, $this->cuit_cuil); // cuit_cuil
+		$this->BuildSearchUrl($sSrchUrl, $this->activo); // activo
 		if ($sSrchUrl <> "") $sSrchUrl .= "&";
 		$sSrchUrl .= "cmd=search";
 		return $sSrchUrl;
@@ -491,6 +491,10 @@ class csocios_search extends csocios {
 		$this->socio_nro->AdvancedSearch->SearchValue = ew_StripSlashes($objForm->GetValue("x_socio_nro"));
 		$this->socio_nro->AdvancedSearch->SearchOperator = $objForm->GetValue("z_socio_nro");
 
+		// cuit_cuil
+		$this->cuit_cuil->AdvancedSearch->SearchValue = ew_StripSlashes($objForm->GetValue("x_cuit_cuil"));
+		$this->cuit_cuil->AdvancedSearch->SearchOperator = $objForm->GetValue("z_cuit_cuil");
+
 		// id_actividad
 		$this->id_actividad->AdvancedSearch->SearchValue = ew_StripSlashes($objForm->GetValue("x_id_actividad"));
 		$this->id_actividad->AdvancedSearch->SearchOperator = $objForm->GetValue("z_id_actividad");
@@ -507,10 +511,6 @@ class csocios_search extends csocios {
 		$this->direccion_comercio->AdvancedSearch->SearchValue = ew_StripSlashes($objForm->GetValue("x_direccion_comercio"));
 		$this->direccion_comercio->AdvancedSearch->SearchOperator = $objForm->GetValue("z_direccion_comercio");
 
-		// activo
-		$this->activo->AdvancedSearch->SearchValue = ew_StripSlashes($objForm->GetValue("x_activo"));
-		$this->activo->AdvancedSearch->SearchOperator = $objForm->GetValue("z_activo");
-
 		// mail
 		$this->mail->AdvancedSearch->SearchValue = ew_StripSlashes($objForm->GetValue("x_mail"));
 		$this->mail->AdvancedSearch->SearchOperator = $objForm->GetValue("z_mail");
@@ -523,9 +523,9 @@ class csocios_search extends csocios {
 		$this->cel->AdvancedSearch->SearchValue = ew_StripSlashes($objForm->GetValue("x_cel"));
 		$this->cel->AdvancedSearch->SearchOperator = $objForm->GetValue("z_cel");
 
-		// cuit_cuil
-		$this->cuit_cuil->AdvancedSearch->SearchValue = ew_StripSlashes($objForm->GetValue("x_cuit_cuil"));
-		$this->cuit_cuil->AdvancedSearch->SearchOperator = $objForm->GetValue("z_cuit_cuil");
+		// activo
+		$this->activo->AdvancedSearch->SearchValue = ew_StripSlashes($objForm->GetValue("x_activo"));
+		$this->activo->AdvancedSearch->SearchOperator = $objForm->GetValue("z_activo");
 	}
 
 	// Render row values based on field settings
@@ -540,16 +540,16 @@ class csocios_search extends csocios {
 
 		// Common render codes for all row types
 		// socio_nro
+		// cuit_cuil
 		// id_actividad
-		// id_usuario
 		// propietario
 		// comercio
 		// direccion_comercio
-		// activo
 		// mail
 		// tel
 		// cel
-		// cuit_cuil
+		// activo
+		// id_usuario
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -557,18 +557,19 @@ class csocios_search extends csocios {
 			$this->socio_nro->ViewValue = $this->socio_nro->CurrentValue;
 			$this->socio_nro->ViewCustomAttributes = "";
 
+			// cuit_cuil
+			$this->cuit_cuil->ViewValue = $this->cuit_cuil->CurrentValue;
+			$this->cuit_cuil->ViewValue = ew_FormatNumber($this->cuit_cuil->ViewValue, 0, -2, -2, -2);
+			$this->cuit_cuil->ViewCustomAttributes = "";
+
 			// id_actividad
 			if ($this->id_actividad->VirtualValue <> "") {
 				$this->id_actividad->ViewValue = $this->id_actividad->VirtualValue;
 			} else {
 			if (strval($this->id_actividad->CurrentValue) <> "") {
-				$sFilterWrk = "`id`" . ew_SearchString("=", $this->id_actividad->CurrentValue, EW_DATATYPE_NUMBER);
-			$sSqlWrk = "SELECT `id`, `actividad` AS `DispFld`, `descripcion` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `actividad`";
+				$sFilterWrk = "`id_actividad`" . ew_SearchString("=", $this->id_actividad->CurrentValue, EW_DATATYPE_NUMBER);
+			$sSqlWrk = "SELECT `id_actividad`, `rubro` AS `DispFld`, `actividad` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `v_db_rubro_actividad`";
 			$sWhereWrk = "";
-			$lookuptblfilter = "`activa`='S'";
-			if (strval($lookuptblfilter) <> "") {
-				ew_AddFilter($sWhereWrk, $lookuptblfilter);
-			}
 			if ($sFilterWrk <> "") {
 				ew_AddFilter($sWhereWrk, $sFilterWrk);
 			}
@@ -576,6 +577,7 @@ class csocios_search extends csocios {
 			// Call Lookup selecting
 			$this->Lookup_Selecting($this->id_actividad, $sWhereWrk);
 			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$sSqlWrk .= " ORDER BY `rubro` ASC";
 				$rswrk = $conn->Execute($sSqlWrk);
 				if ($rswrk && !$rswrk->EOF) { // Lookup values found
 					$this->id_actividad->ViewValue = $rswrk->fields('DispFld');
@@ -602,6 +604,21 @@ class csocios_search extends csocios {
 			$this->direccion_comercio->ViewValue = $this->direccion_comercio->CurrentValue;
 			$this->direccion_comercio->ViewCustomAttributes = "";
 
+			// mail
+			$this->mail->ViewValue = $this->mail->CurrentValue;
+			$this->mail->ViewValue = strtolower($this->mail->ViewValue);
+			$this->mail->ViewCustomAttributes = "";
+
+			// tel
+			$this->tel->ViewValue = $this->tel->CurrentValue;
+			$this->tel->ViewValue = trim($this->tel->ViewValue);
+			$this->tel->ViewCustomAttributes = "";
+
+			// cel
+			$this->cel->ViewValue = $this->cel->CurrentValue;
+			$this->cel->ViewValue = trim($this->cel->ViewValue);
+			$this->cel->ViewCustomAttributes = "";
+
 			// activo
 			if (strval($this->activo->CurrentValue) <> "") {
 				switch ($this->activo->CurrentValue) {
@@ -619,30 +636,15 @@ class csocios_search extends csocios {
 			}
 			$this->activo->ViewCustomAttributes = "";
 
-			// mail
-			$this->mail->ViewValue = $this->mail->CurrentValue;
-			$this->mail->ViewValue = strtolower($this->mail->ViewValue);
-			$this->mail->ViewCustomAttributes = "";
-
-			// tel
-			$this->tel->ViewValue = $this->tel->CurrentValue;
-			$this->tel->ViewValue = trim($this->tel->ViewValue);
-			$this->tel->ViewCustomAttributes = "";
-
-			// cel
-			$this->cel->ViewValue = $this->cel->CurrentValue;
-			$this->cel->ViewValue = trim($this->cel->ViewValue);
-			$this->cel->ViewCustomAttributes = "";
-
-			// cuit_cuil
-			$this->cuit_cuil->ViewValue = $this->cuit_cuil->CurrentValue;
-			$this->cuit_cuil->ViewValue = ew_FormatNumber($this->cuit_cuil->ViewValue, 0, -2, -2, -2);
-			$this->cuit_cuil->ViewCustomAttributes = "";
-
 			// socio_nro
 			$this->socio_nro->LinkCustomAttributes = "";
 			$this->socio_nro->HrefValue = "";
 			$this->socio_nro->TooltipValue = "";
+
+			// cuit_cuil
+			$this->cuit_cuil->LinkCustomAttributes = "";
+			$this->cuit_cuil->HrefValue = "";
+			$this->cuit_cuil->TooltipValue = "";
 
 			// id_actividad
 			$this->id_actividad->LinkCustomAttributes = "";
@@ -664,11 +666,6 @@ class csocios_search extends csocios {
 			$this->direccion_comercio->HrefValue = "";
 			$this->direccion_comercio->TooltipValue = "";
 
-			// activo
-			$this->activo->LinkCustomAttributes = "";
-			$this->activo->HrefValue = "";
-			$this->activo->TooltipValue = "";
-
 			// mail
 			$this->mail->LinkCustomAttributes = "";
 			$this->mail->HrefValue = "";
@@ -684,10 +681,10 @@ class csocios_search extends csocios {
 			$this->cel->HrefValue = "";
 			$this->cel->TooltipValue = "";
 
-			// cuit_cuil
-			$this->cuit_cuil->LinkCustomAttributes = "";
-			$this->cuit_cuil->HrefValue = "";
-			$this->cuit_cuil->TooltipValue = "";
+			// activo
+			$this->activo->LinkCustomAttributes = "";
+			$this->activo->HrefValue = "";
+			$this->activo->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_SEARCH) { // Search row
 
 			// socio_nro
@@ -695,6 +692,12 @@ class csocios_search extends csocios {
 			$this->socio_nro->EditCustomAttributes = "";
 			$this->socio_nro->EditValue = ew_HtmlEncode($this->socio_nro->AdvancedSearch->SearchValue);
 			$this->socio_nro->PlaceHolder = ew_RemoveHtml($this->socio_nro->FldCaption());
+
+			// cuit_cuil
+			$this->cuit_cuil->EditAttrs["class"] = "form-control";
+			$this->cuit_cuil->EditCustomAttributes = "";
+			$this->cuit_cuil->EditValue = ew_HtmlEncode($this->cuit_cuil->AdvancedSearch->SearchValue);
+			$this->cuit_cuil->PlaceHolder = ew_RemoveHtml($this->cuit_cuil->FldCaption());
 
 			// id_actividad
 			$this->id_actividad->EditAttrs["class"] = "form-control";
@@ -720,13 +723,6 @@ class csocios_search extends csocios {
 			$this->direccion_comercio->EditValue = ew_HtmlEncode($this->direccion_comercio->AdvancedSearch->SearchValue);
 			$this->direccion_comercio->PlaceHolder = ew_RemoveHtml($this->direccion_comercio->FldCaption());
 
-			// activo
-			$this->activo->EditCustomAttributes = "";
-			$arwrk = array();
-			$arwrk[] = array($this->activo->FldTagValue(1), $this->activo->FldTagCaption(1) <> "" ? $this->activo->FldTagCaption(1) : $this->activo->FldTagValue(1));
-			$arwrk[] = array($this->activo->FldTagValue(2), $this->activo->FldTagCaption(2) <> "" ? $this->activo->FldTagCaption(2) : $this->activo->FldTagValue(2));
-			$this->activo->EditValue = $arwrk;
-
 			// mail
 			$this->mail->EditAttrs["class"] = "form-control";
 			$this->mail->EditCustomAttributes = "";
@@ -745,11 +741,12 @@ class csocios_search extends csocios {
 			$this->cel->EditValue = ew_HtmlEncode($this->cel->AdvancedSearch->SearchValue);
 			$this->cel->PlaceHolder = ew_RemoveHtml($this->cel->FldCaption());
 
-			// cuit_cuil
-			$this->cuit_cuil->EditAttrs["class"] = "form-control";
-			$this->cuit_cuil->EditCustomAttributes = "";
-			$this->cuit_cuil->EditValue = ew_HtmlEncode($this->cuit_cuil->AdvancedSearch->SearchValue);
-			$this->cuit_cuil->PlaceHolder = ew_RemoveHtml($this->cuit_cuil->FldCaption());
+			// activo
+			$this->activo->EditCustomAttributes = "";
+			$arwrk = array();
+			$arwrk[] = array($this->activo->FldTagValue(1), $this->activo->FldTagCaption(1) <> "" ? $this->activo->FldTagCaption(1) : $this->activo->FldTagValue(1));
+			$arwrk[] = array($this->activo->FldTagValue(2), $this->activo->FldTagCaption(2) <> "" ? $this->activo->FldTagCaption(2) : $this->activo->FldTagValue(2));
+			$this->activo->EditValue = $arwrk;
 		}
 		if ($this->RowType == EW_ROWTYPE_ADD ||
 			$this->RowType == EW_ROWTYPE_EDIT ||
@@ -775,12 +772,6 @@ class csocios_search extends csocios {
 		if (!ew_CheckInteger($this->socio_nro->AdvancedSearch->SearchValue)) {
 			ew_AddMessage($gsSearchError, $this->socio_nro->FldErrMsg());
 		}
-		if (!ew_CheckPhone($this->tel->AdvancedSearch->SearchValue)) {
-			ew_AddMessage($gsSearchError, $this->tel->FldErrMsg());
-		}
-		if (!ew_CheckPhone($this->cel->AdvancedSearch->SearchValue)) {
-			ew_AddMessage($gsSearchError, $this->cel->FldErrMsg());
-		}
 
 		// Return validate result
 		$ValidateSearch = ($gsSearchError == "");
@@ -797,15 +788,15 @@ class csocios_search extends csocios {
 	// Load advanced search
 	function LoadAdvancedSearch() {
 		$this->socio_nro->AdvancedSearch->Load();
+		$this->cuit_cuil->AdvancedSearch->Load();
 		$this->id_actividad->AdvancedSearch->Load();
 		$this->propietario->AdvancedSearch->Load();
 		$this->comercio->AdvancedSearch->Load();
 		$this->direccion_comercio->AdvancedSearch->Load();
-		$this->activo->AdvancedSearch->Load();
 		$this->mail->AdvancedSearch->Load();
 		$this->tel->AdvancedSearch->Load();
 		$this->cel->AdvancedSearch->Load();
-		$this->cuit_cuil->AdvancedSearch->Load();
+		$this->activo->AdvancedSearch->Load();
 	}
 
 	// Set up Breadcrumb
@@ -930,7 +921,7 @@ fsociossearch.ValidateRequired = false;
 <?php } ?>
 
 // Dynamic selection lists
-fsociossearch.Lists["x_id_actividad"] = {"LinkField":"x_id","Ajax":true,"AutoFill":false,"DisplayFields":["x_actividad","x_descripcion","",""],"ParentFields":[],"FilterFields":[],"Options":[]};
+fsociossearch.Lists["x_id_actividad"] = {"LinkField":"x_id_actividad","Ajax":true,"AutoFill":false,"DisplayFields":["x_rubro","x_actividad","",""],"ParentFields":[],"FilterFields":[],"Options":[]};
 
 // Form object for search
 // Validate function for search
@@ -944,12 +935,6 @@ fsociossearch.Validate = function(fobj) {
 	elm = this.GetElements("x" + infix + "_socio_nro");
 	if (elm && !ew_CheckInteger(elm.value))
 		return this.OnError(elm, "<?php echo ew_JsEncode2($socios->socio_nro->FldErrMsg()) ?>");
-	elm = this.GetElements("x" + infix + "_tel");
-	if (elm && !ew_CheckPhone(elm.value))
-		return this.OnError(elm, "<?php echo ew_JsEncode2($socios->tel->FldErrMsg()) ?>");
-	elm = this.GetElements("x" + infix + "_cel");
-	if (elm && !ew_CheckPhone(elm.value))
-		return this.OnError(elm, "<?php echo ew_JsEncode2($socios->cel->FldErrMsg()) ?>");
 
 	// Set up row object
 	ew_ElementsToRow(fobj);
@@ -993,6 +978,18 @@ $socios_search->ShowMessage();
 		<div class="<?php echo $socios_search->SearchRightColumnClass ?>"><div<?php echo $socios->socio_nro->CellAttributes() ?>>
 			<span id="el_socios_socio_nro">
 <input type="text" data-field="x_socio_nro" name="x_socio_nro" id="x_socio_nro" size="30" placeholder="<?php echo ew_HtmlEncode($socios->socio_nro->PlaceHolder) ?>" value="<?php echo $socios->socio_nro->EditValue ?>"<?php echo $socios->socio_nro->EditAttributes() ?>>
+</span>
+		</div></div>
+	</div>
+<?php } ?>
+<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
+	<div id="r_cuit_cuil" class="form-group">
+		<label for="x_cuit_cuil" class="<?php echo $socios_search->SearchLabelClass ?>"><span id="elh_socios_cuit_cuil"><?php echo $socios->cuit_cuil->FldCaption() ?></span>	
+		<p class="form-control-static ewSearchOperator"><?php echo $Language->Phrase("LIKE") ?><input type="hidden" name="z_cuit_cuil" id="z_cuit_cuil" value="LIKE"></p>
+		</label>
+		<div class="<?php echo $socios_search->SearchRightColumnClass ?>"><div<?php echo $socios->cuit_cuil->CellAttributes() ?>>
+			<span id="el_socios_cuit_cuil">
+<input type="text" data-field="x_cuit_cuil" name="x_cuit_cuil" id="x_cuit_cuil" size="30" maxlength="14" placeholder="<?php echo ew_HtmlEncode($socios->cuit_cuil->PlaceHolder) ?>" value="<?php echo $socios->cuit_cuil->EditValue ?>"<?php echo $socios->cuit_cuil->EditAttributes() ?>>
 </span>
 		</div></div>
 	</div>
@@ -1045,38 +1042,6 @@ $socios_search->ShowMessage();
 		</div></div>
 	</div>
 <?php } ?>
-<?php if ($socios->activo->Visible) { // activo ?>
-	<div id="r_activo" class="form-group">
-		<label class="<?php echo $socios_search->SearchLabelClass ?>"><span id="elh_socios_activo"><?php echo $socios->activo->FldCaption() ?></span>	
-		<p class="form-control-static ewSearchOperator"><?php echo $Language->Phrase("LIKE") ?><input type="hidden" name="z_activo" id="z_activo" value="LIKE"></p>
-		</label>
-		<div class="<?php echo $socios_search->SearchRightColumnClass ?>"><div<?php echo $socios->activo->CellAttributes() ?>>
-			<span id="el_socios_activo">
-<div id="tp_x_activo" class="<?php echo EW_ITEM_TEMPLATE_CLASSNAME ?>"><input type="radio" name="x_activo" id="x_activo" value="{value}"<?php echo $socios->activo->EditAttributes() ?>></div>
-<div id="dsl_x_activo" data-repeatcolumn="5" class="ewItemList">
-<?php
-$arwrk = $socios->activo->EditValue;
-if (is_array($arwrk)) {
-	$rowswrk = count($arwrk);
-	$emptywrk = TRUE;
-	for ($rowcntwrk = 0; $rowcntwrk < $rowswrk; $rowcntwrk++) {
-		$selwrk = (strval($socios->activo->AdvancedSearch->SearchValue) == strval($arwrk[$rowcntwrk][0])) ? " checked=\"checked\"" : "";
-		if ($selwrk <> "") $emptywrk = FALSE;
-
-		// Note: No spacing within the LABEL tag
-?>
-<?php echo ew_RepeatColumnTable($rowswrk, $rowcntwrk, 5, 1) ?>
-<label class="radio-inline"><input type="radio" data-field="x_activo" name="x_activo" id="x_activo_<?php echo $rowcntwrk ?>" value="<?php echo ew_HtmlEncode($arwrk[$rowcntwrk][0]) ?>"<?php echo $selwrk ?><?php echo $socios->activo->EditAttributes() ?>><?php echo $arwrk[$rowcntwrk][1] ?></label>
-<?php echo ew_RepeatColumnTable($rowswrk, $rowcntwrk, 5, 2) ?>
-<?php
-	}
-}
-?>
-</div>
-</span>
-		</div></div>
-	</div>
-<?php } ?>
 <?php if ($socios->mail->Visible) { // mail ?>
 	<div id="r_mail" class="form-group">
 		<label for="x_mail" class="<?php echo $socios_search->SearchLabelClass ?>"><span id="elh_socios_mail"><?php echo $socios->mail->FldCaption() ?></span>	
@@ -1113,14 +1078,34 @@ if (is_array($arwrk)) {
 		</div></div>
 	</div>
 <?php } ?>
-<?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
-	<div id="r_cuit_cuil" class="form-group">
-		<label for="x_cuit_cuil" class="<?php echo $socios_search->SearchLabelClass ?>"><span id="elh_socios_cuit_cuil"><?php echo $socios->cuit_cuil->FldCaption() ?></span>	
-		<p class="form-control-static ewSearchOperator"><?php echo $Language->Phrase("LIKE") ?><input type="hidden" name="z_cuit_cuil" id="z_cuit_cuil" value="LIKE"></p>
+<?php if ($socios->activo->Visible) { // activo ?>
+	<div id="r_activo" class="form-group">
+		<label class="<?php echo $socios_search->SearchLabelClass ?>"><span id="elh_socios_activo"><?php echo $socios->activo->FldCaption() ?></span>	
+		<p class="form-control-static ewSearchOperator"><?php echo $Language->Phrase("LIKE") ?><input type="hidden" name="z_activo" id="z_activo" value="LIKE"></p>
 		</label>
-		<div class="<?php echo $socios_search->SearchRightColumnClass ?>"><div<?php echo $socios->cuit_cuil->CellAttributes() ?>>
-			<span id="el_socios_cuit_cuil">
-<input type="text" data-field="x_cuit_cuil" name="x_cuit_cuil" id="x_cuit_cuil" size="30" maxlength="14" placeholder="<?php echo ew_HtmlEncode($socios->cuit_cuil->PlaceHolder) ?>" value="<?php echo $socios->cuit_cuil->EditValue ?>"<?php echo $socios->cuit_cuil->EditAttributes() ?>>
+		<div class="<?php echo $socios_search->SearchRightColumnClass ?>"><div<?php echo $socios->activo->CellAttributes() ?>>
+			<span id="el_socios_activo">
+<div id="tp_x_activo" class="<?php echo EW_ITEM_TEMPLATE_CLASSNAME ?>"><input type="radio" name="x_activo" id="x_activo" value="{value}"<?php echo $socios->activo->EditAttributes() ?>></div>
+<div id="dsl_x_activo" data-repeatcolumn="5" class="ewItemList">
+<?php
+$arwrk = $socios->activo->EditValue;
+if (is_array($arwrk)) {
+	$rowswrk = count($arwrk);
+	$emptywrk = TRUE;
+	for ($rowcntwrk = 0; $rowcntwrk < $rowswrk; $rowcntwrk++) {
+		$selwrk = (strval($socios->activo->AdvancedSearch->SearchValue) == strval($arwrk[$rowcntwrk][0])) ? " checked=\"checked\"" : "";
+		if ($selwrk <> "") $emptywrk = FALSE;
+
+		// Note: No spacing within the LABEL tag
+?>
+<?php echo ew_RepeatColumnTable($rowswrk, $rowcntwrk, 5, 1) ?>
+<label class="radio-inline"><input type="radio" data-field="x_activo" name="x_activo" id="x_activo_<?php echo $rowcntwrk ?>" value="<?php echo ew_HtmlEncode($arwrk[$rowcntwrk][0]) ?>"<?php echo $selwrk ?><?php echo $socios->activo->EditAttributes() ?>><?php echo $arwrk[$rowcntwrk][1] ?></label>
+<?php echo ew_RepeatColumnTable($rowswrk, $rowcntwrk, 5, 2) ?>
+<?php
+	}
+}
+?>
+</div>
 </span>
 		</div></div>
 	</div>

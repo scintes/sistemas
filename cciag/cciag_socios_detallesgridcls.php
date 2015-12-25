@@ -1714,6 +1714,27 @@ class csocios_detalles_grid extends csocios_detalles {
 			// fecha_baja
 			$this->fecha_baja->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->fecha_baja->CurrentValue, 7), NULL, $this->fecha_baja->ReadOnly);
 
+			// Check referential integrity for master table 'socios'
+			$bValidMasterRecord = TRUE;
+			$sMasterFilter = $this->SqlMasterFilter_socios();
+			$KeyValue = isset($rsnew['id_socio']) ? $rsnew['id_socio'] : $rsold['id_socio'];
+			if (strval($KeyValue) <> "") {
+				$sMasterFilter = str_replace("@socio_nro@", ew_AdjustSql($KeyValue), $sMasterFilter);
+			} else {
+				$bValidMasterRecord = FALSE;
+			}
+			if ($bValidMasterRecord) {
+				$rsmaster = $GLOBALS["socios"]->LoadRs($sMasterFilter);
+				$bValidMasterRecord = ($rsmaster && !$rsmaster->EOF);
+				$rsmaster->Close();
+			}
+			if (!$bValidMasterRecord) {
+				$sRelatedRecordMsg = str_replace("%t", "socios", $Language->Phrase("RelatedRecordRequired"));
+				$this->setFailureMessage($sRelatedRecordMsg);
+				$rs->Close();
+				return FALSE;
+			}
+
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
 			if ($bUpdateRow) {
@@ -1799,6 +1820,25 @@ class csocios_detalles_grid extends csocios_detalles {
 			if ($this->getCurrentMasterTable() == "socios") {
 				$this->id_socio->CurrentValue = $this->id_socio->getSessionValue();
 			}
+
+		// Check referential integrity for master table 'socios'
+		$bValidMasterRecord = TRUE;
+		$sMasterFilter = $this->SqlMasterFilter_socios();
+		if (strval($this->id_socio->CurrentValue) <> "") {
+			$sMasterFilter = str_replace("@socio_nro@", ew_AdjustSql($this->id_socio->CurrentValue), $sMasterFilter);
+		} else {
+			$bValidMasterRecord = FALSE;
+		}
+		if ($bValidMasterRecord) {
+			$rsmaster = $GLOBALS["socios"]->LoadRs($sMasterFilter);
+			$bValidMasterRecord = ($rsmaster && !$rsmaster->EOF);
+			$rsmaster->Close();
+		}
+		if (!$bValidMasterRecord) {
+			$sRelatedRecordMsg = str_replace("%t", "socios", $Language->Phrase("RelatedRecordRequired"));
+			$this->setFailureMessage($sRelatedRecordMsg);
+			return FALSE;
+		}
 
 		// Load db values from rsold
 		if ($rsold) {

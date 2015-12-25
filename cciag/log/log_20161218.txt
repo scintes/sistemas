@@ -1,0 +1,7 @@
+date/time	script	user	action	table	field	key value	old value	new value
+2016/12/18 09:25:14	/cciag/cciag_login.php	sergio	login	::1				
+2016/12/18 11:18:40	/cciag/cciag_sociosedit.php	1	U	socios	cuit_cuil	6		27254697821
+2016/12/18 11:18:40	/cciag/cciag_sociosedit.php	1	U	socios	comercio	6	FERRETERIA "IRUPE" 	FERRETERIA "IRUPE"
+2016/12/18 11:18:40	/cciag/cciag_sociosedit.php	1	U	socios	mail	6		ferreteria.irupe@gmail.com
+2016/12/18 11:18:40	/cciag/cciag_sociosedit.php	1	U	socios	tel	6		3424951178
+2016/12/18 11:18:40	/cciag/cciag_sociosedit.php	1	U	socios	cel	6		3424297401

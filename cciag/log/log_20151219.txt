@@ -1,0 +1,4 @@
+date/time	script	user	action	table	field	key value	old value	new value
+2015/12/19 20:34:36	/cciag/cciag_sociosedit.php	1	U	socios	tel	6	3424951178	0342-4951178
+2015/12/19 20:34:36	/cciag/cciag_sociosedit.php	1	U	socios	cel	6	3424297401	0342-4297401
+2015/12/19 20:37:05	/cciag/cciag_socioslist.php	1	U	socios	cuit_cuil	6	27254697821	27-25469782-1

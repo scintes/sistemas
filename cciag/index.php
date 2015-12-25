@@ -245,8 +245,6 @@ class cdefault {
 			$this->Page_Terminate("cciag_socios_cuotaslist.php");
 		if ($Security->AllowList(CurrentProjectID() . 'usuario'))
 			$this->Page_Terminate("cciag_usuariolist.php");
-		if ($Security->AllowList(CurrentProjectID() . 'cantidad_socios_por_actividad'))
-			$this->Page_Terminate("cciag_cantidad_socios_por_actividadreport.php");
 		if ($Security->AllowList(CurrentProjectID() . 'userlevelpermissions'))
 			$this->Page_Terminate("cciag_userlevelpermissionslist.php");
 		if ($Security->AllowList(CurrentProjectID() . 'userlevels'))
@@ -266,6 +264,14 @@ class cdefault {
 			$this->Page_Terminate("cciag_seguimiento_tramiteslist.php");
 		if ($Security->AllowList(CurrentProjectID() . 'tramites'))
 			$this->Page_Terminate("cciag_tramiteslist.php");
+		if ($Security->AllowList(CurrentProjectID() . 'v_db_rubro_actividad'))
+			$this->Page_Terminate("cciag_v_db_rubro_actividadlist.php");
+		if ($Security->AllowList(CurrentProjectID() . 'v_db_rubro_actividad_socio'))
+			$this->Page_Terminate("cciag_v_db_rubro_actividad_sociolist.php");
+		if ($Security->AllowList(CurrentProjectID() . 'r_listado_socios_por_actividad_y_rubro'))
+			$this->Page_Terminate("cciag_r_listado_socios_por_actividad_y_rubroreport.php");
+		if ($Security->AllowList(CurrentProjectID() . 'v_total_estado_cuenta_x_anio_mes'))
+			$this->Page_Terminate("cciag_v_total_estado_cuenta_x_anio_meslist.php");
 		if ($Security->IsLoggedIn()) {
 			$this->setFailureMessage($Language->Phrase("NoPermission") . "<br><br><a href=\"cciag_logout.php\">" . $Language->Phrase("BackToLogin") . "</a>");
 		} else {

@@ -54,8 +54,6 @@ if (ew_IsResponsiveLayout()) {
 <script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>calendar/lang/calendar-en.js"></script>
 <script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>calendar/calendar-setup.js"></script>
 <script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>phpjs/ewcalendar.js"></script>
-<script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>ckeditor/ckeditor.js"></script>
-<script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>phpjs/cciag_eweditor.js"></script>
 <script type="text/javascript">
 var EW_LANGUAGE_ID = "<?php echo $gsLanguage ?>";
 var EW_DATE_SEPARATOR = "/" || "/"; // Default date separator

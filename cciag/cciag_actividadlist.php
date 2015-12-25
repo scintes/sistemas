@@ -6,9 +6,8 @@ $EW_RELATIVE_PATH = "";
 <?php include_once $EW_RELATIVE_PATH . "cciag_ewcfg11.php" ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_ewmysql11.php" ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_phpfn11.php" ?>
-<?php include_once $EW_RELATIVE_PATH . "cciag_socios_cuotasinfo.php" ?>
-<?php include_once $EW_RELATIVE_PATH . "cciag_montosinfo.php" ?>
-<?php include_once $EW_RELATIVE_PATH . "cciag_sociosinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_actividadinfo.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_rubrosinfo.php" ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_usuarioinfo.php" ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_userfn11.php" ?>
 <?php
@@ -17,9 +16,9 @@ $EW_RELATIVE_PATH = "";
 // Page class
 //
 
-$socios_cuotas_list = NULL; // Initialize page object first
+$actividad_list = NULL; // Initialize page object first
 
-class csocios_cuotas_list extends csocios_cuotas {
+class cactividad_list extends cactividad {
 
 	// Page ID
 	var $PageID = 'list';
@@ -28,13 +27,13 @@ class csocios_cuotas_list extends csocios_cuotas {
 	var $ProjectID = "{E85D8E60-21B0-46D8-A725-BE5A2EF61FC0}";
 
 	// Table name
-	var $TableName = 'socios_cuotas';
+	var $TableName = 'actividad';
 
 	// Page object name
-	var $PageObjName = 'socios_cuotas_list';
+	var $PageObjName = 'actividad_list';
 
 	// Grid form hidden field names
-	var $FormName = 'fsocios_cuotaslist';
+	var $FormName = 'factividadlist';
 	var $FormActionName = 'k_action';
 	var $FormKeyName = 'k_key';
 	var $FormOldKeyName = 'k_oldkey';
@@ -238,10 +237,10 @@ class csocios_cuotas_list extends csocios_cuotas {
 		// Parent constuctor
 		parent::__construct();
 
-		// Table object (socios_cuotas)
-		if (!isset($GLOBALS["socios_cuotas"]) || get_class($GLOBALS["socios_cuotas"]) == "csocios_cuotas") {
-			$GLOBALS["socios_cuotas"] = &$this;
-			$GLOBALS["Table"] = &$GLOBALS["socios_cuotas"];
+		// Table object (actividad)
+		if (!isset($GLOBALS["actividad"]) || get_class($GLOBALS["actividad"]) == "cactividad") {
+			$GLOBALS["actividad"] = &$this;
+			$GLOBALS["Table"] = &$GLOBALS["actividad"];
 		}
 
 		// Initialize URLs
@@ -252,18 +251,15 @@ class csocios_cuotas_list extends csocios_cuotas {
 		$this->ExportXmlUrl = $this->PageUrl() . "export=xml";
 		$this->ExportCsvUrl = $this->PageUrl() . "export=csv";
 		$this->ExportPdfUrl = $this->PageUrl() . "export=pdf";
-		$this->AddUrl = "cciag_socios_cuotasadd.php";
+		$this->AddUrl = "cciag_actividadadd.php";
 		$this->InlineAddUrl = $this->PageUrl() . "a=add";
 		$this->GridAddUrl = $this->PageUrl() . "a=gridadd";
 		$this->GridEditUrl = $this->PageUrl() . "a=gridedit";
-		$this->MultiDeleteUrl = "cciag_socios_cuotasdelete.php";
-		$this->MultiUpdateUrl = "cciag_socios_cuotasupdate.php";
+		$this->MultiDeleteUrl = "cciag_actividaddelete.php";
+		$this->MultiUpdateUrl = "cciag_actividadupdate.php";
 
-		// Table object (montos)
-		if (!isset($GLOBALS['montos'])) $GLOBALS['montos'] = new cmontos();
-
-		// Table object (socios)
-		if (!isset($GLOBALS['socios'])) $GLOBALS['socios'] = new csocios();
+		// Table object (rubros)
+		if (!isset($GLOBALS['rubros'])) $GLOBALS['rubros'] = new crubros();
 
 		// Table object (usuario)
 		if (!isset($GLOBALS['usuario'])) $GLOBALS['usuario'] = new cusuario();
@@ -277,7 +273,7 @@ class csocios_cuotas_list extends csocios_cuotas {
 
 		// Table name (for backward compatibility)
 		if (!defined("EW_TABLE_NAME"))
-			define("EW_TABLE_NAME", 'socios_cuotas', TRUE);
+			define("EW_TABLE_NAME", 'actividad', TRUE);
 
 		// Start timer
 		if (!isset($GLOBALS["gTimer"])) $GLOBALS["gTimer"] = new cTimer();
@@ -325,10 +321,6 @@ class csocios_cuotas_list extends csocios_cuotas {
 		$Security->UserID_Loading();
 		if ($Security->IsLoggedIn()) $Security->LoadUserID();
 		$Security->UserID_Loaded();
-		if ($Security->IsLoggedIn() && strval($Security->CurrentUserID()) == "") {
-			$this->setFailureMessage($Language->Phrase("NoPermission")); // Set no permission
-			$this->Page_Terminate();
-		}
 
 		// Get export parameters
 		$custom = "";
@@ -378,6 +370,7 @@ class csocios_cuotas_list extends csocios_cuotas {
 
 		// Setup export options
 		$this->SetupExportOptions();
+		$this->id->Visible = !$this->IsAdd() && !$this->IsCopy() && !$this->IsGridAdd();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -430,13 +423,13 @@ class csocios_cuotas_list extends csocios_cuotas {
 		Page_Unloaded();
 
 		// Export
-		global $EW_EXPORT, $socios_cuotas;
+		global $EW_EXPORT, $actividad;
 		if ($this->CustomExport <> "" && $this->CustomExport == $this->Export && array_key_exists($this->CustomExport, $EW_EXPORT)) {
 				$sContent = ob_get_contents();
 			if ($gsExportFile == "") $gsExportFile = $this->TableVar;
 			$class = $EW_EXPORT[$this->CustomExport];
 			if (class_exists($class)) {
-				$doc = new $class($socios_cuotas);
+				$doc = new $class($actividad);
 				$doc->Text = $sContent;
 				if ($this->Export == "email")
 					echo $this->ExportEmail($doc->Text);
@@ -548,7 +541,11 @@ class csocios_cuotas_list extends csocios_cuotas {
 			}
 
 			// Get default search criteria
+			ew_AddFilter($this->DefaultSearchWhere, $this->BasicSearchWhere(TRUE));
 			ew_AddFilter($this->DefaultSearchWhere, $this->AdvancedSearchWhere(TRUE));
+
+			// Get basic search values
+			$this->LoadBasicSearchValues();
 
 			// Get and validate search values for advanced search
 			$this->LoadSearchValues(); // Get search values
@@ -564,6 +561,10 @@ class csocios_cuotas_list extends csocios_cuotas {
 
 			// Set up sorting order
 			$this->SetUpSortOrder();
+
+			// Get basic search criteria
+			if ($gsSearchError == "")
+				$sSrchBasic = $this->BasicSearchWhere();
 
 			// Get search criteria for advanced search
 			if ($gsSearchError == "")
@@ -582,6 +583,11 @@ class csocios_cuotas_list extends csocios_cuotas {
 
 		// Load search default if no existing search criteria
 		if (!$this->CheckSearchParms()) {
+
+			// Load basic search from default
+			$this->BasicSearch->LoadDefault();
+			if ($this->BasicSearch->Keyword != "")
+				$sSrchBasic = $this->BasicSearchWhere();
 
 			// Load advanced search from default
 			if ($this->LoadAdvancedSearchDefault()) {
@@ -613,45 +619,21 @@ class csocios_cuotas_list extends csocios_cuotas {
 		// Restore master/detail filter
 		$this->DbMasterFilter = $this->GetMasterFilter(); // Restore master filter
 		$this->DbDetailFilter = $this->GetDetailFilter(); // Restore detail filter
-
-		// Add master User ID filter
-		if ($Security->CurrentUserID() <> "" && !$Security->IsAdmin()) { // Non system admin
-			if ($this->getCurrentMasterTable() == "montos")
-				$this->DbMasterFilter = $this->AddMasterUserIDFilter($this->DbMasterFilter, "montos"); // Add master User ID filter
-			if ($this->getCurrentMasterTable() == "socios")
-				$this->DbMasterFilter = $this->AddMasterUserIDFilter($this->DbMasterFilter, "socios"); // Add master User ID filter
-		}
 		ew_AddFilter($sFilter, $this->DbDetailFilter);
 		ew_AddFilter($sFilter, $this->SearchWhere);
 
 		// Load master record
-		if ($this->CurrentMode <> "add" && $this->GetMasterFilter() <> "" && $this->getCurrentMasterTable() == "montos") {
-			global $montos;
-			$rsmaster = $montos->LoadRs($this->DbMasterFilter);
+		if ($this->CurrentMode <> "add" && $this->GetMasterFilter() <> "" && $this->getCurrentMasterTable() == "rubros") {
+			global $rubros;
+			$rsmaster = $rubros->LoadRs($this->DbMasterFilter);
 			$this->MasterRecordExists = ($rsmaster && !$rsmaster->EOF);
 			if (!$this->MasterRecordExists) {
 				$this->setFailureMessage($Language->Phrase("NoRecord")); // Set no record found
-				$this->Page_Terminate("cciag_montoslist.php"); // Return to master page
+				$this->Page_Terminate("cciag_rubroslist.php"); // Return to master page
 			} else {
-				$montos->LoadListRowValues($rsmaster);
-				$montos->RowType = EW_ROWTYPE_MASTER; // Master row
-				$montos->RenderListRow();
-				$rsmaster->Close();
-			}
-		}
-
-		// Load master record
-		if ($this->CurrentMode <> "add" && $this->GetMasterFilter() <> "" && $this->getCurrentMasterTable() == "socios") {
-			global $socios;
-			$rsmaster = $socios->LoadRs($this->DbMasterFilter);
-			$this->MasterRecordExists = ($rsmaster && !$rsmaster->EOF);
-			if (!$this->MasterRecordExists) {
-				$this->setFailureMessage($Language->Phrase("NoRecord")); // Set no record found
-				$this->Page_Terminate("cciag_socioslist.php"); // Return to master page
-			} else {
-				$socios->LoadListRowValues($rsmaster);
-				$socios->RowType = EW_ROWTYPE_MASTER; // Master row
-				$socios->RenderListRow();
+				$rubros->LoadListRowValues($rsmaster);
+				$rubros->RowType = EW_ROWTYPE_MASTER; // Master row
+				$rubros->RenderListRow();
 				$rsmaster->Close();
 			}
 		}
@@ -710,7 +692,10 @@ class csocios_cuotas_list extends csocios_cuotas {
 	// Set up key values
 	function SetupKeyValues($key) {
 		$arrKeyFlds = explode($GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"], $key);
-		if (count($arrKeyFlds) >= 0) {
+		if (count($arrKeyFlds) >= 1) {
+			$this->id->setFormValue($arrKeyFlds[0]);
+			if (!is_numeric($this->id->FormValue))
+				return FALSE;
 		}
 		return TRUE;
 	}
@@ -720,18 +705,22 @@ class csocios_cuotas_list extends csocios_cuotas {
 		global $Security;
 		$sWhere = "";
 		if (!$Security->CanSearch()) return "";
-		$this->BuildSearchSql($sWhere, $this->id_socio, $Default, FALSE); // id_socio
-		$this->BuildSearchSql($sWhere, $this->id_montos, $Default, FALSE); // id_montos
-		$this->BuildSearchSql($sWhere, $this->fecha, $Default, FALSE); // fecha
+		$this->BuildSearchSql($sWhere, $this->id, $Default, FALSE); // id
+		$this->BuildSearchSql($sWhere, $this->id_rubro, $Default, FALSE); // id_rubro
+		$this->BuildSearchSql($sWhere, $this->actividad, $Default, FALSE); // actividad
+		$this->BuildSearchSql($sWhere, $this->descripcion, $Default, FALSE); // descripcion
+		$this->BuildSearchSql($sWhere, $this->activa, $Default, FALSE); // activa
 
 		// Set up search parm
 		if (!$Default && $sWhere <> "") {
 			$this->Command = "search";
 		}
 		if (!$Default && $this->Command == "search") {
-			$this->id_socio->AdvancedSearch->Save(); // id_socio
-			$this->id_montos->AdvancedSearch->Save(); // id_montos
-			$this->fecha->AdvancedSearch->Save(); // fecha
+			$this->id->AdvancedSearch->Save(); // id
+			$this->id_rubro->AdvancedSearch->Save(); // id_rubro
+			$this->actividad->AdvancedSearch->Save(); // actividad
+			$this->descripcion->AdvancedSearch->Save(); // descripcion
+			$this->activa->AdvancedSearch->Save(); // activa
 		}
 		return $sWhere;
 	}
@@ -785,13 +774,135 @@ class csocios_cuotas_list extends csocios_cuotas {
 		return $Value;
 	}
 
+	// Return basic search SQL
+	function BasicSearchSQL($arKeywords, $type) {
+		$sWhere = "";
+		$this->BuildBasicSearchSQL($sWhere, $this->actividad, $arKeywords, $type);
+		$this->BuildBasicSearchSQL($sWhere, $this->descripcion, $arKeywords, $type);
+		$this->BuildBasicSearchSQL($sWhere, $this->activa, $arKeywords, $type);
+		return $sWhere;
+	}
+
+	// Build basic search SQL
+	function BuildBasicSearchSql(&$Where, &$Fld, $arKeywords, $type) {
+		$sDefCond = ($type == "OR") ? "OR" : "AND";
+		$sCond = $sDefCond;
+		$arSQL = array(); // Array for SQL parts
+		$arCond = array(); // Array for search conditions
+		$cnt = count($arKeywords);
+		$j = 0; // Number of SQL parts
+		for ($i = 0; $i < $cnt; $i++) {
+			$Keyword = $arKeywords[$i];
+			$Keyword = trim($Keyword);
+			if (EW_BASIC_SEARCH_IGNORE_PATTERN <> "") {
+				$Keyword = preg_replace(EW_BASIC_SEARCH_IGNORE_PATTERN, "\\", $Keyword);
+				$ar = explode("\\", $Keyword);
+			} else {
+				$ar = array($Keyword);
+			}
+			foreach ($ar as $Keyword) {
+				if ($Keyword <> "") {
+					$sWrk = "";
+					if ($Keyword == "OR" && $type == "") {
+						if ($j > 0)
+							$arCond[$j-1] = "OR";
+					} elseif ($Keyword == EW_NULL_VALUE) {
+						$sWrk = $Fld->FldExpression . " IS NULL";
+					} elseif ($Keyword == EW_NOT_NULL_VALUE) {
+						$sWrk = $Fld->FldExpression . " IS NOT NULL";
+					} elseif ($Fld->FldDataType != EW_DATATYPE_NUMBER || is_numeric($Keyword)) {
+						$sFldExpression = ($Fld->FldVirtualExpression <> $Fld->FldExpression) ? $Fld->FldVirtualExpression : $Fld->FldBasicSearchExpression;
+						$sWrk = $sFldExpression . ew_Like(ew_QuotedValue("%" . $Keyword . "%", EW_DATATYPE_STRING));
+					}
+					if ($sWrk <> "") {
+						$arSQL[$j] = $sWrk;
+						$arCond[$j] = $sDefCond;
+						$j += 1;
+					}
+				}
+			}
+		}
+		$cnt = count($arSQL);
+		$bQuoted = FALSE;
+		$sSql = "";
+		if ($cnt > 0) {
+			for ($i = 0; $i < $cnt-1; $i++) {
+				if ($arCond[$i] == "OR") {
+					if (!$bQuoted) $sSql .= "(";
+					$bQuoted = TRUE;
+				}
+				$sSql .= $arSQL[$i];
+				if ($bQuoted && $arCond[$i] <> "OR") {
+					$sSql .= ")";
+					$bQuoted = FALSE;
+				}
+				$sSql .= " " . $arCond[$i] . " ";
+			}
+			$sSql .= $arSQL[$cnt-1];
+			if ($bQuoted)
+				$sSql .= ")";
+		}
+		if ($sSql <> "") {
+			if ($Where <> "") $Where .= " OR ";
+			$Where .=  "(" . $sSql . ")";
+		}
+	}
+
+	// Return basic search WHERE clause based on search keyword and type
+	function BasicSearchWhere($Default = FALSE) {
+		global $Security;
+		$sSearchStr = "";
+		if (!$Security->CanSearch()) return "";
+		$sSearchKeyword = ($Default) ? $this->BasicSearch->KeywordDefault : $this->BasicSearch->Keyword;
+		$sSearchType = ($Default) ? $this->BasicSearch->TypeDefault : $this->BasicSearch->Type;
+		if ($sSearchKeyword <> "") {
+			$sSearch = trim($sSearchKeyword);
+			if ($sSearchType <> "=") {
+				$ar = array();
+
+				// Match quoted keywords (i.e.: "...")
+				if (preg_match_all('/"([^"]*)"/i', $sSearch, $matches, PREG_SET_ORDER)) {
+					foreach ($matches as $match) {
+						$p = strpos($sSearch, $match[0]);
+						$str = substr($sSearch, 0, $p);
+						$sSearch = substr($sSearch, $p + strlen($match[0]));
+						if (strlen(trim($str)) > 0)
+							$ar = array_merge($ar, explode(" ", trim($str)));
+						$ar[] = $match[1]; // Save quoted keyword
+					}
+				}
+
+				// Match individual keywords
+				if (strlen(trim($sSearch)) > 0)
+					$ar = array_merge($ar, explode(" ", trim($sSearch)));
+				$sSearchStr = $this->BasicSearchSQL($ar, $sSearchType);
+			} else {
+				$sSearchStr = $this->BasicSearchSQL(array($sSearch), $sSearchType);
+			}
+			if (!$Default) $this->Command = "search";
+		}
+		if (!$Default && $this->Command == "search") {
+			$this->BasicSearch->setKeyword($sSearchKeyword);
+			$this->BasicSearch->setType($sSearchType);
+		}
+		return $sSearchStr;
+	}
+
 	// Check if search parm exists
 	function CheckSearchParms() {
-		if ($this->id_socio->AdvancedSearch->IssetSession())
+
+		// Check basic search
+		if ($this->BasicSearch->IssetSession())
 			return TRUE;
-		if ($this->id_montos->AdvancedSearch->IssetSession())
+		if ($this->id->AdvancedSearch->IssetSession())
 			return TRUE;
-		if ($this->fecha->AdvancedSearch->IssetSession())
+		if ($this->id_rubro->AdvancedSearch->IssetSession())
+			return TRUE;
+		if ($this->actividad->AdvancedSearch->IssetSession())
+			return TRUE;
+		if ($this->descripcion->AdvancedSearch->IssetSession())
+			return TRUE;
+		if ($this->activa->AdvancedSearch->IssetSession())
 			return TRUE;
 		return FALSE;
 	}
@@ -803,6 +914,9 @@ class csocios_cuotas_list extends csocios_cuotas {
 		$this->SearchWhere = "";
 		$this->setSearchWhere($this->SearchWhere);
 
+		// Clear basic search parameters
+		$this->ResetBasicSearchParms();
+
 		// Clear advanced search parameters
 		$this->ResetAdvancedSearchParms();
 	}
@@ -812,21 +926,33 @@ class csocios_cuotas_list extends csocios_cuotas {
 		return FALSE;
 	}
 
+	// Clear all basic search parameters
+	function ResetBasicSearchParms() {
+		$this->BasicSearch->UnsetSession();
+	}
+
 	// Clear all advanced search parameters
 	function ResetAdvancedSearchParms() {
-		$this->id_socio->AdvancedSearch->UnsetSession();
-		$this->id_montos->AdvancedSearch->UnsetSession();
-		$this->fecha->AdvancedSearch->UnsetSession();
+		$this->id->AdvancedSearch->UnsetSession();
+		$this->id_rubro->AdvancedSearch->UnsetSession();
+		$this->actividad->AdvancedSearch->UnsetSession();
+		$this->descripcion->AdvancedSearch->UnsetSession();
+		$this->activa->AdvancedSearch->UnsetSession();
 	}
 
 	// Restore all search parameters
 	function RestoreSearchParms() {
 		$this->RestoreSearch = TRUE;
 
+		// Restore basic search values
+		$this->BasicSearch->Load();
+
 		// Restore advanced search values
-		$this->id_socio->AdvancedSearch->Load();
-		$this->id_montos->AdvancedSearch->Load();
-		$this->fecha->AdvancedSearch->Load();
+		$this->id->AdvancedSearch->Load();
+		$this->id_rubro->AdvancedSearch->Load();
+		$this->actividad->AdvancedSearch->Load();
+		$this->descripcion->AdvancedSearch->Load();
+		$this->activa->AdvancedSearch->Load();
 	}
 
 	// Set up sort parameters
@@ -836,9 +962,11 @@ class csocios_cuotas_list extends csocios_cuotas {
 		if (@$_GET["order"] <> "") {
 			$this->CurrentOrder = ew_StripSlashes(@$_GET["order"]);
 			$this->CurrentOrderType = @$_GET["ordertype"];
-			$this->UpdateSort($this->id_socio); // id_socio
-			$this->UpdateSort($this->id_montos); // id_montos
-			$this->UpdateSort($this->fecha); // fecha
+			$this->UpdateSort($this->id); // id
+			$this->UpdateSort($this->id_rubro); // id_rubro
+			$this->UpdateSort($this->actividad); // actividad
+			$this->UpdateSort($this->descripcion); // descripcion
+			$this->UpdateSort($this->activa); // activa
 			$this->setStartRecordNumber(1); // Reset start position
 		}
 	}
@@ -872,17 +1000,18 @@ class csocios_cuotas_list extends csocios_cuotas {
 				$this->setCurrentMasterTable(""); // Clear master table
 				$this->DbMasterFilter = "";
 				$this->DbDetailFilter = "";
-				$this->id_montos->setSessionValue("");
-				$this->id_socio->setSessionValue("");
+				$this->id_rubro->setSessionValue("");
 			}
 
 			// Reset sorting order
 			if ($this->Command == "resetsort") {
 				$sOrderBy = "";
 				$this->setSessionOrderBy($sOrderBy);
-				$this->id_socio->setSort("");
-				$this->id_montos->setSort("");
-				$this->fecha->setSort("");
+				$this->id->setSort("");
+				$this->id_rubro->setSort("");
+				$this->actividad->setSort("");
+				$this->descripcion->setSort("");
+				$this->activa->setSort("");
 			}
 
 			// Reset start position
@@ -900,6 +1029,30 @@ class csocios_cuotas_list extends csocios_cuotas {
 		$item->Body = "";
 		$item->OnLeft = FALSE;
 		$item->Visible = FALSE;
+
+		// "view"
+		$item = &$this->ListOptions->Add("view");
+		$item->CssStyle = "white-space: nowrap;";
+		$item->Visible = $Security->CanView();
+		$item->OnLeft = FALSE;
+
+		// "edit"
+		$item = &$this->ListOptions->Add("edit");
+		$item->CssStyle = "white-space: nowrap;";
+		$item->Visible = $Security->CanEdit();
+		$item->OnLeft = FALSE;
+
+		// "copy"
+		$item = &$this->ListOptions->Add("copy");
+		$item->CssStyle = "white-space: nowrap;";
+		$item->Visible = $Security->CanAdd();
+		$item->OnLeft = FALSE;
+
+		// "delete"
+		$item = &$this->ListOptions->Add("delete");
+		$item->CssStyle = "white-space: nowrap;";
+		$item->Visible = $Security->CanDelete();
+		$item->OnLeft = FALSE;
 
 		// "checkbox"
 		$item = &$this->ListOptions->Add("checkbox");
@@ -930,8 +1083,39 @@ class csocios_cuotas_list extends csocios_cuotas {
 		global $Security, $Language, $objForm;
 		$this->ListOptions->LoadDefault();
 
+		// "view"
+		$oListOpt = &$this->ListOptions->Items["view"];
+		if ($Security->CanView())
+			$oListOpt->Body = "<a class=\"ewRowLink ewView\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewLink")) . "\" href=\"" . ew_HtmlEncode($this->ViewUrl) . "\">" . $Language->Phrase("ViewLink") . "</a>";
+		else
+			$oListOpt->Body = "";
+
+		// "edit"
+		$oListOpt = &$this->ListOptions->Items["edit"];
+		if ($Security->CanEdit()) {
+			$oListOpt->Body = "<a class=\"ewRowLink ewEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" href=\"" . ew_HtmlEncode($this->EditUrl) . "\">" . $Language->Phrase("EditLink") . "</a>";
+		} else {
+			$oListOpt->Body = "";
+		}
+
+		// "copy"
+		$oListOpt = &$this->ListOptions->Items["copy"];
+		if ($Security->CanAdd()) {
+			$oListOpt->Body = "<a class=\"ewRowLink ewCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("CopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("CopyLink")) . "\" href=\"" . ew_HtmlEncode($this->CopyUrl) . "\">" . $Language->Phrase("CopyLink") . "</a>";
+		} else {
+			$oListOpt->Body = "";
+		}
+
+		// "delete"
+		$oListOpt = &$this->ListOptions->Items["delete"];
+		if ($Security->CanDelete())
+			$oListOpt->Body = "<a class=\"ewRowLink ewDelete\"" . "" . " title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("DeleteLink") . "</a>";
+		else
+			$oListOpt->Body = "";
+
 		// "checkbox"
 		$oListOpt = &$this->ListOptions->Items["checkbox"];
+		$oListOpt->Body = "<input type=\"checkbox\" name=\"key_m[]\" value=\"" . ew_HtmlEncode($this->id->CurrentValue) . "\" onclick='ew_ClickMultiCheckbox(event, this);'>";
 		$this->RenderListOptionsExt();
 
 		// Call ListOptions_Rendered event
@@ -942,6 +1126,12 @@ class csocios_cuotas_list extends csocios_cuotas {
 	function SetupOtherOptions() {
 		global $Language, $Security;
 		$options = &$this->OtherOptions;
+		$option = $options["addedit"];
+
+		// Add
+		$item = &$option->Add("add");
+		$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . ew_HtmlTitle($Language->Phrase("AddLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("AddLink")) . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
+		$item->Visible = ($this->AddUrl <> "" && $Security->CanAdd());
 		$option = $options["action"];
 
 		// Set up options default
@@ -968,7 +1158,7 @@ class csocios_cuotas_list extends csocios_cuotas {
 
 				// Add custom action
 				$item = &$option->Add("custom_" . $action);
-				$item->Body = "<a class=\"ewAction ewCustomAction\" href=\"\" onclick=\"ew_SubmitSelected(document.fsocios_cuotaslist, '" . ew_CurrentUrl() . "', null, '" . $action . "');return false;\">" . $name . "</a>";
+				$item->Body = "<a class=\"ewAction ewCustomAction\" href=\"\" onclick=\"ew_SubmitSelected(document.factividadlist, '" . ew_CurrentUrl() . "', null, '" . $action . "');return false;\">" . $name . "</a>";
 			}
 
 			// Hide grid edit, multi-delete and multi-update
@@ -1035,6 +1225,12 @@ class csocios_cuotas_list extends csocios_cuotas {
 		$this->SearchOptions->Tag = "div";
 		$this->SearchOptions->TagClassName = "ewSearchOption";
 
+		// Search button
+		$item = &$this->SearchOptions->Add("searchtoggle");
+		$SearchToggleClass = ($this->SearchWhere <> "") ? " active" : " active";
+		$item->Body = "<button type=\"button\" class=\"btn btn-default ewSearchToggle" . $SearchToggleClass . "\" title=\"" . $Language->Phrase("SearchPanel") . "\" data-caption=\"" . $Language->Phrase("SearchPanel") . "\" data-toggle=\"button\" data-form=\"factividadlistsrch\">" . $Language->Phrase("SearchBtn") . "</button>";
+		$item->Visible = TRUE;
+
 		// Show all button
 		$item = &$this->SearchOptions->Add("showall");
 		$item->Body = "<a class=\"btn btn-default ewShowAll\" title=\"" . $Language->Phrase("ShowAll") . "\" data-caption=\"" . $Language->Phrase("ShowAll") . "\" href=\"" . $this->PageUrl() . "cmd=reset\">" . $Language->Phrase("ShowAllBtn") . "</a>";
@@ -1042,12 +1238,12 @@ class csocios_cuotas_list extends csocios_cuotas {
 
 		// Advanced search button
 		$item = &$this->SearchOptions->Add("advancedsearch");
-		$item->Body = "<a class=\"btn btn-default ewAdvancedSearch\" title=\"" . $Language->Phrase("AdvancedSearch") . "\" data-caption=\"" . $Language->Phrase("AdvancedSearch") . "\" href=\"cciag_socios_cuotassrch.php\">" . $Language->Phrase("AdvancedSearchBtn") . "</a>";
+		$item->Body = "<a class=\"btn btn-default ewAdvancedSearch\" title=\"" . $Language->Phrase("AdvancedSearch") . "\" data-caption=\"" . $Language->Phrase("AdvancedSearch") . "\" href=\"cciag_actividadsrch.php\">" . $Language->Phrase("AdvancedSearchBtn") . "</a>";
 		$item->Visible = TRUE;
 
 		// Search highlight button
 		$item = &$this->SearchOptions->Add("searchhighlight");
-		$item->Body = "<button type=\"button\" class=\"btn btn-default ewHighlight active\" title=\"" . $Language->Phrase("Highlight") . "\" data-caption=\"" . $Language->Phrase("Highlight") . "\" data-toggle=\"button\" data-form=\"fsocios_cuotaslistsrch\" data-name=\"" . $this->HighlightName() . "\">" . $Language->Phrase("HighlightBtn") . "</button>";
+		$item->Body = "<button type=\"button\" class=\"btn btn-default ewHighlight active\" title=\"" . $Language->Phrase("Highlight") . "\" data-caption=\"" . $Language->Phrase("Highlight") . "\" data-toggle=\"button\" data-form=\"factividadlistsrch\" data-name=\"" . $this->HighlightName() . "\">" . $Language->Phrase("HighlightBtn") . "</button>";
 		$item->Visible = ($this->SearchWhere <> "" && $this->TotalRecs > 0);
 
 		// Button group for search
@@ -1113,26 +1309,43 @@ class csocios_cuotas_list extends csocios_cuotas {
 		}
 	}
 
+	// Load basic search values
+	function LoadBasicSearchValues() {
+		$this->BasicSearch->Keyword = @$_GET[EW_TABLE_BASIC_SEARCH];
+		if ($this->BasicSearch->Keyword <> "") $this->Command = "search";
+		$this->BasicSearch->Type = @$_GET[EW_TABLE_BASIC_SEARCH_TYPE];
+	}
+
 	//  Load search values for validation
 	function LoadSearchValues() {
 		global $objForm;
 
 		// Load search values
-		// id_socio
+		// id
 
-		$this->id_socio->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_id_socio"]);
-		if ($this->id_socio->AdvancedSearch->SearchValue <> "") $this->Command = "search";
-		$this->id_socio->AdvancedSearch->SearchOperator = @$_GET["z_id_socio"];
+		$this->id->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_id"]);
+		if ($this->id->AdvancedSearch->SearchValue <> "") $this->Command = "search";
+		$this->id->AdvancedSearch->SearchOperator = @$_GET["z_id"];
 
-		// id_montos
-		$this->id_montos->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_id_montos"]);
-		if ($this->id_montos->AdvancedSearch->SearchValue <> "") $this->Command = "search";
-		$this->id_montos->AdvancedSearch->SearchOperator = @$_GET["z_id_montos"];
+		// id_rubro
+		$this->id_rubro->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_id_rubro"]);
+		if ($this->id_rubro->AdvancedSearch->SearchValue <> "") $this->Command = "search";
+		$this->id_rubro->AdvancedSearch->SearchOperator = @$_GET["z_id_rubro"];
 
-		// fecha
-		$this->fecha->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_fecha"]);
-		if ($this->fecha->AdvancedSearch->SearchValue <> "") $this->Command = "search";
-		$this->fecha->AdvancedSearch->SearchOperator = @$_GET["z_fecha"];
+		// actividad
+		$this->actividad->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_actividad"]);
+		if ($this->actividad->AdvancedSearch->SearchValue <> "") $this->Command = "search";
+		$this->actividad->AdvancedSearch->SearchOperator = @$_GET["z_actividad"];
+
+		// descripcion
+		$this->descripcion->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_descripcion"]);
+		if ($this->descripcion->AdvancedSearch->SearchValue <> "") $this->Command = "search";
+		$this->descripcion->AdvancedSearch->SearchOperator = @$_GET["z_descripcion"];
+
+		// activa
+		$this->activa->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_activa"]);
+		if ($this->activa->AdvancedSearch->SearchValue <> "") $this->Command = "search";
+		$this->activa->AdvancedSearch->SearchOperator = @$_GET["z_activa"];
 	}
 
 	// Load recordset
@@ -1181,20 +1394,22 @@ class csocios_cuotas_list extends csocios_cuotas {
 		// Call Row Selected event
 		$row = &$rs->fields;
 		$this->Row_Selected($row);
-		$this->id_socio->setDbValue($rs->fields('id_socio'));
-		$this->id_montos->setDbValue($rs->fields('id_montos'));
-		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
-		$this->fecha->setDbValue($rs->fields('fecha'));
+		$this->id->setDbValue($rs->fields('id'));
+		$this->id_rubro->setDbValue($rs->fields('id_rubro'));
+		$this->actividad->setDbValue($rs->fields('actividad'));
+		$this->descripcion->setDbValue($rs->fields('descripcion'));
+		$this->activa->setDbValue($rs->fields('activa'));
 	}
 
 	// Load DbValue from recordset
 	function LoadDbValues(&$rs) {
 		if (!$rs || !is_array($rs) && $rs->EOF) return;
 		$row = is_array($rs) ? $rs : $rs->fields;
-		$this->id_socio->DbValue = $row['id_socio'];
-		$this->id_montos->DbValue = $row['id_montos'];
-		$this->id_usuario->DbValue = $row['id_usuario'];
-		$this->fecha->DbValue = $row['fecha'];
+		$this->id->DbValue = $row['id'];
+		$this->id_rubro->DbValue = $row['id_rubro'];
+		$this->actividad->DbValue = $row['actividad'];
+		$this->descripcion->DbValue = $row['descripcion'];
+		$this->activa->DbValue = $row['activa'];
 	}
 
 	// Load old record
@@ -1202,6 +1417,10 @@ class csocios_cuotas_list extends csocios_cuotas {
 
 		// Load key values from Session
 		$bValidKey = TRUE;
+		if (strval($this->getKey("id")) <> "")
+			$this->id->CurrentValue = $this->getKey("id"); // id
+		else
+			$bValidKey = FALSE;
 
 		// Load old recordset
 		if ($bValidKey) {
@@ -1232,84 +1451,100 @@ class csocios_cuotas_list extends csocios_cuotas {
 		$this->Row_Rendering();
 
 		// Common render codes for all row types
-		// id_socio
-		// id_montos
-		// id_usuario
+		// id
+		// id_rubro
+		// actividad
+		// descripcion
+		// activa
 
-		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
-
-		// fecha
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
-			// id_socio
-			if (strval($this->id_socio->CurrentValue) <> "") {
-				$sFilterWrk = "`socio_nro`" . ew_SearchString("=", $this->id_socio->CurrentValue, EW_DATATYPE_NUMBER);
-			$sSqlWrk = "SELECT `socio_nro`, `socio_nro` AS `DispFld`, `propietario` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `socios`";
+			// id
+			$this->id->ViewValue = $this->id->CurrentValue;
+			$this->id->ViewCustomAttributes = "";
+
+			// id_rubro
+			if (strval($this->id_rubro->CurrentValue) <> "") {
+				$sFilterWrk = "`id`" . ew_SearchString("=", $this->id_rubro->CurrentValue, EW_DATATYPE_NUMBER);
+			$sSqlWrk = "SELECT `id`, `rubro` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `rubros`";
 			$sWhereWrk = "";
+			$lookuptblfilter = "`activa`='S'";
+			if (strval($lookuptblfilter) <> "") {
+				ew_AddFilter($sWhereWrk, $lookuptblfilter);
+			}
 			if ($sFilterWrk <> "") {
 				ew_AddFilter($sWhereWrk, $sFilterWrk);
 			}
 
 			// Call Lookup selecting
-			$this->Lookup_Selecting($this->id_socio, $sWhereWrk);
+			$this->Lookup_Selecting($this->id_rubro, $sWhereWrk);
 			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$sSqlWrk .= " ORDER BY `rubro` DESC";
 				$rswrk = $conn->Execute($sSqlWrk);
 				if ($rswrk && !$rswrk->EOF) { // Lookup values found
-					$this->id_socio->ViewValue = $rswrk->fields('DispFld');
-					$this->id_socio->ViewValue .= ew_ValueSeparator(1,$this->id_socio) . $rswrk->fields('Disp2Fld');
+					$this->id_rubro->ViewValue = $rswrk->fields('DispFld');
 					$rswrk->Close();
 				} else {
-					$this->id_socio->ViewValue = $this->id_socio->CurrentValue;
+					$this->id_rubro->ViewValue = $this->id_rubro->CurrentValue;
 				}
 			} else {
-				$this->id_socio->ViewValue = NULL;
+				$this->id_rubro->ViewValue = NULL;
 			}
-			$this->id_socio->ViewCustomAttributes = "";
+			$this->id_rubro->ViewCustomAttributes = "";
 
-			// id_montos
-			if (strval($this->id_montos->CurrentValue) <> "") {
-				$sFilterWrk = "`id`" . ew_SearchString("=", $this->id_montos->CurrentValue, EW_DATATYPE_NUMBER);
-			$sSqlWrk = "SELECT `id`, `descripcion` AS `DispFld`, `importe` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `montos`";
-			$sWhereWrk = "";
-			if ($sFilterWrk <> "") {
-				ew_AddFilter($sWhereWrk, $sFilterWrk);
-			}
+			// actividad
+			$this->actividad->ViewValue = $this->actividad->CurrentValue;
+			$this->actividad->ViewCustomAttributes = "";
 
-			// Call Lookup selecting
-			$this->Lookup_Selecting($this->id_montos, $sWhereWrk);
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-				$rswrk = $conn->Execute($sSqlWrk);
-				if ($rswrk && !$rswrk->EOF) { // Lookup values found
-					$this->id_montos->ViewValue = $rswrk->fields('DispFld');
-					$this->id_montos->ViewValue .= ew_ValueSeparator(1,$this->id_montos) . ew_FormatCurrency($rswrk->fields('Disp2Fld'), 0, -2, -2, -2);
-					$rswrk->Close();
-				} else {
-					$this->id_montos->ViewValue = $this->id_montos->CurrentValue;
+			// descripcion
+			$this->descripcion->ViewValue = $this->descripcion->CurrentValue;
+			$this->descripcion->ViewCustomAttributes = "";
+
+			// activa
+			if (strval($this->activa->CurrentValue) <> "") {
+				switch ($this->activa->CurrentValue) {
+					case $this->activa->FldTagValue(1):
+						$this->activa->ViewValue = $this->activa->FldTagCaption(1) <> "" ? $this->activa->FldTagCaption(1) : $this->activa->CurrentValue;
+						break;
+					case $this->activa->FldTagValue(2):
+						$this->activa->ViewValue = $this->activa->FldTagCaption(2) <> "" ? $this->activa->FldTagCaption(2) : $this->activa->CurrentValue;
+						break;
+					default:
+						$this->activa->ViewValue = $this->activa->CurrentValue;
 				}
 			} else {
-				$this->id_montos->ViewValue = NULL;
+				$this->activa->ViewValue = NULL;
 			}
-			$this->id_montos->ViewCustomAttributes = "";
+			$this->activa->ViewCustomAttributes = "";
 
-			// fecha
-			$this->fecha->ViewValue = $this->fecha->CurrentValue;
-			$this->fecha->ViewValue = ew_FormatDateTime($this->fecha->ViewValue, 7);
-			$this->fecha->ViewCustomAttributes = "";
+			// id
+			$this->id->LinkCustomAttributes = "";
+			$this->id->HrefValue = "";
+			$this->id->TooltipValue = "";
 
-			// id_socio
-			$this->id_socio->LinkCustomAttributes = "";
-			$this->id_socio->HrefValue = "";
-			$this->id_socio->TooltipValue = "";
+			// id_rubro
+			$this->id_rubro->LinkCustomAttributes = "";
+			$this->id_rubro->HrefValue = "";
+			$this->id_rubro->TooltipValue = "";
 
-			// id_montos
-			$this->id_montos->LinkCustomAttributes = "";
-			$this->id_montos->HrefValue = "";
-			$this->id_montos->TooltipValue = "";
+			// actividad
+			$this->actividad->LinkCustomAttributes = "";
+			$this->actividad->HrefValue = "";
+			$this->actividad->TooltipValue = "";
+			if ($this->Export == "")
+				$this->actividad->ViewValue = ew_Highlight($this->HighlightName(), $this->actividad->ViewValue, $this->BasicSearch->getKeyword(), $this->BasicSearch->getType(), $this->actividad->AdvancedSearch->getValue("x"), "");
 
-			// fecha
-			$this->fecha->LinkCustomAttributes = "";
-			$this->fecha->HrefValue = "";
-			$this->fecha->TooltipValue = "";
+			// descripcion
+			$this->descripcion->LinkCustomAttributes = "";
+			$this->descripcion->HrefValue = "";
+			$this->descripcion->TooltipValue = "";
+			if ($this->Export == "")
+				$this->descripcion->ViewValue = ew_Highlight($this->HighlightName(), $this->descripcion->ViewValue, $this->BasicSearch->getKeyword(), $this->BasicSearch->getType(), $this->descripcion->AdvancedSearch->getValue("x"), "");
+
+			// activa
+			$this->activa->LinkCustomAttributes = "";
+			$this->activa->HrefValue = "";
+			$this->activa->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -1342,9 +1577,11 @@ class csocios_cuotas_list extends csocios_cuotas {
 
 	// Load advanced search
 	function LoadAdvancedSearch() {
-		$this->id_socio->AdvancedSearch->Load();
-		$this->id_montos->AdvancedSearch->Load();
-		$this->fecha->AdvancedSearch->Load();
+		$this->id->AdvancedSearch->Load();
+		$this->id_rubro->AdvancedSearch->Load();
+		$this->actividad->AdvancedSearch->Load();
+		$this->descripcion->AdvancedSearch->Load();
+		$this->activa->AdvancedSearch->Load();
 	}
 
 	// Set up export options
@@ -1389,7 +1626,7 @@ class csocios_cuotas_list extends csocios_cuotas {
 		// Export to Email
 		$item = &$this->ExportOptions->Add("email");
 		$url = "";
-		$item->Body = "<button id=\"emf_socios_cuotas\" class=\"ewExportLink ewEmail\" title=\"" . $Language->Phrase("ExportToEmailText") . "\" data-caption=\"" . $Language->Phrase("ExportToEmailText") . "\" onclick=\"ew_EmailDialogShow({lnk:'emf_socios_cuotas',hdr:ewLanguage.Phrase('ExportToEmailText'),f:document.fsocios_cuotaslist,sel:false" . $url . "});\">" . $Language->Phrase("ExportToEmail") . "</button>";
+		$item->Body = "<button id=\"emf_actividad\" class=\"ewExportLink ewEmail\" title=\"" . $Language->Phrase("ExportToEmailText") . "\" data-caption=\"" . $Language->Phrase("ExportToEmailText") . "\" onclick=\"ew_EmailDialogShow({lnk:'emf_actividad',hdr:ewLanguage.Phrase('ExportToEmailText'),f:document.factividadlist,sel:false" . $url . "});\">" . $Language->Phrase("ExportToEmail") . "</button>";
 		$item->Visible = TRUE;
 
 		// Drop down button for export
@@ -1460,32 +1697,15 @@ class csocios_cuotas_list extends csocios_cuotas {
 		$ParentTable = "";
 
 		// Export master record
-		if (EW_EXPORT_MASTER_RECORD && $this->GetMasterFilter() <> "" && $this->getCurrentMasterTable() == "montos") {
-			global $montos;
-			if (!isset($montos)) $montos = new cmontos;
-			$rsmaster = $montos->LoadRs($this->DbMasterFilter); // Load master record
+		if (EW_EXPORT_MASTER_RECORD && $this->GetMasterFilter() <> "" && $this->getCurrentMasterTable() == "rubros") {
+			global $rubros;
+			if (!isset($rubros)) $rubros = new crubros;
+			$rsmaster = $rubros->LoadRs($this->DbMasterFilter); // Load master record
 			if ($rsmaster && !$rsmaster->EOF) {
 				$ExportStyle = $Doc->Style;
 				$Doc->SetStyle("v"); // Change to vertical
 				if ($this->Export <> "csv" || EW_EXPORT_MASTER_RECORD_FOR_CSV) {
-					$montos->ExportDocument($Doc, $rsmaster, 1, 1);
-					$Doc->ExportEmptyRow();
-				}
-				$Doc->SetStyle($ExportStyle); // Restore
-				$rsmaster->Close();
-			}
-		}
-
-		// Export master record
-		if (EW_EXPORT_MASTER_RECORD && $this->GetMasterFilter() <> "" && $this->getCurrentMasterTable() == "socios") {
-			global $socios;
-			if (!isset($socios)) $socios = new csocios;
-			$rsmaster = $socios->LoadRs($this->DbMasterFilter); // Load master record
-			if ($rsmaster && !$rsmaster->EOF) {
-				$ExportStyle = $Doc->Style;
-				$Doc->SetStyle("v"); // Change to vertical
-				if ($this->Export <> "csv" || EW_EXPORT_MASTER_RECORD_FOR_CSV) {
-					$socios->ExportDocument($Doc, $rsmaster, 1, 1);
+					$rubros->ExportDocument($Doc, $rsmaster, 1, 1);
 					$Doc->ExportEmptyRow();
 				}
 				$Doc->SetStyle($ExportStyle); // Restore
@@ -1621,9 +1841,14 @@ class csocios_cuotas_list extends csocios_cuotas {
 		$sQry = "export=html";
 
 		// Build QueryString for search
-		$this->AddSearchQueryString($sQry, $this->id_socio); // id_socio
-		$this->AddSearchQueryString($sQry, $this->id_montos); // id_montos
-		$this->AddSearchQueryString($sQry, $this->fecha); // fecha
+		if ($this->BasicSearch->getKeyword() <> "") {
+			$sQry .= "&" . EW_TABLE_BASIC_SEARCH . "=" . urlencode($this->BasicSearch->getKeyword()) . "&" . EW_TABLE_BASIC_SEARCH_TYPE . "=" . urlencode($this->BasicSearch->getType());
+		}
+		$this->AddSearchQueryString($sQry, $this->id); // id
+		$this->AddSearchQueryString($sQry, $this->id_rubro); // id_rubro
+		$this->AddSearchQueryString($sQry, $this->actividad); // actividad
+		$this->AddSearchQueryString($sQry, $this->descripcion); // descripcion
+		$this->AddSearchQueryString($sQry, $this->activa); // activa
 
 		// Build QueryString for pager
 		$sQry .= "&" . EW_TABLE_REC_PER_PAGE . "=" . urlencode($this->getRecordsPerPage()) . "&" . EW_TABLE_START_REC . "=" . urlencode($this->getStartRecordNumber());
@@ -1646,14 +1871,6 @@ class csocios_cuotas_list extends csocios_cuotas {
 		}
 	}
 
-	// Show link optionally based on User ID
-	function ShowOptionLink($id = "") {
-		global $Security;
-		if ($Security->IsLoggedIn() && !$Security->IsAdmin() && !$this->UserIDAllow($id))
-			return $Security->IsValidUserID($this->id_usuario->CurrentValue);
-		return TRUE;
-	}
-
 	// Set up master/detail based on QueryString
 	function SetUpMasterParms() {
 		$bValidMaster = FALSE;
@@ -1666,24 +1883,13 @@ class csocios_cuotas_list extends csocios_cuotas {
 				$this->DbMasterFilter = "";
 				$this->DbDetailFilter = "";
 			}
-			if ($sMasterTblVar == "montos") {
+			if ($sMasterTblVar == "rubros") {
 				$bValidMaster = TRUE;
 				if (@$_GET["fk_id"] <> "") {
-					$GLOBALS["montos"]->id->setQueryStringValue($_GET["fk_id"]);
-					$this->id_montos->setQueryStringValue($GLOBALS["montos"]->id->QueryStringValue);
-					$this->id_montos->setSessionValue($this->id_montos->QueryStringValue);
-					if (!is_numeric($GLOBALS["montos"]->id->QueryStringValue)) $bValidMaster = FALSE;
-				} else {
-					$bValidMaster = FALSE;
-				}
-			}
-			if ($sMasterTblVar == "socios") {
-				$bValidMaster = TRUE;
-				if (@$_GET["fk_socio_nro"] <> "") {
-					$GLOBALS["socios"]->socio_nro->setQueryStringValue($_GET["fk_socio_nro"]);
-					$this->id_socio->setQueryStringValue($GLOBALS["socios"]->socio_nro->QueryStringValue);
-					$this->id_socio->setSessionValue($this->id_socio->QueryStringValue);
-					if (!is_numeric($GLOBALS["socios"]->socio_nro->QueryStringValue)) $bValidMaster = FALSE;
+					$GLOBALS["rubros"]->id->setQueryStringValue($_GET["fk_id"]);
+					$this->id_rubro->setQueryStringValue($GLOBALS["rubros"]->id->QueryStringValue);
+					$this->id_rubro->setSessionValue($this->id_rubro->QueryStringValue);
+					if (!is_numeric($GLOBALS["rubros"]->id->QueryStringValue)) $bValidMaster = FALSE;
 				} else {
 					$bValidMaster = FALSE;
 				}
@@ -1699,11 +1905,8 @@ class csocios_cuotas_list extends csocios_cuotas {
 			$this->setStartRecordNumber($this->StartRec);
 
 			// Clear previous master key from Session
-			if ($sMasterTblVar <> "montos") {
-				if ($this->id_montos->QueryStringValue == "") $this->id_montos->setSessionValue("");
-			}
-			if ($sMasterTblVar <> "socios") {
-				if ($this->id_socio->QueryStringValue == "") $this->id_socio->setSessionValue("");
+			if ($sMasterTblVar <> "rubros") {
+				if ($this->id_rubro->QueryStringValue == "") $this->id_rubro->setSessionValue("");
 			}
 		}
 		$this->DbMasterFilter = $this->GetMasterFilter(); //  Get master filter
@@ -1721,7 +1924,7 @@ class csocios_cuotas_list extends csocios_cuotas {
 
 	// Write Audit Trail start/end for grid update
 	function WriteAuditTrailDummy($typ) {
-		$table = 'socios_cuotas';
+		$table = 'actividad';
 	  $usr = CurrentUserID();
 		ew_WriteAuditTrail("log", ew_StdCurrentDateTime(), ew_ScriptName(), $usr, $typ, $table, "", "", "", "");
 	}
@@ -1850,35 +2053,35 @@ class csocios_cuotas_list extends csocios_cuotas {
 <?php
 
 // Create page object
-if (!isset($socios_cuotas_list)) $socios_cuotas_list = new csocios_cuotas_list();
+if (!isset($actividad_list)) $actividad_list = new cactividad_list();
 
 // Page init
-$socios_cuotas_list->Page_Init();
+$actividad_list->Page_Init();
 
 // Page main
-$socios_cuotas_list->Page_Main();
+$actividad_list->Page_Main();
 
 // Global Page Rendering event (in userfn*.php)
 Page_Rendering();
 
 // Page Rendering event
-$socios_cuotas_list->Page_Render();
+$actividad_list->Page_Render();
 ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
-<?php if ($socios_cuotas->Export == "") { ?>
+<?php if ($actividad->Export == "") { ?>
 <script type="text/javascript">
 
 // Page object
-var socios_cuotas_list = new ew_Page("socios_cuotas_list");
-socios_cuotas_list.PageID = "list"; // Page ID
-var EW_PAGE_ID = socios_cuotas_list.PageID; // For backward compatibility
+var actividad_list = new ew_Page("actividad_list");
+actividad_list.PageID = "list"; // Page ID
+var EW_PAGE_ID = actividad_list.PageID; // For backward compatibility
 
 // Form object
-var fsocios_cuotaslist = new ew_Form("fsocios_cuotaslist");
-fsocios_cuotaslist.FormKeyCountName = '<?php echo $socios_cuotas_list->FormKeyCountName ?>';
+var factividadlist = new ew_Form("factividadlist");
+factividadlist.FormKeyCountName = '<?php echo $actividad_list->FormKeyCountName ?>';
 
 // Form_CustomValidate event
-fsocios_cuotaslist.Form_CustomValidate = 
+factividadlist.Form_CustomValidate = 
  function(fobj) { // DO NOT CHANGE THIS LINE!
 
  	// Your custom validation code here, return false if invalid. 
@@ -1887,65 +2090,50 @@ fsocios_cuotaslist.Form_CustomValidate =
 
 // Use JavaScript validation or not
 <?php if (EW_CLIENT_VALIDATE) { ?>
-fsocios_cuotaslist.ValidateRequired = true;
+factividadlist.ValidateRequired = true;
 <?php } else { ?>
-fsocios_cuotaslist.ValidateRequired = false; 
+factividadlist.ValidateRequired = false; 
 <?php } ?>
 
 // Dynamic selection lists
-fsocios_cuotaslist.Lists["x_id_socio"] = {"LinkField":"x_socio_nro","Ajax":true,"AutoFill":false,"DisplayFields":["x_socio_nro","x_propietario","",""],"ParentFields":[],"FilterFields":[],"Options":[]};
-fsocios_cuotaslist.Lists["x_id_montos"] = {"LinkField":"x_id","Ajax":true,"AutoFill":false,"DisplayFields":["x_descripcion","x_importe","",""],"ParentFields":[],"FilterFields":[],"Options":[]};
+factividadlist.Lists["x_id_rubro"] = {"LinkField":"x_id","Ajax":true,"AutoFill":false,"DisplayFields":["x_rubro","","",""],"ParentFields":[],"FilterFields":[],"Options":[]};
 
 // Form object for search
-var fsocios_cuotaslistsrch = new ew_Form("fsocios_cuotaslistsrch");
+var factividadlistsrch = new ew_Form("factividadlistsrch");
 </script>
 <script type="text/javascript">
 
 // Write your client script here, no need to add script tags.
 </script>
 <?php } ?>
-<?php if ($socios_cuotas->Export == "") { ?>
+<?php if ($actividad->Export == "") { ?>
 <div class="ewToolbar">
-<?php if ($socios_cuotas->Export == "") { ?>
+<?php if ($actividad->Export == "") { ?>
 <?php $Breadcrumb->Render(); ?>
 <?php } ?>
-<?php if ($socios_cuotas_list->TotalRecs > 0 && $socios_cuotas->getCurrentMasterTable() == "" && $socios_cuotas_list->ExportOptions->Visible()) { ?>
-<?php $socios_cuotas_list->ExportOptions->Render("body") ?>
+<?php if ($actividad_list->TotalRecs > 0 && $actividad->getCurrentMasterTable() == "" && $actividad_list->ExportOptions->Visible()) { ?>
+<?php $actividad_list->ExportOptions->Render("body") ?>
 <?php } ?>
-<?php if ($socios_cuotas_list->SearchOptions->Visible()) { ?>
-<?php $socios_cuotas_list->SearchOptions->Render("body") ?>
+<?php if ($actividad_list->SearchOptions->Visible()) { ?>
+<?php $actividad_list->SearchOptions->Render("body") ?>
 <?php } ?>
-<?php if ($socios_cuotas->Export == "") { ?>
+<?php if ($actividad->Export == "") { ?>
 <?php echo $Language->SelectionForm(); ?>
 <?php } ?>
 <div class="clearfix"></div>
 </div>
 <?php } ?>
-<?php if (($socios_cuotas->Export == "") || (EW_EXPORT_MASTER_RECORD && $socios_cuotas->Export == "print")) { ?>
+<?php if (($actividad->Export == "") || (EW_EXPORT_MASTER_RECORD && $actividad->Export == "print")) { ?>
 <?php
-$gsMasterReturnUrl = "cciag_montoslist.php";
-if ($socios_cuotas_list->DbMasterFilter <> "" && $socios_cuotas->getCurrentMasterTable() == "montos") {
-	if ($socios_cuotas_list->MasterRecordExists) {
-		if ($socios_cuotas->getCurrentMasterTable() == $socios_cuotas->TableVar) $gsMasterReturnUrl .= "?" . EW_TABLE_SHOW_MASTER . "=";
+$gsMasterReturnUrl = "cciag_rubroslist.php";
+if ($actividad_list->DbMasterFilter <> "" && $actividad->getCurrentMasterTable() == "rubros") {
+	if ($actividad_list->MasterRecordExists) {
+		if ($actividad->getCurrentMasterTable() == $actividad->TableVar) $gsMasterReturnUrl .= "?" . EW_TABLE_SHOW_MASTER . "=";
 ?>
-<?php if ($socios_cuotas_list->ExportOptions->Visible()) { ?>
-<div class="ewListExportOptions"><?php $socios_cuotas_list->ExportOptions->Render("body") ?></div>
+<?php if ($actividad_list->ExportOptions->Visible()) { ?>
+<div class="ewListExportOptions"><?php $actividad_list->ExportOptions->Render("body") ?></div>
 <?php } ?>
-<?php include_once $EW_RELATIVE_PATH . "cciag_montosmaster.php" ?>
-<?php
-	}
-}
-?>
-<?php
-$gsMasterReturnUrl = "cciag_socioslist.php";
-if ($socios_cuotas_list->DbMasterFilter <> "" && $socios_cuotas->getCurrentMasterTable() == "socios") {
-	if ($socios_cuotas_list->MasterRecordExists) {
-		if ($socios_cuotas->getCurrentMasterTable() == $socios_cuotas->TableVar) $gsMasterReturnUrl .= "?" . EW_TABLE_SHOW_MASTER . "=";
-?>
-<?php if ($socios_cuotas_list->ExportOptions->Visible()) { ?>
-<div class="ewListExportOptions"><?php $socios_cuotas_list->ExportOptions->Render("body") ?></div>
-<?php } ?>
-<?php include_once $EW_RELATIVE_PATH . "cciag_sociosmaster.php" ?>
+<?php include_once $EW_RELATIVE_PATH . "cciag_rubrosmaster.php" ?>
 <?php
 	}
 }
@@ -1954,239 +2142,298 @@ if ($socios_cuotas_list->DbMasterFilter <> "" && $socios_cuotas->getCurrentMaste
 <?php
 	$bSelectLimit = EW_SELECT_LIMIT;
 	if ($bSelectLimit) {
-		$socios_cuotas_list->TotalRecs = $socios_cuotas->SelectRecordCount();
+		$actividad_list->TotalRecs = $actividad->SelectRecordCount();
 	} else {
-		if ($socios_cuotas_list->Recordset = $socios_cuotas_list->LoadRecordset())
-			$socios_cuotas_list->TotalRecs = $socios_cuotas_list->Recordset->RecordCount();
+		if ($actividad_list->Recordset = $actividad_list->LoadRecordset())
+			$actividad_list->TotalRecs = $actividad_list->Recordset->RecordCount();
 	}
-	$socios_cuotas_list->StartRec = 1;
-	if ($socios_cuotas_list->DisplayRecs <= 0 || ($socios_cuotas->Export <> "" && $socios_cuotas->ExportAll)) // Display all records
-		$socios_cuotas_list->DisplayRecs = $socios_cuotas_list->TotalRecs;
-	if (!($socios_cuotas->Export <> "" && $socios_cuotas->ExportAll))
-		$socios_cuotas_list->SetUpStartRec(); // Set up start record position
+	$actividad_list->StartRec = 1;
+	if ($actividad_list->DisplayRecs <= 0 || ($actividad->Export <> "" && $actividad->ExportAll)) // Display all records
+		$actividad_list->DisplayRecs = $actividad_list->TotalRecs;
+	if (!($actividad->Export <> "" && $actividad->ExportAll))
+		$actividad_list->SetUpStartRec(); // Set up start record position
 	if ($bSelectLimit)
-		$socios_cuotas_list->Recordset = $socios_cuotas_list->LoadRecordset($socios_cuotas_list->StartRec-1, $socios_cuotas_list->DisplayRecs);
+		$actividad_list->Recordset = $actividad_list->LoadRecordset($actividad_list->StartRec-1, $actividad_list->DisplayRecs);
 
 	// Set no record found message
-	if ($socios_cuotas->CurrentAction == "" && $socios_cuotas_list->TotalRecs == 0) {
+	if ($actividad->CurrentAction == "" && $actividad_list->TotalRecs == 0) {
 		if (!$Security->CanList())
-			$socios_cuotas_list->setWarningMessage($Language->Phrase("NoPermission"));
-		if ($socios_cuotas_list->SearchWhere == "0=101")
-			$socios_cuotas_list->setWarningMessage($Language->Phrase("EnterSearchCriteria"));
+			$actividad_list->setWarningMessage($Language->Phrase("NoPermission"));
+		if ($actividad_list->SearchWhere == "0=101")
+			$actividad_list->setWarningMessage($Language->Phrase("EnterSearchCriteria"));
 		else
-			$socios_cuotas_list->setWarningMessage($Language->Phrase("NoRecord"));
+			$actividad_list->setWarningMessage($Language->Phrase("NoRecord"));
 	}
-$socios_cuotas_list->RenderOtherOptions();
+$actividad_list->RenderOtherOptions();
 ?>
-<?php $socios_cuotas_list->ShowPageHeader(); ?>
+<?php if ($Security->CanSearch()) { ?>
+<?php if ($actividad->Export == "" && $actividad->CurrentAction == "") { ?>
+<form name="factividadlistsrch" id="factividadlistsrch" class="form-inline ewForm" action="<?php echo ew_CurrentPage() ?>">
+<?php $SearchPanelClass = ($actividad_list->SearchWhere <> "") ? " in" : " in"; ?>
+<div id="factividadlistsrch_SearchPanel" class="ewSearchPanel collapse<?php echo $SearchPanelClass ?>">
+<input type="hidden" name="cmd" value="search">
+<input type="hidden" name="t" value="actividad">
+	<div class="ewBasicSearch">
+<div id="xsr_1" class="ewRow">
+	<div class="ewQuickSearch input-group">
+	<input type="text" name="<?php echo EW_TABLE_BASIC_SEARCH ?>" id="<?php echo EW_TABLE_BASIC_SEARCH ?>" class="form-control" value="<?php echo ew_HtmlEncode($actividad_list->BasicSearch->getKeyword()) ?>" placeholder="<?php echo ew_HtmlEncode($Language->Phrase("Search")) ?>">
+	<input type="hidden" name="<?php echo EW_TABLE_BASIC_SEARCH_TYPE ?>" id="<?php echo EW_TABLE_BASIC_SEARCH_TYPE ?>" value="<?php echo ew_HtmlEncode($actividad_list->BasicSearch->getType()) ?>">
+	<div class="input-group-btn">
+		<button type="button" data-toggle="dropdown" class="btn btn-default"><span id="searchtype"><?php echo $actividad_list->BasicSearch->getTypeNameShort() ?></span><span class="caret"></span></button>
+		<ul class="dropdown-menu pull-right" role="menu">
+			<li<?php if ($actividad_list->BasicSearch->getType() == "") echo " class=\"active\""; ?>><a href="javascript:void(0);" onclick="ew_SetSearchType(this)"><?php echo $Language->Phrase("QuickSearchAuto") ?></a></li>
+			<li<?php if ($actividad_list->BasicSearch->getType() == "=") echo " class=\"active\""; ?>><a href="javascript:void(0);" onclick="ew_SetSearchType(this,'=')"><?php echo $Language->Phrase("QuickSearchExact") ?></a></li>
+			<li<?php if ($actividad_list->BasicSearch->getType() == "AND") echo " class=\"active\""; ?>><a href="javascript:void(0);" onclick="ew_SetSearchType(this,'AND')"><?php echo $Language->Phrase("QuickSearchAll") ?></a></li>
+			<li<?php if ($actividad_list->BasicSearch->getType() == "OR") echo " class=\"active\""; ?>><a href="javascript:void(0);" onclick="ew_SetSearchType(this,'OR')"><?php echo $Language->Phrase("QuickSearchAny") ?></a></li>
+		</ul>
+	<button class="btn btn-primary ewButton" name="btnsubmit" id="btnsubmit" type="submit"><?php echo $Language->Phrase("QuickSearchBtn") ?></button>
+	</div>
+	</div>
+</div>
+	</div>
+</div>
+</form>
+<?php } ?>
+<?php } ?>
+<?php $actividad_list->ShowPageHeader(); ?>
 <?php
-$socios_cuotas_list->ShowMessage();
+$actividad_list->ShowMessage();
 ?>
-<?php if ($socios_cuotas_list->TotalRecs > 0 || $socios_cuotas->CurrentAction <> "") { ?>
+<?php if ($actividad_list->TotalRecs > 0 || $actividad->CurrentAction <> "") { ?>
 <div class="ewGrid">
-<?php if ($socios_cuotas->Export == "") { ?>
+<?php if ($actividad->Export == "") { ?>
 <div class="ewGridUpperPanel">
-<?php if ($socios_cuotas->CurrentAction <> "gridadd" && $socios_cuotas->CurrentAction <> "gridedit") { ?>
+<?php if ($actividad->CurrentAction <> "gridadd" && $actividad->CurrentAction <> "gridedit") { ?>
 <form name="ewPagerForm" class="form-inline ewForm ewPagerForm" action="<?php echo ew_CurrentPage() ?>">
-<?php if (!isset($socios_cuotas_list->Pager)) $socios_cuotas_list->Pager = new cPrevNextPager($socios_cuotas_list->StartRec, $socios_cuotas_list->DisplayRecs, $socios_cuotas_list->TotalRecs) ?>
-<?php if ($socios_cuotas_list->Pager->RecordCount > 0) { ?>
+<?php if (!isset($actividad_list->Pager)) $actividad_list->Pager = new cPrevNextPager($actividad_list->StartRec, $actividad_list->DisplayRecs, $actividad_list->TotalRecs) ?>
+<?php if ($actividad_list->Pager->RecordCount > 0) { ?>
 <div class="ewPager">
 <span><?php echo $Language->Phrase("Page") ?>&nbsp;</span>
 <div class="ewPrevNext"><div class="input-group">
 <div class="input-group-btn">
 <!--first page button-->
-	<?php if ($socios_cuotas_list->Pager->FirstButton->Enabled) { ?>
-	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerFirst") ?>" href="<?php echo $socios_cuotas_list->PageUrl() ?>start=<?php echo $socios_cuotas_list->Pager->FirstButton->Start ?>"><span class="icon-first ewIcon"></span></a>
+	<?php if ($actividad_list->Pager->FirstButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerFirst") ?>" href="<?php echo $actividad_list->PageUrl() ?>start=<?php echo $actividad_list->Pager->FirstButton->Start ?>"><span class="icon-first ewIcon"></span></a>
 	<?php } else { ?>
 	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerFirst") ?>"><span class="icon-first ewIcon"></span></a>
 	<?php } ?>
 <!--previous page button-->
-	<?php if ($socios_cuotas_list->Pager->PrevButton->Enabled) { ?>
-	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerPrevious") ?>" href="<?php echo $socios_cuotas_list->PageUrl() ?>start=<?php echo $socios_cuotas_list->Pager->PrevButton->Start ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php if ($actividad_list->Pager->PrevButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerPrevious") ?>" href="<?php echo $actividad_list->PageUrl() ?>start=<?php echo $actividad_list->Pager->PrevButton->Start ?>"><span class="icon-prev ewIcon"></span></a>
 	<?php } else { ?>
 	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerPrevious") ?>"><span class="icon-prev ewIcon"></span></a>
 	<?php } ?>
 </div>
 <!--current page number-->
-	<input class="form-control input-sm" type="text" name="<?php echo EW_TABLE_PAGE_NO ?>" value="<?php echo $socios_cuotas_list->Pager->CurrentPage ?>">
+	<input class="form-control input-sm" type="text" name="<?php echo EW_TABLE_PAGE_NO ?>" value="<?php echo $actividad_list->Pager->CurrentPage ?>">
 <div class="input-group-btn">
 <!--next page button-->
-	<?php if ($socios_cuotas_list->Pager->NextButton->Enabled) { ?>
-	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerNext") ?>" href="<?php echo $socios_cuotas_list->PageUrl() ?>start=<?php echo $socios_cuotas_list->Pager->NextButton->Start ?>"><span class="icon-next ewIcon"></span></a>
+	<?php if ($actividad_list->Pager->NextButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerNext") ?>" href="<?php echo $actividad_list->PageUrl() ?>start=<?php echo $actividad_list->Pager->NextButton->Start ?>"><span class="icon-next ewIcon"></span></a>
 	<?php } else { ?>
 	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerNext") ?>"><span class="icon-next ewIcon"></span></a>
 	<?php } ?>
 <!--last page button-->
-	<?php if ($socios_cuotas_list->Pager->LastButton->Enabled) { ?>
-	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerLast") ?>" href="<?php echo $socios_cuotas_list->PageUrl() ?>start=<?php echo $socios_cuotas_list->Pager->LastButton->Start ?>"><span class="icon-last ewIcon"></span></a>
+	<?php if ($actividad_list->Pager->LastButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerLast") ?>" href="<?php echo $actividad_list->PageUrl() ?>start=<?php echo $actividad_list->Pager->LastButton->Start ?>"><span class="icon-last ewIcon"></span></a>
 	<?php } else { ?>
 	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerLast") ?>"><span class="icon-last ewIcon"></span></a>
 	<?php } ?>
 </div>
 </div>
 </div>
-<span>&nbsp;<?php echo $Language->Phrase("of") ?>&nbsp;<?php echo $socios_cuotas_list->Pager->PageCount ?></span>
+<span>&nbsp;<?php echo $Language->Phrase("of") ?>&nbsp;<?php echo $actividad_list->Pager->PageCount ?></span>
 </div>
 <div class="ewPager ewRec">
-	<span><?php echo $Language->Phrase("Record") ?>&nbsp;<?php echo $socios_cuotas_list->Pager->FromIndex ?>&nbsp;<?php echo $Language->Phrase("To") ?>&nbsp;<?php echo $socios_cuotas_list->Pager->ToIndex ?>&nbsp;<?php echo $Language->Phrase("Of") ?>&nbsp;<?php echo $socios_cuotas_list->Pager->RecordCount ?></span>
+	<span><?php echo $Language->Phrase("Record") ?>&nbsp;<?php echo $actividad_list->Pager->FromIndex ?>&nbsp;<?php echo $Language->Phrase("To") ?>&nbsp;<?php echo $actividad_list->Pager->ToIndex ?>&nbsp;<?php echo $Language->Phrase("Of") ?>&nbsp;<?php echo $actividad_list->Pager->RecordCount ?></span>
 </div>
 <?php } ?>
 </form>
 <?php } ?>
 <div class="ewListOtherOptions">
 <?php
-	foreach ($socios_cuotas_list->OtherOptions as &$option)
+	foreach ($actividad_list->OtherOptions as &$option)
 		$option->Render("body");
 ?>
 </div>
 <div class="clearfix"></div>
 </div>
 <?php } ?>
-<form name="fsocios_cuotaslist" id="fsocios_cuotaslist" class="form-inline ewForm ewListForm" action="<?php echo ew_CurrentPage() ?>" method="post">
-<?php if ($socios_cuotas_list->CheckToken) { ?>
-<input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $socios_cuotas_list->Token ?>">
+<form name="factividadlist" id="factividadlist" class="form-inline ewForm ewListForm" action="<?php echo ew_CurrentPage() ?>" method="post">
+<?php if ($actividad_list->CheckToken) { ?>
+<input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $actividad_list->Token ?>">
 <?php } ?>
-<input type="hidden" name="t" value="socios_cuotas">
-<div id="gmp_socios_cuotas" class="<?php if (ew_IsResponsiveLayout()) { echo "table-responsive "; } ?>ewGridMiddlePanel">
-<?php if ($socios_cuotas_list->TotalRecs > 0) { ?>
-<table id="tbl_socios_cuotaslist" class="table ewTable">
-<?php echo $socios_cuotas->TableCustomInnerHtml ?>
+<input type="hidden" name="t" value="actividad">
+<div id="gmp_actividad" class="<?php if (ew_IsResponsiveLayout()) { echo "table-responsive "; } ?>ewGridMiddlePanel">
+<?php if ($actividad_list->TotalRecs > 0) { ?>
+<table id="tbl_actividadlist" class="table ewTable">
+<?php echo $actividad->TableCustomInnerHtml ?>
 <thead><!-- Table header -->
 	<tr class="ewTableHeader">
 <?php
 
 // Render list options
-$socios_cuotas_list->RenderListOptions();
+$actividad_list->RenderListOptions();
 
 // Render list options (header, left)
-$socios_cuotas_list->ListOptions->Render("header", "left");
+$actividad_list->ListOptions->Render("header", "left");
 ?>
-<?php if ($socios_cuotas->id_socio->Visible) { // id_socio ?>
-	<?php if ($socios_cuotas->SortUrl($socios_cuotas->id_socio) == "") { ?>
-		<th data-name="id_socio"><div id="elh_socios_cuotas_id_socio" class="socios_cuotas_id_socio"><div class="ewTableHeaderCaption"><?php echo $socios_cuotas->id_socio->FldCaption() ?></div></div></th>
+<?php if ($actividad->id->Visible) { // id ?>
+	<?php if ($actividad->SortUrl($actividad->id) == "") { ?>
+		<th data-name="id"><div id="elh_actividad_id" class="actividad_id"><div class="ewTableHeaderCaption"><?php echo $actividad->id->FldCaption() ?></div></div></th>
 	<?php } else { ?>
-		<th data-name="id_socio"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $socios_cuotas->SortUrl($socios_cuotas->id_socio) ?>',1);"><div id="elh_socios_cuotas_id_socio" class="socios_cuotas_id_socio">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $socios_cuotas->id_socio->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($socios_cuotas->id_socio->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($socios_cuotas->id_socio->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		<th data-name="id"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $actividad->SortUrl($actividad->id) ?>',1);"><div id="elh_actividad_id" class="actividad_id">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $actividad->id->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($actividad->id->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($actividad->id->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
         </div></div></th>
 	<?php } ?>
 <?php } ?>		
-<?php if ($socios_cuotas->id_montos->Visible) { // id_montos ?>
-	<?php if ($socios_cuotas->SortUrl($socios_cuotas->id_montos) == "") { ?>
-		<th data-name="id_montos"><div id="elh_socios_cuotas_id_montos" class="socios_cuotas_id_montos"><div class="ewTableHeaderCaption"><?php echo $socios_cuotas->id_montos->FldCaption() ?></div></div></th>
+<?php if ($actividad->id_rubro->Visible) { // id_rubro ?>
+	<?php if ($actividad->SortUrl($actividad->id_rubro) == "") { ?>
+		<th data-name="id_rubro"><div id="elh_actividad_id_rubro" class="actividad_id_rubro"><div class="ewTableHeaderCaption"><?php echo $actividad->id_rubro->FldCaption() ?></div></div></th>
 	<?php } else { ?>
-		<th data-name="id_montos"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $socios_cuotas->SortUrl($socios_cuotas->id_montos) ?>',1);"><div id="elh_socios_cuotas_id_montos" class="socios_cuotas_id_montos">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $socios_cuotas->id_montos->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($socios_cuotas->id_montos->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($socios_cuotas->id_montos->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		<th data-name="id_rubro"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $actividad->SortUrl($actividad->id_rubro) ?>',1);"><div id="elh_actividad_id_rubro" class="actividad_id_rubro">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $actividad->id_rubro->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($actividad->id_rubro->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($actividad->id_rubro->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
         </div></div></th>
 	<?php } ?>
 <?php } ?>		
-<?php if ($socios_cuotas->fecha->Visible) { // fecha ?>
-	<?php if ($socios_cuotas->SortUrl($socios_cuotas->fecha) == "") { ?>
-		<th data-name="fecha"><div id="elh_socios_cuotas_fecha" class="socios_cuotas_fecha"><div class="ewTableHeaderCaption"><?php echo $socios_cuotas->fecha->FldCaption() ?></div></div></th>
+<?php if ($actividad->actividad->Visible) { // actividad ?>
+	<?php if ($actividad->SortUrl($actividad->actividad) == "") { ?>
+		<th data-name="actividad"><div id="elh_actividad_actividad" class="actividad_actividad"><div class="ewTableHeaderCaption"><?php echo $actividad->actividad->FldCaption() ?></div></div></th>
 	<?php } else { ?>
-		<th data-name="fecha"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $socios_cuotas->SortUrl($socios_cuotas->fecha) ?>',1);"><div id="elh_socios_cuotas_fecha" class="socios_cuotas_fecha">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $socios_cuotas->fecha->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($socios_cuotas->fecha->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($socios_cuotas->fecha->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		<th data-name="actividad"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $actividad->SortUrl($actividad->actividad) ?>',1);"><div id="elh_actividad_actividad" class="actividad_actividad">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $actividad->actividad->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($actividad->actividad->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($actividad->actividad->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+        </div></div></th>
+	<?php } ?>
+<?php } ?>		
+<?php if ($actividad->descripcion->Visible) { // descripcion ?>
+	<?php if ($actividad->SortUrl($actividad->descripcion) == "") { ?>
+		<th data-name="descripcion"><div id="elh_actividad_descripcion" class="actividad_descripcion"><div class="ewTableHeaderCaption"><?php echo $actividad->descripcion->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="descripcion"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $actividad->SortUrl($actividad->descripcion) ?>',1);"><div id="elh_actividad_descripcion" class="actividad_descripcion">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $actividad->descripcion->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($actividad->descripcion->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($actividad->descripcion->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+        </div></div></th>
+	<?php } ?>
+<?php } ?>		
+<?php if ($actividad->activa->Visible) { // activa ?>
+	<?php if ($actividad->SortUrl($actividad->activa) == "") { ?>
+		<th data-name="activa"><div id="elh_actividad_activa" class="actividad_activa"><div class="ewTableHeaderCaption"><?php echo $actividad->activa->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="activa"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $actividad->SortUrl($actividad->activa) ?>',1);"><div id="elh_actividad_activa" class="actividad_activa">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $actividad->activa->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($actividad->activa->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($actividad->activa->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
         </div></div></th>
 	<?php } ?>
 <?php } ?>		
 <?php
 
 // Render list options (header, right)
-$socios_cuotas_list->ListOptions->Render("header", "right");
+$actividad_list->ListOptions->Render("header", "right");
 ?>
 	</tr>
 </thead>
 <tbody>
 <?php
-if ($socios_cuotas->ExportAll && $socios_cuotas->Export <> "") {
-	$socios_cuotas_list->StopRec = $socios_cuotas_list->TotalRecs;
+if ($actividad->ExportAll && $actividad->Export <> "") {
+	$actividad_list->StopRec = $actividad_list->TotalRecs;
 } else {
 
 	// Set the last record to display
-	if ($socios_cuotas_list->TotalRecs > $socios_cuotas_list->StartRec + $socios_cuotas_list->DisplayRecs - 1)
-		$socios_cuotas_list->StopRec = $socios_cuotas_list->StartRec + $socios_cuotas_list->DisplayRecs - 1;
+	if ($actividad_list->TotalRecs > $actividad_list->StartRec + $actividad_list->DisplayRecs - 1)
+		$actividad_list->StopRec = $actividad_list->StartRec + $actividad_list->DisplayRecs - 1;
 	else
-		$socios_cuotas_list->StopRec = $socios_cuotas_list->TotalRecs;
+		$actividad_list->StopRec = $actividad_list->TotalRecs;
 }
-$socios_cuotas_list->RecCnt = $socios_cuotas_list->StartRec - 1;
-if ($socios_cuotas_list->Recordset && !$socios_cuotas_list->Recordset->EOF) {
-	$socios_cuotas_list->Recordset->MoveFirst();
+$actividad_list->RecCnt = $actividad_list->StartRec - 1;
+if ($actividad_list->Recordset && !$actividad_list->Recordset->EOF) {
+	$actividad_list->Recordset->MoveFirst();
 	$bSelectLimit = EW_SELECT_LIMIT;
-	if (!$bSelectLimit && $socios_cuotas_list->StartRec > 1)
-		$socios_cuotas_list->Recordset->Move($socios_cuotas_list->StartRec - 1);
-} elseif (!$socios_cuotas->AllowAddDeleteRow && $socios_cuotas_list->StopRec == 0) {
-	$socios_cuotas_list->StopRec = $socios_cuotas->GridAddRowCount;
+	if (!$bSelectLimit && $actividad_list->StartRec > 1)
+		$actividad_list->Recordset->Move($actividad_list->StartRec - 1);
+} elseif (!$actividad->AllowAddDeleteRow && $actividad_list->StopRec == 0) {
+	$actividad_list->StopRec = $actividad->GridAddRowCount;
 }
 
 // Initialize aggregate
-$socios_cuotas->RowType = EW_ROWTYPE_AGGREGATEINIT;
-$socios_cuotas->ResetAttrs();
-$socios_cuotas_list->RenderRow();
-while ($socios_cuotas_list->RecCnt < $socios_cuotas_list->StopRec) {
-	$socios_cuotas_list->RecCnt++;
-	if (intval($socios_cuotas_list->RecCnt) >= intval($socios_cuotas_list->StartRec)) {
-		$socios_cuotas_list->RowCnt++;
+$actividad->RowType = EW_ROWTYPE_AGGREGATEINIT;
+$actividad->ResetAttrs();
+$actividad_list->RenderRow();
+while ($actividad_list->RecCnt < $actividad_list->StopRec) {
+	$actividad_list->RecCnt++;
+	if (intval($actividad_list->RecCnt) >= intval($actividad_list->StartRec)) {
+		$actividad_list->RowCnt++;
 
 		// Set up key count
-		$socios_cuotas_list->KeyCount = $socios_cuotas_list->RowIndex;
+		$actividad_list->KeyCount = $actividad_list->RowIndex;
 
 		// Init row class and style
-		$socios_cuotas->ResetAttrs();
-		$socios_cuotas->CssClass = "";
-		if ($socios_cuotas->CurrentAction == "gridadd") {
+		$actividad->ResetAttrs();
+		$actividad->CssClass = "";
+		if ($actividad->CurrentAction == "gridadd") {
 		} else {
-			$socios_cuotas_list->LoadRowValues($socios_cuotas_list->Recordset); // Load row values
+			$actividad_list->LoadRowValues($actividad_list->Recordset); // Load row values
 		}
-		$socios_cuotas->RowType = EW_ROWTYPE_VIEW; // Render view
+		$actividad->RowType = EW_ROWTYPE_VIEW; // Render view
 
 		// Set up row id / data-rowindex
-		$socios_cuotas->RowAttrs = array_merge($socios_cuotas->RowAttrs, array('data-rowindex'=>$socios_cuotas_list->RowCnt, 'id'=>'r' . $socios_cuotas_list->RowCnt . '_socios_cuotas', 'data-rowtype'=>$socios_cuotas->RowType));
+		$actividad->RowAttrs = array_merge($actividad->RowAttrs, array('data-rowindex'=>$actividad_list->RowCnt, 'id'=>'r' . $actividad_list->RowCnt . '_actividad', 'data-rowtype'=>$actividad->RowType));
 
 		// Render row
-		$socios_cuotas_list->RenderRow();
+		$actividad_list->RenderRow();
 
 		// Render list options
-		$socios_cuotas_list->RenderListOptions();
+		$actividad_list->RenderListOptions();
 ?>
-	<tr<?php echo $socios_cuotas->RowAttributes() ?>>
+	<tr<?php echo $actividad->RowAttributes() ?>>
 <?php
 
 // Render list options (body, left)
-$socios_cuotas_list->ListOptions->Render("body", "left", $socios_cuotas_list->RowCnt);
+$actividad_list->ListOptions->Render("body", "left", $actividad_list->RowCnt);
 ?>
-	<?php if ($socios_cuotas->id_socio->Visible) { // id_socio ?>
-		<td data-name="id_socio"<?php echo $socios_cuotas->id_socio->CellAttributes() ?>>
-<span<?php echo $socios_cuotas->id_socio->ViewAttributes() ?>>
-<?php echo $socios_cuotas->id_socio->ListViewValue() ?></span>
-<a id="<?php echo $socios_cuotas_list->PageObjName . "_row_" . $socios_cuotas_list->RowCnt ?>"></a></td>
+	<?php if ($actividad->id->Visible) { // id ?>
+		<td data-name="id"<?php echo $actividad->id->CellAttributes() ?>>
+<span<?php echo $actividad->id->ViewAttributes() ?>>
+<?php echo $actividad->id->ListViewValue() ?></span>
+<a id="<?php echo $actividad_list->PageObjName . "_row_" . $actividad_list->RowCnt ?>"></a></td>
 	<?php } ?>
-	<?php if ($socios_cuotas->id_montos->Visible) { // id_montos ?>
-		<td data-name="id_montos"<?php echo $socios_cuotas->id_montos->CellAttributes() ?>>
-<span<?php echo $socios_cuotas->id_montos->ViewAttributes() ?>>
-<?php echo $socios_cuotas->id_montos->ListViewValue() ?></span>
+	<?php if ($actividad->id_rubro->Visible) { // id_rubro ?>
+		<td data-name="id_rubro"<?php echo $actividad->id_rubro->CellAttributes() ?>>
+<span<?php echo $actividad->id_rubro->ViewAttributes() ?>>
+<?php echo $actividad->id_rubro->ListViewValue() ?></span>
 </td>
 	<?php } ?>
-	<?php if ($socios_cuotas->fecha->Visible) { // fecha ?>
-		<td data-name="fecha"<?php echo $socios_cuotas->fecha->CellAttributes() ?>>
-<span<?php echo $socios_cuotas->fecha->ViewAttributes() ?>>
-<?php echo $socios_cuotas->fecha->ListViewValue() ?></span>
+	<?php if ($actividad->actividad->Visible) { // actividad ?>
+		<td data-name="actividad"<?php echo $actividad->actividad->CellAttributes() ?>>
+<span<?php echo $actividad->actividad->ViewAttributes() ?>>
+<?php echo $actividad->actividad->ListViewValue() ?></span>
+</td>
+	<?php } ?>
+	<?php if ($actividad->descripcion->Visible) { // descripcion ?>
+		<td data-name="descripcion"<?php echo $actividad->descripcion->CellAttributes() ?>>
+<span<?php echo $actividad->descripcion->ViewAttributes() ?>>
+<?php echo $actividad->descripcion->ListViewValue() ?></span>
+</td>
+	<?php } ?>
+	<?php if ($actividad->activa->Visible) { // activa ?>
+		<td data-name="activa"<?php echo $actividad->activa->CellAttributes() ?>>
+<span<?php echo $actividad->activa->ViewAttributes() ?>>
+<?php echo $actividad->activa->ListViewValue() ?></span>
 </td>
 	<?php } ?>
 <?php
 
 // Render list options (body, right)
-$socios_cuotas_list->ListOptions->Render("body", "right", $socios_cuotas_list->RowCnt);
+$actividad_list->ListOptions->Render("body", "right", $actividad_list->RowCnt);
 ?>
 	</tr>
 <?php
 	}
-	if ($socios_cuotas->CurrentAction <> "gridadd")
-		$socios_cuotas_list->Recordset->MoveNext();
+	if ($actividad->CurrentAction <> "gridadd")
+		$actividad_list->Recordset->MoveNext();
 }
 ?>
 </tbody>
 </table>
 <?php } ?>
-<?php if ($socios_cuotas->CurrentAction == "") { ?>
+<?php if ($actividad->CurrentAction == "") { ?>
 <input type="hidden" name="a_list" id="a_list" value="">
 <?php } ?>
 </div>
@@ -2194,15 +2441,15 @@ $socios_cuotas_list->ListOptions->Render("body", "right", $socios_cuotas_list->R
 <?php
 
 // Close recordset
-if ($socios_cuotas_list->Recordset)
-	$socios_cuotas_list->Recordset->Close();
+if ($actividad_list->Recordset)
+	$actividad_list->Recordset->Close();
 ?>
 </div>
 <?php } ?>
-<?php if ($socios_cuotas_list->TotalRecs == 0 && $socios_cuotas->CurrentAction == "") { // Show other options ?>
+<?php if ($actividad_list->TotalRecs == 0 && $actividad->CurrentAction == "") { // Show other options ?>
 <div class="ewListOtherOptions">
 <?php
-	foreach ($socios_cuotas_list->OtherOptions as &$option) {
+	foreach ($actividad_list->OtherOptions as &$option) {
 		$option->ButtonClass = "";
 		$option->Render("body", "");
 	}
@@ -2210,18 +2457,18 @@ if ($socios_cuotas_list->Recordset)
 </div>
 <div class="clearfix"></div>
 <?php } ?>
-<?php if ($socios_cuotas->Export == "") { ?>
+<?php if ($actividad->Export == "") { ?>
 <script type="text/javascript">
-fsocios_cuotaslistsrch.Init();
-fsocios_cuotaslist.Init();
+factividadlistsrch.Init();
+factividadlist.Init();
 </script>
 <?php } ?>
 <?php
-$socios_cuotas_list->ShowPageFooter();
+$actividad_list->ShowPageFooter();
 if (EW_DEBUG_ENABLED)
 	echo ew_DebugMsg();
 ?>
-<?php if ($socios_cuotas->Export == "") { ?>
+<?php if ($actividad->Export == "") { ?>
 <script type="text/javascript">
 
 // Write your table-specific startup script here
@@ -2231,5 +2478,5 @@ if (EW_DEBUG_ENABLED)
 <?php } ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
-$socios_cuotas_list->Page_Terminate();
+$actividad_list->Page_Terminate();
 ?>

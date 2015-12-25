@@ -1,16 +1,16 @@
 <?php
 
 // Global variable for table object
-$socios_cuotas = NULL;
+$v_db_rubro_actividad = NULL;
 
 //
-// Table class for socios_cuotas
+// Table class for v_db_rubro_actividad
 //
-class csocios_cuotas extends cTable {
-	var $id_socio;
-	var $id_montos;
-	var $id_usuario;
-	var $fecha;
+class cv_db_rubro_actividad extends cTable {
+	var $rubro;
+	var $actividad;
+	var $id_rubro;
+	var $id_actividad;
 
 	//
 	// Table class constructor
@@ -20,9 +20,9 @@ class csocios_cuotas extends cTable {
 
 		// Language object
 		if (!isset($Language)) $Language = new cLanguage();
-		$this->TableVar = 'socios_cuotas';
-		$this->TableName = 'socios_cuotas';
-		$this->TableType = 'TABLE';
+		$this->TableVar = 'v_db_rubro_actividad';
+		$this->TableName = 'v_db_rubro_actividad';
+		$this->TableType = 'VIEW';
 		$this->ExportAll = TRUE;
 		$this->ExportPageBreakCount = 0; // Page break per every n record (PDF only)
 		$this->ExportPageOrientation = "portrait"; // Page orientation (PDF only)
@@ -33,28 +33,26 @@ class csocios_cuotas extends cTable {
 		$this->ShowMultipleDetails = FALSE; // Show multiple details
 		$this->GridAddRowCount = 5;
 		$this->AllowAddDeleteRow = ew_AllowAddDeleteRow(); // Allow add/delete row
-		$this->UserIDAllowSecurity = 104; // User ID Allow
+		$this->UserIDAllowSecurity = 0; // User ID Allow
 		$this->BasicSearch = new cBasicSearch($this->TableVar);
 
-		// id_socio
-		$this->id_socio = new cField('socios_cuotas', 'socios_cuotas', 'x_id_socio', 'id_socio', '`id_socio`', '`id_socio`', 3, -1, FALSE, '`id_socio`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
-		$this->id_socio->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
-		$this->fields['id_socio'] = &$this->id_socio;
+		// rubro
+		$this->rubro = new cField('v_db_rubro_actividad', 'v_db_rubro_actividad', 'x_rubro', 'rubro', '`rubro`', '`rubro`', 200, -1, FALSE, '`rubro`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->fields['rubro'] = &$this->rubro;
 
-		// id_montos
-		$this->id_montos = new cField('socios_cuotas', 'socios_cuotas', 'x_id_montos', 'id_montos', '`id_montos`', '`id_montos`', 3, -1, FALSE, '`id_montos`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
-		$this->id_montos->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
-		$this->fields['id_montos'] = &$this->id_montos;
+		// actividad
+		$this->actividad = new cField('v_db_rubro_actividad', 'v_db_rubro_actividad', 'x_actividad', 'actividad', '`actividad`', '`actividad`', 200, -1, FALSE, '`actividad`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->fields['actividad'] = &$this->actividad;
 
-		// id_usuario
-		$this->id_usuario = new cField('socios_cuotas', 'socios_cuotas', 'x_id_usuario', 'id_usuario', '`id_usuario`', '`id_usuario`', 3, -1, FALSE, '`id_usuario`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
-		$this->id_usuario->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
-		$this->fields['id_usuario'] = &$this->id_usuario;
+		// id_rubro
+		$this->id_rubro = new cField('v_db_rubro_actividad', 'v_db_rubro_actividad', 'x_id_rubro', 'id_rubro', '`id_rubro`', '`id_rubro`', 3, -1, FALSE, '`id_rubro`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->id_rubro->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['id_rubro'] = &$this->id_rubro;
 
-		// fecha
-		$this->fecha = new cField('socios_cuotas', 'socios_cuotas', 'x_fecha', 'fecha', '`fecha`', 'DATE_FORMAT(`fecha`, \'%d/%m/%Y\')', 133, 7, FALSE, '`fecha`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
-		$this->fecha->FldDefaultErrMsg = str_replace("%s", "/", $Language->Phrase("IncorrectDateDMY"));
-		$this->fields['fecha'] = &$this->fecha;
+		// id_actividad
+		$this->id_actividad = new cField('v_db_rubro_actividad', 'v_db_rubro_actividad', 'x_id_actividad', 'id_actividad', '`id_actividad`', '`id_actividad`', 3, -1, FALSE, '`id_actividad`', FALSE, FALSE, FALSE, 'FORMATTED TEXT');
+		$this->id_actividad->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['id_actividad'] = &$this->id_actividad;
 	}
 
 	// Single column sort
@@ -74,80 +72,11 @@ class csocios_cuotas extends cTable {
 		}
 	}
 
-	// Current master table name
-	function getCurrentMasterTable() {
-		return @$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_MASTER_TABLE];
-	}
-
-	function setCurrentMasterTable($v) {
-		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_MASTER_TABLE] = $v;
-	}
-
-	// Session master WHERE clause
-	function GetMasterFilter() {
-
-		// Master filter
-		$sMasterFilter = "";
-		if ($this->getCurrentMasterTable() == "montos") {
-			if ($this->id_montos->getSessionValue() <> "")
-				$sMasterFilter .= "`id`=" . ew_QuotedValue($this->id_montos->getSessionValue(), EW_DATATYPE_NUMBER);
-			else
-				return "";
-		}
-		if ($this->getCurrentMasterTable() == "socios") {
-			if ($this->id_socio->getSessionValue() <> "")
-				$sMasterFilter .= "`socio_nro`=" . ew_QuotedValue($this->id_socio->getSessionValue(), EW_DATATYPE_NUMBER);
-			else
-				return "";
-		}
-		return $sMasterFilter;
-	}
-
-	// Session detail WHERE clause
-	function GetDetailFilter() {
-
-		// Detail filter
-		$sDetailFilter = "";
-		if ($this->getCurrentMasterTable() == "montos") {
-			if ($this->id_montos->getSessionValue() <> "")
-				$sDetailFilter .= "`id_montos`=" . ew_QuotedValue($this->id_montos->getSessionValue(), EW_DATATYPE_NUMBER);
-			else
-				return "";
-		}
-		if ($this->getCurrentMasterTable() == "socios") {
-			if ($this->id_socio->getSessionValue() <> "")
-				$sDetailFilter .= "`id_socio`=" . ew_QuotedValue($this->id_socio->getSessionValue(), EW_DATATYPE_NUMBER);
-			else
-				return "";
-		}
-		return $sDetailFilter;
-	}
-
-	// Master filter
-	function SqlMasterFilter_montos() {
-		return "`id`=@id@";
-	}
-
-	// Detail filter
-	function SqlDetailFilter_montos() {
-		return "`id_montos`=@id_montos@";
-	}
-
-	// Master filter
-	function SqlMasterFilter_socios() {
-		return "`socio_nro`=@socio_nro@";
-	}
-
-	// Detail filter
-	function SqlDetailFilter_socios() {
-		return "`id_socio`=@id_socio@";
-	}
-
 	// Table level SQL
 	var $_SqlFrom = "";
 
 	function getSqlFrom() { // From
-		return ($this->_SqlFrom <> "") ? $this->_SqlFrom : "`socios_cuotas`";
+		return ($this->_SqlFrom <> "") ? $this->_SqlFrom : "`v_db_rubro_actividad`";
 	}
 
 	function SqlFrom() { // For backward compatibility
@@ -251,18 +180,12 @@ class csocios_cuotas extends cTable {
 
 	// Apply User ID filters
 	function ApplyUserIDFilters($sFilter) {
-		global $Security;
-
-		// Add User ID filter
-		if (!$this->AllowAnonymousUser() && $Security->CurrentUserID() <> "" && !$Security->IsAdmin()) { // Non system admin
-			$sFilter = $this->AddUserIDFilter($sFilter);
-		}
 		return $sFilter;
 	}
 
 	// Check if User ID security allows view all
 	function UserIDAllow($id = "") {
-		$allow = $this->UserIDAllowSecurity;
+		$allow = EW_USER_ID_ALLOW;
 		switch ($id) {
 			case "add":
 			case "copy":
@@ -376,7 +299,7 @@ class csocios_cuotas extends cTable {
 	}
 
 	// Update Table
-	var $UpdateTable = "`socios_cuotas`";
+	var $UpdateTable = "`v_db_rubro_actividad`";
 
 	// INSERT statement
 	function InsertSQL(&$rs) {
@@ -429,6 +352,10 @@ class csocios_cuotas extends cTable {
 	function DeleteSQL(&$rs, $where = "") {
 		$sql = "DELETE FROM " . $this->UpdateTable . " WHERE ";
 		if ($rs) {
+			if (array_key_exists('id_rubro', $rs))
+				ew_AddFilter($where, ew_QuotedName('id_rubro') . '=' . ew_QuotedValue($rs['id_rubro'], $this->id_rubro->FldDataType));
+			if (array_key_exists('id_actividad', $rs))
+				ew_AddFilter($where, ew_QuotedName('id_actividad') . '=' . ew_QuotedValue($rs['id_actividad'], $this->id_actividad->FldDataType));
 		}
 		$filter = $this->CurrentFilter;
 		ew_AddFilter($filter, $where);
@@ -447,12 +374,18 @@ class csocios_cuotas extends cTable {
 
 	// Key filter WHERE clause
 	function SqlKeyFilter() {
-		return "";
+		return "`id_rubro` = @id_rubro@ AND `id_actividad` = @id_actividad@";
 	}
 
 	// Key filter
 	function KeyFilter() {
 		$sKeyFilter = $this->SqlKeyFilter();
+		if (!is_numeric($this->id_rubro->CurrentValue))
+			$sKeyFilter = "0=1"; // Invalid key
+		$sKeyFilter = str_replace("@id_rubro@", ew_AdjustSql($this->id_rubro->CurrentValue), $sKeyFilter); // Replace key value
+		if (!is_numeric($this->id_actividad->CurrentValue))
+			$sKeyFilter = "0=1"; // Invalid key
+		$sKeyFilter = str_replace("@id_actividad@", ew_AdjustSql($this->id_actividad->CurrentValue), $sKeyFilter); // Replace key value
 		return $sKeyFilter;
 	}
 
@@ -466,7 +399,7 @@ class csocios_cuotas extends cTable {
 		if (@$_SESSION[$name] <> "") {
 			return $_SESSION[$name];
 		} else {
-			return "cciag_socios_cuotaslist.php";
+			return "cciag_v_db_rubro_actividadlist.php";
 		}
 	}
 
@@ -476,28 +409,28 @@ class csocios_cuotas extends cTable {
 
 	// List URL
 	function GetListUrl() {
-		return "cciag_socios_cuotaslist.php";
+		return "cciag_v_db_rubro_actividadlist.php";
 	}
 
 	// View URL
 	function GetViewUrl($parm = "") {
 		if ($parm <> "")
-			return $this->KeyUrl("cciag_socios_cuotasview.php", $this->UrlParm($parm));
+			return $this->KeyUrl("cciag_v_db_rubro_actividadview.php", $this->UrlParm($parm));
 		else
-			return $this->KeyUrl("cciag_socios_cuotasview.php", $this->UrlParm(EW_TABLE_SHOW_DETAIL . "="));
+			return $this->KeyUrl("cciag_v_db_rubro_actividadview.php", $this->UrlParm(EW_TABLE_SHOW_DETAIL . "="));
 	}
 
 	// Add URL
 	function GetAddUrl($parm = "") {
 		if ($parm <> "")
-			return "cciag_socios_cuotasadd.php?" . $this->UrlParm($parm);
+			return "cciag_v_db_rubro_actividadadd.php?" . $this->UrlParm($parm);
 		else
-			return "cciag_socios_cuotasadd.php";
+			return "cciag_v_db_rubro_actividadadd.php";
 	}
 
 	// Edit URL
 	function GetEditUrl($parm = "") {
-		return $this->KeyUrl("cciag_socios_cuotasedit.php", $this->UrlParm($parm));
+		return $this->KeyUrl("cciag_v_db_rubro_actividadedit.php", $this->UrlParm($parm));
 	}
 
 	// Inline edit URL
@@ -507,7 +440,7 @@ class csocios_cuotas extends cTable {
 
 	// Copy URL
 	function GetCopyUrl($parm = "") {
-		return $this->KeyUrl("cciag_socios_cuotasadd.php", $this->UrlParm($parm));
+		return $this->KeyUrl("cciag_v_db_rubro_actividadadd.php", $this->UrlParm($parm));
 	}
 
 	// Inline copy URL
@@ -517,13 +450,23 @@ class csocios_cuotas extends cTable {
 
 	// Delete URL
 	function GetDeleteUrl() {
-		return $this->KeyUrl("cciag_socios_cuotasdelete.php", $this->UrlParm());
+		return $this->KeyUrl("cciag_v_db_rubro_actividaddelete.php", $this->UrlParm());
 	}
 
 	// Add key value to URL
 	function KeyUrl($url, $parm = "") {
 		$sUrl = $url . "?";
 		if ($parm <> "") $sUrl .= $parm . "&";
+		if (!is_null($this->id_rubro->CurrentValue)) {
+			$sUrl .= "id_rubro=" . urlencode($this->id_rubro->CurrentValue);
+		} else {
+			return "javascript:alert(ewLanguage.Phrase('InvalidRecord'));";
+		}
+		if (!is_null($this->id_actividad->CurrentValue)) {
+			$sUrl .= "&id_actividad=" . urlencode($this->id_actividad->CurrentValue);
+		} else {
+			return "javascript:alert(ewLanguage.Phrase('InvalidRecord'));";
+		}
 		return $sUrl;
 	}
 
@@ -548,10 +491,17 @@ class csocios_cuotas extends cTable {
 		if (isset($_POST["key_m"])) {
 			$arKeys = ew_StripSlashes($_POST["key_m"]);
 			$cnt = count($arKeys);
+			for ($i = 0; $i < $cnt; $i++)
+				$arKeys[$i] = explode($EW_COMPOSITE_KEY_SEPARATOR, $arKeys[$i]);
 		} elseif (isset($_GET["key_m"])) {
 			$arKeys = ew_StripSlashes($_GET["key_m"]);
 			$cnt = count($arKeys);
+			for ($i = 0; $i < $cnt; $i++)
+				$arKeys[$i] = explode($EW_COMPOSITE_KEY_SEPARATOR, $arKeys[$i]);
 		} elseif (isset($_GET)) {
+			$arKey[] = @$_GET["id_rubro"]; // id_rubro
+			$arKey[] = @$_GET["id_actividad"]; // id_actividad
+			$arKeys[] = $arKey;
 
 			//return $arKeys; // Do not return yet, so the values will also be checked by the following code
 		}
@@ -559,6 +509,12 @@ class csocios_cuotas extends cTable {
 		// Check keys
 		$ar = array();
 		foreach ($arKeys as $key) {
+			if (!is_array($key) || count($key) <> 2)
+				continue; // Just skip so other keys will still work
+			if (!is_numeric($key[0])) // id_rubro
+				continue;
+			if (!is_numeric($key[1])) // id_actividad
+				continue;
 			$ar[] = $key;
 		}
 		return $ar;
@@ -570,6 +526,8 @@ class csocios_cuotas extends cTable {
 		$sKeyFilter = "";
 		foreach ($arKeys as $key) {
 			if ($sKeyFilter <> "") $sKeyFilter .= " OR ";
+			$this->id_rubro->CurrentValue = $key[0];
+			$this->id_actividad->CurrentValue = $key[1];
 			$sKeyFilter .= "(" . $this->KeyFilter() . ")";
 		}
 		return $sKeyFilter;
@@ -590,10 +548,10 @@ class csocios_cuotas extends cTable {
 
 	// Load row values from recordset
 	function LoadListRowValues(&$rs) {
-		$this->id_socio->setDbValue($rs->fields('id_socio'));
-		$this->id_montos->setDbValue($rs->fields('id_montos'));
-		$this->id_usuario->setDbValue($rs->fields('id_usuario'));
-		$this->fecha->setDbValue($rs->fields('fecha'));
+		$this->rubro->setDbValue($rs->fields('rubro'));
+		$this->actividad->setDbValue($rs->fields('actividad'));
+		$this->id_rubro->setDbValue($rs->fields('id_rubro'));
+		$this->id_actividad->setDbValue($rs->fields('id_actividad'));
 	}
 
 	// Render list row values
@@ -604,112 +562,46 @@ class csocios_cuotas extends cTable {
 		$this->Row_Rendering();
 
    // Common render codes
-		// id_socio
-		// id_montos
-		// id_usuario
+		// rubro
+		// actividad
+		// id_rubro
+		// id_actividad
+		// rubro
 
-		$this->id_usuario->CellCssStyle = "white-space: nowrap;";
+		$this->rubro->ViewValue = $this->rubro->CurrentValue;
+		$this->rubro->ViewCustomAttributes = "";
 
-		// fecha
-		// id_socio
+		// actividad
+		$this->actividad->ViewValue = $this->actividad->CurrentValue;
+		$this->actividad->ViewCustomAttributes = "";
 
-		if (strval($this->id_socio->CurrentValue) <> "") {
-			$sFilterWrk = "`socio_nro`" . ew_SearchString("=", $this->id_socio->CurrentValue, EW_DATATYPE_NUMBER);
-		$sSqlWrk = "SELECT `socio_nro`, `socio_nro` AS `DispFld`, `propietario` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `socios`";
-		$sWhereWrk = "";
-		if ($sFilterWrk <> "") {
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-		}
+		// id_rubro
+		$this->id_rubro->ViewValue = $this->id_rubro->CurrentValue;
+		$this->id_rubro->ViewCustomAttributes = "";
 
-		// Call Lookup selecting
-		$this->Lookup_Selecting($this->id_socio, $sWhereWrk);
-		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = $conn->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$this->id_socio->ViewValue = $rswrk->fields('DispFld');
-				$this->id_socio->ViewValue .= ew_ValueSeparator(1,$this->id_socio) . $rswrk->fields('Disp2Fld');
-				$rswrk->Close();
-			} else {
-				$this->id_socio->ViewValue = $this->id_socio->CurrentValue;
-			}
-		} else {
-			$this->id_socio->ViewValue = NULL;
-		}
-		$this->id_socio->ViewCustomAttributes = "";
+		// id_actividad
+		$this->id_actividad->ViewValue = $this->id_actividad->CurrentValue;
+		$this->id_actividad->ViewCustomAttributes = "";
 
-		// id_montos
-		if (strval($this->id_montos->CurrentValue) <> "") {
-			$sFilterWrk = "`id`" . ew_SearchString("=", $this->id_montos->CurrentValue, EW_DATATYPE_NUMBER);
-		$sSqlWrk = "SELECT `id`, `descripcion` AS `DispFld`, `importe` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `montos`";
-		$sWhereWrk = "";
-		if ($sFilterWrk <> "") {
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-		}
+		// rubro
+		$this->rubro->LinkCustomAttributes = "";
+		$this->rubro->HrefValue = "";
+		$this->rubro->TooltipValue = "";
 
-		// Call Lookup selecting
-		$this->Lookup_Selecting($this->id_montos, $sWhereWrk);
-		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = $conn->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$this->id_montos->ViewValue = $rswrk->fields('DispFld');
-				$this->id_montos->ViewValue .= ew_ValueSeparator(1,$this->id_montos) . ew_FormatCurrency($rswrk->fields('Disp2Fld'), 0, -2, -2, -2);
-				$rswrk->Close();
-			} else {
-				$this->id_montos->ViewValue = $this->id_montos->CurrentValue;
-			}
-		} else {
-			$this->id_montos->ViewValue = NULL;
-		}
-		$this->id_montos->ViewCustomAttributes = "";
+		// actividad
+		$this->actividad->LinkCustomAttributes = "";
+		$this->actividad->HrefValue = "";
+		$this->actividad->TooltipValue = "";
 
-		// id_usuario
-		if (strval($this->id_usuario->CurrentValue) <> "") {
-			$sFilterWrk = "`id`" . ew_SearchString("=", $this->id_usuario->CurrentValue, EW_DATATYPE_NUMBER);
-		$sSqlWrk = "SELECT `id`, `usuario` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `usuario`";
-		$sWhereWrk = "";
-		if ($sFilterWrk <> "") {
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-		}
+		// id_rubro
+		$this->id_rubro->LinkCustomAttributes = "";
+		$this->id_rubro->HrefValue = "";
+		$this->id_rubro->TooltipValue = "";
 
-		// Call Lookup selecting
-		$this->Lookup_Selecting($this->id_usuario, $sWhereWrk);
-		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = $conn->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$this->id_usuario->ViewValue = $rswrk->fields('DispFld');
-				$rswrk->Close();
-			} else {
-				$this->id_usuario->ViewValue = $this->id_usuario->CurrentValue;
-			}
-		} else {
-			$this->id_usuario->ViewValue = NULL;
-		}
-		$this->id_usuario->ViewCustomAttributes = "";
-
-		// fecha
-		$this->fecha->ViewValue = $this->fecha->CurrentValue;
-		$this->fecha->ViewValue = ew_FormatDateTime($this->fecha->ViewValue, 7);
-		$this->fecha->ViewCustomAttributes = "";
-
-		// id_socio
-		$this->id_socio->LinkCustomAttributes = "";
-		$this->id_socio->HrefValue = "";
-		$this->id_socio->TooltipValue = "";
-
-		// id_montos
-		$this->id_montos->LinkCustomAttributes = "";
-		$this->id_montos->HrefValue = "";
-		$this->id_montos->TooltipValue = "";
-
-		// id_usuario
-		$this->id_usuario->LinkCustomAttributes = "";
-		$this->id_usuario->HrefValue = "";
-		$this->id_usuario->TooltipValue = "";
-
-		// fecha
-		$this->fecha->LinkCustomAttributes = "";
-		$this->fecha->HrefValue = "";
-		$this->fecha->TooltipValue = "";
+		// id_actividad
+		$this->id_actividad->LinkCustomAttributes = "";
+		$this->id_actividad->HrefValue = "";
+		$this->id_actividad->TooltipValue = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -722,75 +614,29 @@ class csocios_cuotas extends cTable {
 		// Call Row Rendering event
 		$this->Row_Rendering();
 
-		// id_socio
-		$this->id_socio->EditAttrs["class"] = "form-control";
-		$this->id_socio->EditCustomAttributes = "";
-		if ($this->id_socio->getSessionValue() <> "") {
-			$this->id_socio->CurrentValue = $this->id_socio->getSessionValue();
-		if (strval($this->id_socio->CurrentValue) <> "") {
-			$sFilterWrk = "`socio_nro`" . ew_SearchString("=", $this->id_socio->CurrentValue, EW_DATATYPE_NUMBER);
-		$sSqlWrk = "SELECT `socio_nro`, `socio_nro` AS `DispFld`, `propietario` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `socios`";
-		$sWhereWrk = "";
-		if ($sFilterWrk <> "") {
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-		}
+		// rubro
+		$this->rubro->EditAttrs["class"] = "form-control";
+		$this->rubro->EditCustomAttributes = "";
+		$this->rubro->EditValue = ew_HtmlEncode($this->rubro->CurrentValue);
+		$this->rubro->PlaceHolder = ew_RemoveHtml($this->rubro->FldCaption());
 
-		// Call Lookup selecting
-		$this->Lookup_Selecting($this->id_socio, $sWhereWrk);
-		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = $conn->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$this->id_socio->ViewValue = $rswrk->fields('DispFld');
-				$this->id_socio->ViewValue .= ew_ValueSeparator(1,$this->id_socio) . $rswrk->fields('Disp2Fld');
-				$rswrk->Close();
-			} else {
-				$this->id_socio->ViewValue = $this->id_socio->CurrentValue;
-			}
-		} else {
-			$this->id_socio->ViewValue = NULL;
-		}
-		$this->id_socio->ViewCustomAttributes = "";
-		} else {
-		}
+		// actividad
+		$this->actividad->EditAttrs["class"] = "form-control";
+		$this->actividad->EditCustomAttributes = "";
+		$this->actividad->EditValue = ew_HtmlEncode($this->actividad->CurrentValue);
+		$this->actividad->PlaceHolder = ew_RemoveHtml($this->actividad->FldCaption());
 
-		// id_montos
-		$this->id_montos->EditAttrs["class"] = "form-control";
-		$this->id_montos->EditCustomAttributes = "";
-		if ($this->id_montos->getSessionValue() <> "") {
-			$this->id_montos->CurrentValue = $this->id_montos->getSessionValue();
-		if (strval($this->id_montos->CurrentValue) <> "") {
-			$sFilterWrk = "`id`" . ew_SearchString("=", $this->id_montos->CurrentValue, EW_DATATYPE_NUMBER);
-		$sSqlWrk = "SELECT `id`, `descripcion` AS `DispFld`, `importe` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `montos`";
-		$sWhereWrk = "";
-		if ($sFilterWrk <> "") {
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-		}
+		// id_rubro
+		$this->id_rubro->EditAttrs["class"] = "form-control";
+		$this->id_rubro->EditCustomAttributes = "";
+		$this->id_rubro->EditValue = $this->id_rubro->CurrentValue;
+		$this->id_rubro->ViewCustomAttributes = "";
 
-		// Call Lookup selecting
-		$this->Lookup_Selecting($this->id_montos, $sWhereWrk);
-		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = $conn->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$this->id_montos->ViewValue = $rswrk->fields('DispFld');
-				$this->id_montos->ViewValue .= ew_ValueSeparator(1,$this->id_montos) . ew_FormatCurrency($rswrk->fields('Disp2Fld'), 0, -2, -2, -2);
-				$rswrk->Close();
-			} else {
-				$this->id_montos->ViewValue = $this->id_montos->CurrentValue;
-			}
-		} else {
-			$this->id_montos->ViewValue = NULL;
-		}
-		$this->id_montos->ViewCustomAttributes = "";
-		} else {
-		}
-
-		// id_usuario
-		// fecha
-
-		$this->fecha->EditAttrs["class"] = "form-control";
-		$this->fecha->EditCustomAttributes = "";
-		$this->fecha->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->fecha->CurrentValue, 7));
-		$this->fecha->PlaceHolder = ew_RemoveHtml($this->fecha->FldCaption());
+		// id_actividad
+		$this->id_actividad->EditAttrs["class"] = "form-control";
+		$this->id_actividad->EditCustomAttributes = "";
+		$this->id_actividad->EditValue = $this->id_actividad->CurrentValue;
+		$this->id_actividad->ViewCustomAttributes = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -816,13 +662,15 @@ class csocios_cuotas extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
-					if ($this->id_socio->Exportable) $Doc->ExportCaption($this->id_socio);
-					if ($this->id_montos->Exportable) $Doc->ExportCaption($this->id_montos);
-					if ($this->fecha->Exportable) $Doc->ExportCaption($this->fecha);
+					if ($this->rubro->Exportable) $Doc->ExportCaption($this->rubro);
+					if ($this->actividad->Exportable) $Doc->ExportCaption($this->actividad);
+					if ($this->id_rubro->Exportable) $Doc->ExportCaption($this->id_rubro);
+					if ($this->id_actividad->Exportable) $Doc->ExportCaption($this->id_actividad);
 				} else {
-					if ($this->id_socio->Exportable) $Doc->ExportCaption($this->id_socio);
-					if ($this->id_montos->Exportable) $Doc->ExportCaption($this->id_montos);
-					if ($this->fecha->Exportable) $Doc->ExportCaption($this->fecha);
+					if ($this->rubro->Exportable) $Doc->ExportCaption($this->rubro);
+					if ($this->actividad->Exportable) $Doc->ExportCaption($this->actividad);
+					if ($this->id_rubro->Exportable) $Doc->ExportCaption($this->id_rubro);
+					if ($this->id_actividad->Exportable) $Doc->ExportCaption($this->id_actividad);
 				}
 				$Doc->EndExportRow();
 			}
@@ -854,13 +702,15 @@ class csocios_cuotas extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
-						if ($this->id_socio->Exportable) $Doc->ExportField($this->id_socio);
-						if ($this->id_montos->Exportable) $Doc->ExportField($this->id_montos);
-						if ($this->fecha->Exportable) $Doc->ExportField($this->fecha);
+						if ($this->rubro->Exportable) $Doc->ExportField($this->rubro);
+						if ($this->actividad->Exportable) $Doc->ExportField($this->actividad);
+						if ($this->id_rubro->Exportable) $Doc->ExportField($this->id_rubro);
+						if ($this->id_actividad->Exportable) $Doc->ExportField($this->id_actividad);
 					} else {
-						if ($this->id_socio->Exportable) $Doc->ExportField($this->id_socio);
-						if ($this->id_montos->Exportable) $Doc->ExportField($this->id_montos);
-						if ($this->fecha->Exportable) $Doc->ExportField($this->fecha);
+						if ($this->rubro->Exportable) $Doc->ExportField($this->rubro);
+						if ($this->actividad->Exportable) $Doc->ExportField($this->actividad);
+						if ($this->id_rubro->Exportable) $Doc->ExportField($this->id_rubro);
+						if ($this->id_actividad->Exportable) $Doc->ExportField($this->id_actividad);
 					}
 					$Doc->EndExportRow();
 				}
@@ -874,84 +724,6 @@ class csocios_cuotas extends cTable {
 		if (!$Doc->ExportCustom) {
 			$Doc->ExportTableFooter();
 		}
-	}
-
-	// Add User ID filter
-	function AddUserIDFilter($sFilter) {
-		global $Security;
-		$sFilterWrk = "";
-		$id = (CurrentPageID() == "list") ? $this->CurrentAction : CurrentPageID();
-		if (!$this->UserIDAllow($id) && !$Security->IsAdmin()) {
-			$sFilterWrk = $Security->UserIDList();
-			if ($sFilterWrk <> "")
-				$sFilterWrk = '`id_usuario` IN (' . $sFilterWrk . ')';
-		}
-
-		// Call User ID Filtering event
-		$this->UserID_Filtering($sFilterWrk);
-		ew_AddFilter($sFilter, $sFilterWrk);
-		return $sFilter;
-	}
-
-	// User ID subquery
-	function GetUserIDSubquery(&$fld, &$masterfld) {
-		global $conn;
-		$sWrk = "";
-		$sSql = "SELECT " . $masterfld->FldExpression . " FROM `socios_cuotas`";
-		$sFilter = $this->AddUserIDFilter("");
-		if ($sFilter <> "") $sSql .= " WHERE " . $sFilter;
-
-		// Use subquery
-		if (EW_USE_SUBQUERY_FOR_MASTER_USER_ID) {
-			$sWrk = $sSql;
-		} else {
-
-			// List all values
-			if ($rs = $conn->Execute($sSql)) {
-				while (!$rs->EOF) {
-					if ($sWrk <> "") $sWrk .= ",";
-					$sWrk .= ew_QuotedValue($rs->fields[0], $masterfld->FldDataType);
-					$rs->MoveNext();
-				}
-				$rs->Close();
-			}
-		}
-		if ($sWrk <> "") {
-			$sWrk = $fld->FldExpression . " IN (" . $sWrk . ")";
-		}
-		return $sWrk;
-	}
-
-	// Add master User ID filter
-	function AddMasterUserIDFilter($sFilter, $sCurrentMasterTable) {
-		$sFilterWrk = $sFilter;
-		if ($sCurrentMasterTable == "montos") {
-			$sFilterWrk = $GLOBALS["montos"]->AddUserIDFilter($sFilterWrk);
-		}
-		if ($sCurrentMasterTable == "socios") {
-			$sFilterWrk = $GLOBALS["socios"]->AddUserIDFilter($sFilterWrk);
-		}
-		return $sFilterWrk;
-	}
-
-	// Add detail User ID filter
-	function AddDetailUserIDFilter($sFilter, $sCurrentMasterTable) {
-		$sFilterWrk = $sFilter;
-		if ($sCurrentMasterTable == "montos") {
-			$mastertable = $GLOBALS["montos"];
-			if (!$mastertable->UserIDAllow()) {
-				$sSubqueryWrk = $mastertable->GetUserIDSubquery($this->id_montos, $mastertable->id);
-				ew_AddFilter($sFilterWrk, $sSubqueryWrk);
-			}
-		}
-		if ($sCurrentMasterTable == "socios") {
-			$mastertable = $GLOBALS["socios"];
-			if (!$mastertable->UserIDAllow()) {
-				$sSubqueryWrk = $mastertable->GetUserIDSubquery($this->id_socio, $mastertable->socio_nro);
-				ew_AddFilter($sFilterWrk, $sSubqueryWrk);
-			}
-		}
-		return $sFilterWrk;
 	}
 
 	// Get auto fill value

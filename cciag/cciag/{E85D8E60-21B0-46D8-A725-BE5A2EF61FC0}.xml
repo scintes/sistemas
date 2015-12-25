@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0"?>
-<configuration date="2015/12/17" author="e.World Technology Ltd.">
-<project id="{E85D8E60-21B0-46D8-A725-BE5A2EF61FC0}" file="C:\xampp\htdocs\cciag\cciag.pmp" name="cciag" product="PHPMaker" version="11.0" datetime="2015/12/17 19:38:28" languagefolder="phplang" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,76;2,&quot;sistemas&quot;,111">
+<configuration date="2015/12/25" author="e.World Technology Ltd.">
+<project id="{E85D8E60-21B0-46D8-A725-BE5A2EF61FC0}" file="C:\xampp\htdocs\cciag\cciag.pmp" name="cciag" product="PHPMaker" version="11.0" datetime="2015/12/25 10:23:01" languagefolder="phplang" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,76;2,&quot;sistemas&quot;,111">
 <table id="actividad" name="actividad" caption="ABM - Actividades" userlevel="0,&quot;Default&quot;,32;1,&quot;Cobradores&quot;,104;2,&quot;sistemas&quot;,111" priv="1"/>
 <table id="deudas" name="deudas" caption="Deudas de socios" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,109;2,&quot;sistemas&quot;,111" priv="1"/>
 <table id="montos" name="montos" caption="ABM - Montos" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,104;2,&quot;sistemas&quot;,111" priv="1"/>
@@ -14,9 +14,7 @@
 <table id="userlevelpermissions" name="userlevelpermissions" caption="userlevelpermissions" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,72;2,&quot;sistemas&quot;,111" priv="1"/>
 <table id="userlevels" name="userlevels" caption="userlevels" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,64;2,&quot;sistemas&quot;,111" priv="1"/>
 <table id="detalle_asociado" name="detalle_asociado" caption="detalle asociado" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,76;2,&quot;sistemas&quot;,111" priv="1"/>
-<table id="resumen_por_mes_de_pago" name="resumen_por_mes_de_pago" caption="resumen por mes de pago" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,76;2,&quot;sistemas&quot;,111" priv="1"/>
 <table id="detalle_deudas" name="detalle_deudas" caption="detalle deudas" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,76;2,&quot;sistemas&quot;,111" priv="1"/>
-<table id="codigo_actividad" name="codigo_actividad" caption="codigo actividad" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,0;2,&quot;sistemas&quot;,111" priv="1"/>
 <table id="socios_activos" name="socios_activos" caption="socios activos" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,76;2,&quot;sistemas&quot;,111" priv="1"/>
 <table id="detalles" name="detalles" caption="detalles" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,76;2,&quot;sistemas&quot;,111" priv="1"/>
 <table id="socios_detalles" name="socios_detalles" caption="socios detalles" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,76;2,&quot;sistemas&quot;,111" priv="1"/>
@@ -24,6 +22,11 @@
 <table id="acerca_de_php" name="acerca_de.php" caption="Acerca de..." userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,8;2,&quot;sistemas&quot;,8" priv="1"/>
 <table id="backup_v1_php" name="backup_v1.php" caption="Copia de Seguridad" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,8;2,&quot;sistemas&quot;,8" priv="1"/>
 <table id="backup_php" name="backup.php" caption="backup" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,8;2,&quot;sistemas&quot;,8" priv="1"/>
+<table id="v_deuda_adquirida" name="v_deuda_adquirida" caption="v deuda adquirida" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,76;2,&quot;sistemas&quot;,111" priv="1"/>
 <table id="seguimiento_tramites" name="seguimiento_tramites" caption="Seguimiento de Tramites" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,76;2,&quot;sistemas&quot;,111" priv="1"/>
 <table id="tramites" name="tramites" caption="tramites" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,73;2,&quot;sistemas&quot;,111" priv="1"/>
+<table id="v_db_rubro_actividad" name="v_db_rubro_actividad" caption="v db rubro actividad" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,76;2,&quot;sistemas&quot;,111" priv="1"/>
+<table id="v_db_rubro_actividad_socio" name="v_db_rubro_actividad_socio" caption="v db rubro actividad socio" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,76;2,&quot;sistemas&quot;,111" priv="1"/>
+<table id="r_listado_socios_por_actividad_y_rubro" name="r_listado_socios_por_actividad_y_rubro" caption="r listado socios por actividad y rubro" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,8;2,&quot;sistemas&quot;,8" priv="1"/>
+<table id="v_total_estado_cuenta_x_anio_mes" name="v_total_estado_cuenta_x_anio_mes" caption="v total estado cuenta x anio mes" userlevel="0,&quot;Default&quot;,0;1,&quot;Cobradores&quot;,76;2,&quot;sistemas&quot;,111" priv="1"/>
 </project></configuration>

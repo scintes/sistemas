@@ -18,12 +18,12 @@ $EW_RELATIVE_PATH = "";
 // Page class
 //
 
-$socios_add = NULL; // Initialize page object first
+$socios_update = NULL; // Initialize page object first
 
-class csocios_add extends csocios {
+class csocios_update extends csocios {
 
 	// Page ID
-	var $PageID = 'add';
+	var $PageID = 'update';
 
 	// Project ID
 	var $ProjectID = "{E85D8E60-21B0-46D8-A725-BE5A2EF61FC0}";
@@ -32,7 +32,7 @@ class csocios_add extends csocios {
 	var $TableName = 'socios';
 
 	// Page object name
-	var $PageObjName = 'socios_add';
+	var $PageObjName = 'socios_update';
 
 	// Page name
 	function PageName() {
@@ -213,7 +213,7 @@ class csocios_add extends csocios {
 
 		// Page ID
 		if (!defined("EW_PAGE_ID"))
-			define("EW_PAGE_ID", 'add', TRUE);
+			define("EW_PAGE_ID", 'update', TRUE);
 
 		// Table name (for backward compatibility)
 		if (!defined("EW_TABLE_NAME"))
@@ -351,99 +351,170 @@ class csocios_add extends csocios {
 		}
 		exit();
 	}
-	var $DbMasterFilter = "";
-	var $DbDetailFilter = "";
-	var $StartRec;
-	var $Priv = 0;
-	var $OldRecordset;
-	var $CopyRecord;
+	var $RecKeys;
+	var $Disabled;
+	var $Recordset;
+	var $UpdateCount = 0;
 
-	// 
+	//
 	// Page main
 	//
 	function Page_Main() {
 		global $objForm, $Language, $gsFormError;
 
-		// Process form if post back
-		if (@$_POST["a_add"] <> "") {
-			$this->CurrentAction = $_POST["a_add"]; // Get form action
-			$this->CopyRecord = $this->LoadOldRecord(); // Load old recordset
-			$this->LoadFormValues(); // Load form values
-		} else { // Not post back
-
-			// Load key values from QueryString
-			$this->CopyRecord = TRUE;
-			if (@$_GET["socio_nro"] != "") {
-				$this->socio_nro->setQueryStringValue($_GET["socio_nro"]);
-				$this->setKey("socio_nro", $this->socio_nro->CurrentValue); // Set up key
-			} else {
-				$this->setKey("socio_nro", ""); // Clear key
-				$this->CopyRecord = FALSE;
-			}
-			if ($this->CopyRecord) {
-				$this->CurrentAction = "C"; // Copy record
-			} else {
-				$this->CurrentAction = "I"; // Display blank record
-				$this->LoadDefaultValues(); // Load default values
-			}
-		}
-
 		// Set up Breadcrumb
 		$this->SetupBreadcrumb();
 
-		// Set up detail parameters
-		$this->SetUpDetailParms();
+		// Try to load keys from list form
+		$this->RecKeys = $this->GetRecordKeys(); // Load record keys
 
-		// Validate form if post back
-		if (@$_POST["a_add"] <> "") {
+		// Check if valid user id
+		$sql = $this->GetSQL($this->GetKeyFilter(), "");
+		if ($this->Recordset = ew_LoadRecordset($sql)) {
+			$res = TRUE;
+			while (!$this->Recordset->EOF) {
+				$this->LoadRowValues($this->Recordset);
+				if (!$this->ShowOptionLink('update')) {
+					$sUserIdMsg = $Language->Phrase("NoEditPermission");
+					$this->setFailureMessage($sUserIdMsg);
+					$res = FALSE;
+					break;
+				}
+				$this->Recordset->MoveNext();
+			}
+			$this->Recordset->Close();
+			if (!$res) $this->Page_Terminate("cciag_socioslist.php"); // Return to list
+		}
+		if (@$_POST["a_update"] <> "") {
+
+			// Get action
+			$this->CurrentAction = $_POST["a_update"];
+			$this->LoadFormValues(); // Get form values
+
+			// Validate form
 			if (!$this->ValidateForm()) {
 				$this->CurrentAction = "I"; // Form error, reset action
-				$this->EventCancelled = TRUE; // Event cancelled
-				$this->RestoreFormValues(); // Restore form values
 				$this->setFailureMessage($gsFormError);
 			}
+		} else {
+			$this->LoadMultiUpdateValues(); // Load initial values to form
 		}
-
-		// Perform action based on action code
+		if (count($this->RecKeys) <= 0)
+			$this->Page_Terminate("cciag_socioslist.php"); // No records selected, return to list
 		switch ($this->CurrentAction) {
-			case "I": // Blank record, no action required
-				break;
-			case "C": // Copy an existing record
-				if (!$this->LoadRow()) { // Load record based on key
-					if ($this->getFailureMessage() == "") $this->setFailureMessage($Language->Phrase("NoRecord")); // No record found
-					$this->Page_Terminate("cciag_socioslist.php"); // No matching record, return to list
-				}
-
-				// Set up detail parameters
-				$this->SetUpDetailParms();
-				break;
-			case "A": // Add new record
-				$this->SendEmail = TRUE; // Send email on add success
-				if ($this->AddRow($this->OldRecordset)) { // Add successful
+			case "U": // Update
+				if ($this->UpdateRows()) { // Update Records based on key
 					if ($this->getSuccessMessage() == "")
-						$this->setSuccessMessage($Language->Phrase("AddSuccess")); // Set up success message
-					if ($this->getCurrentDetailTable() <> "") // Master/detail add
-						$sReturnUrl = $this->GetDetailUrl();
-					else
-						$sReturnUrl = $this->getReturnUrl();
-					if (ew_GetPageName($sReturnUrl) == "cciag_sociosview.php")
-						$sReturnUrl = $this->GetViewUrl(); // View paging, return to view page with keyurl directly
-					$this->Page_Terminate($sReturnUrl); // Clean up and return
+						$this->setSuccessMessage($Language->Phrase("UpdateSuccess")); // Set up update success message
+					$this->Page_Terminate($this->getReturnUrl()); // Return to caller
 				} else {
-					$this->EventCancelled = TRUE; // Event cancelled
-					$this->RestoreFormValues(); // Add failed, restore form values
-
-					// Set up detail parameters
-					$this->SetUpDetailParms();
+					$this->RestoreFormValues(); // Restore form values
 				}
 		}
-
-		// Render row based on row type
-		$this->RowType = EW_ROWTYPE_ADD;  // Render add type
 
 		// Render row
+		if ($this->CurrentAction == "F") { // Confirm page
+			$this->RowType = EW_ROWTYPE_VIEW; // Render view
+			$this->Disabled = " disabled=\"true\"";
+		} else {
+			$this->RowType = EW_ROWTYPE_EDIT; // Render edit
+			$this->Disabled = "";
+		}
 		$this->ResetAttrs();
 		$this->RenderRow();
+	}
+
+	// Load initial values to form if field values are identical in all selected records
+	function LoadMultiUpdateValues() {
+		$this->CurrentFilter = $this->GetKeyFilter();
+
+		// Load recordset
+		if ($this->Recordset = $this->LoadRecordset()) {
+			$i = 1;
+			while (!$this->Recordset->EOF) {
+				if ($i == 1) {
+					$this->cuit_cuil->setDbValue($this->Recordset->fields('cuit_cuil'));
+					$this->id_actividad->setDbValue($this->Recordset->fields('id_actividad'));
+					$this->propietario->setDbValue($this->Recordset->fields('propietario'));
+					$this->comercio->setDbValue($this->Recordset->fields('comercio'));
+					$this->direccion_comercio->setDbValue($this->Recordset->fields('direccion_comercio'));
+					$this->mail->setDbValue($this->Recordset->fields('mail'));
+					$this->tel->setDbValue($this->Recordset->fields('tel'));
+					$this->cel->setDbValue($this->Recordset->fields('cel'));
+					$this->activo->setDbValue($this->Recordset->fields('activo'));
+				} else {
+					if (!ew_CompareValue($this->cuit_cuil->DbValue, $this->Recordset->fields('cuit_cuil')))
+						$this->cuit_cuil->CurrentValue = NULL;
+					if (!ew_CompareValue($this->id_actividad->DbValue, $this->Recordset->fields('id_actividad')))
+						$this->id_actividad->CurrentValue = NULL;
+					if (!ew_CompareValue($this->propietario->DbValue, $this->Recordset->fields('propietario')))
+						$this->propietario->CurrentValue = NULL;
+					if (!ew_CompareValue($this->comercio->DbValue, $this->Recordset->fields('comercio')))
+						$this->comercio->CurrentValue = NULL;
+					if (!ew_CompareValue($this->direccion_comercio->DbValue, $this->Recordset->fields('direccion_comercio')))
+						$this->direccion_comercio->CurrentValue = NULL;
+					if (!ew_CompareValue($this->mail->DbValue, $this->Recordset->fields('mail')))
+						$this->mail->CurrentValue = NULL;
+					if (!ew_CompareValue($this->tel->DbValue, $this->Recordset->fields('tel')))
+						$this->tel->CurrentValue = NULL;
+					if (!ew_CompareValue($this->cel->DbValue, $this->Recordset->fields('cel')))
+						$this->cel->CurrentValue = NULL;
+					if (!ew_CompareValue($this->activo->DbValue, $this->Recordset->fields('activo')))
+						$this->activo->CurrentValue = NULL;
+				}
+				$i++;
+				$this->Recordset->MoveNext();
+			}
+			$this->Recordset->Close();
+		}
+	}
+
+	// Set up key value
+	function SetupKeyValues($key) {
+		$sKeyFld = $key;
+		if (!is_numeric($sKeyFld))
+			return FALSE;
+		$this->socio_nro->CurrentValue = $sKeyFld;
+		return TRUE;
+	}
+
+	// Update all selected rows
+	function UpdateRows() {
+		global $conn, $Language;
+		$conn->BeginTrans();
+
+		// Get old recordset
+		$this->CurrentFilter = $this->GetKeyFilter();
+		$sSql = $this->SQL();
+		$rsold = $conn->Execute($sSql);
+
+		// Update all rows
+		$sKey = "";
+		foreach ($this->RecKeys as $key) {
+			if ($this->SetupKeyValues($key)) {
+				$sThisKey = $key;
+				$this->SendEmail = FALSE; // Do not send email on update success
+				$this->UpdateCount += 1; // Update record count for records being updated
+				$UpdateRows = $this->EditRow(); // Update this row
+			} else {
+				$UpdateRows = FALSE;
+			}
+			if (!$UpdateRows)
+				break; // Update failed
+			if ($sKey <> "") $sKey .= ", ";
+			$sKey .= $sThisKey;
+		}
+
+		// Check if all rows updated
+		if ($UpdateRows) {
+			$conn->CommitTrans(); // Commit transaction
+
+			// Get new recordset
+			$rsnew = $conn->Execute($sSql);
+		} else {
+			$conn->RollbackTrans(); // Rollback transaction
+		}
+		return $UpdateRows;
 	}
 
 	// Get upload files
@@ -451,27 +522,6 @@ class csocios_add extends csocios {
 		global $objForm, $Language;
 
 		// Get upload data
-	}
-
-	// Load default values
-	function LoadDefaultValues() {
-		$this->cuit_cuil->CurrentValue = NULL;
-		$this->cuit_cuil->OldValue = $this->cuit_cuil->CurrentValue;
-		$this->id_actividad->CurrentValue = NULL;
-		$this->id_actividad->OldValue = $this->id_actividad->CurrentValue;
-		$this->propietario->CurrentValue = NULL;
-		$this->propietario->OldValue = $this->propietario->CurrentValue;
-		$this->comercio->CurrentValue = NULL;
-		$this->comercio->OldValue = $this->comercio->CurrentValue;
-		$this->direccion_comercio->CurrentValue = NULL;
-		$this->direccion_comercio->OldValue = $this->direccion_comercio->CurrentValue;
-		$this->mail->CurrentValue = NULL;
-		$this->mail->OldValue = $this->mail->CurrentValue;
-		$this->tel->CurrentValue = NULL;
-		$this->tel->OldValue = $this->tel->CurrentValue;
-		$this->cel->CurrentValue = NULL;
-		$this->cel->OldValue = $this->cel->CurrentValue;
-		$this->activo->CurrentValue = 'S';
 	}
 
 	// Load form values
@@ -482,36 +532,47 @@ class csocios_add extends csocios {
 		if (!$this->cuit_cuil->FldIsDetailKey) {
 			$this->cuit_cuil->setFormValue($objForm->GetValue("x_cuit_cuil"));
 		}
+		$this->cuit_cuil->MultiUpdate = $objForm->GetValue("u_cuit_cuil");
 		if (!$this->id_actividad->FldIsDetailKey) {
 			$this->id_actividad->setFormValue($objForm->GetValue("x_id_actividad"));
 		}
+		$this->id_actividad->MultiUpdate = $objForm->GetValue("u_id_actividad");
 		if (!$this->propietario->FldIsDetailKey) {
 			$this->propietario->setFormValue($objForm->GetValue("x_propietario"));
 		}
+		$this->propietario->MultiUpdate = $objForm->GetValue("u_propietario");
 		if (!$this->comercio->FldIsDetailKey) {
 			$this->comercio->setFormValue($objForm->GetValue("x_comercio"));
 		}
+		$this->comercio->MultiUpdate = $objForm->GetValue("u_comercio");
 		if (!$this->direccion_comercio->FldIsDetailKey) {
 			$this->direccion_comercio->setFormValue($objForm->GetValue("x_direccion_comercio"));
 		}
+		$this->direccion_comercio->MultiUpdate = $objForm->GetValue("u_direccion_comercio");
 		if (!$this->mail->FldIsDetailKey) {
 			$this->mail->setFormValue($objForm->GetValue("x_mail"));
 		}
+		$this->mail->MultiUpdate = $objForm->GetValue("u_mail");
 		if (!$this->tel->FldIsDetailKey) {
 			$this->tel->setFormValue($objForm->GetValue("x_tel"));
 		}
+		$this->tel->MultiUpdate = $objForm->GetValue("u_tel");
 		if (!$this->cel->FldIsDetailKey) {
 			$this->cel->setFormValue($objForm->GetValue("x_cel"));
 		}
+		$this->cel->MultiUpdate = $objForm->GetValue("u_cel");
 		if (!$this->activo->FldIsDetailKey) {
 			$this->activo->setFormValue($objForm->GetValue("x_activo"));
 		}
+		$this->activo->MultiUpdate = $objForm->GetValue("u_activo");
+		if (!$this->socio_nro->FldIsDetailKey)
+			$this->socio_nro->setFormValue($objForm->GetValue("x_socio_nro"));
 	}
 
 	// Restore form values
 	function RestoreFormValues() {
 		global $objForm;
-		$this->LoadOldRecord();
+		$this->socio_nro->CurrentValue = $this->socio_nro->FormValue;
 		$this->cuit_cuil->CurrentValue = $this->cuit_cuil->FormValue;
 		$this->id_actividad->CurrentValue = $this->id_actividad->FormValue;
 		$this->propietario->CurrentValue = $this->propietario->FormValue;
@@ -521,6 +582,23 @@ class csocios_add extends csocios {
 		$this->tel->CurrentValue = $this->tel->FormValue;
 		$this->cel->CurrentValue = $this->cel->FormValue;
 		$this->activo->CurrentValue = $this->activo->FormValue;
+	}
+
+	// Load recordset
+	function LoadRecordset($offset = -1, $rowcnt = -1) {
+		global $conn;
+
+		// Load List page SQL
+		$sSql = $this->SelectSQL();
+
+		// Load recordset
+		$conn->raiseErrorFn = 'ew_ErrorFn';
+		$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
+		$conn->raiseErrorFn = '';
+
+		// Call Recordset Selected event
+		$this->Recordset_Selected($rs);
+		return $rs;
 	}
 
 	// Load row based on key values
@@ -540,15 +618,6 @@ class csocios_add extends csocios {
 			$res = TRUE;
 			$this->LoadRowValues($rs); // Load row values
 			$rs->Close();
-		}
-
-		// Check if valid user id
-		if ($res) {
-			$res = $this->ShowOptionLink('add');
-			if (!$res) {
-				$sUserIdMsg = $Language->Phrase("NoPermission");
-				$this->setFailureMessage($sUserIdMsg);
-			}
 		}
 		return $res;
 	}
@@ -594,28 +663,6 @@ class csocios_add extends csocios {
 		$this->cel->DbValue = $row['cel'];
 		$this->activo->DbValue = $row['activo'];
 		$this->id_usuario->DbValue = $row['id_usuario'];
-	}
-
-	// Load old record
-	function LoadOldRecord() {
-
-		// Load key values from Session
-		$bValidKey = TRUE;
-		if (strval($this->getKey("socio_nro")) <> "")
-			$this->socio_nro->CurrentValue = $this->getKey("socio_nro"); // socio_nro
-		else
-			$bValidKey = FALSE;
-
-		// Load old recordset
-		if ($bValidKey) {
-			$this->CurrentFilter = $this->KeyFilter();
-			$sSql = $this->SQL();
-			$this->OldRecordset = ew_LoadRecordset($sSql);
-			$this->LoadRowValues($this->OldRecordset); // Load row values
-		} else {
-			$this->OldRecordset = NULL;
-		}
-		return $bValidKey;
 	}
 
 	// Render row values based on field settings
@@ -770,7 +817,7 @@ class csocios_add extends csocios {
 			$this->activo->LinkCustomAttributes = "";
 			$this->activo->HrefValue = "";
 			$this->activo->TooltipValue = "";
-		} elseif ($this->RowType == EW_ROWTYPE_ADD) { // Add row
+		} elseif ($this->RowType == EW_ROWTYPE_EDIT) { // Edit row
 
 			// cuit_cuil
 			$this->cuit_cuil->EditAttrs["class"] = "form-control";
@@ -891,45 +938,46 @@ class csocios_add extends csocios {
 
 		// Initialize form error message
 		$gsFormError = "";
+		$lUpdateCnt = 0;
+		if ($this->cuit_cuil->MultiUpdate == "1") $lUpdateCnt++;
+		if ($this->id_actividad->MultiUpdate == "1") $lUpdateCnt++;
+		if ($this->propietario->MultiUpdate == "1") $lUpdateCnt++;
+		if ($this->comercio->MultiUpdate == "1") $lUpdateCnt++;
+		if ($this->direccion_comercio->MultiUpdate == "1") $lUpdateCnt++;
+		if ($this->mail->MultiUpdate == "1") $lUpdateCnt++;
+		if ($this->tel->MultiUpdate == "1") $lUpdateCnt++;
+		if ($this->cel->MultiUpdate == "1") $lUpdateCnt++;
+		if ($this->activo->MultiUpdate == "1") $lUpdateCnt++;
+		if ($lUpdateCnt == 0) {
+			$gsFormError = $Language->Phrase("NoFieldSelected");
+			return FALSE;
+		}
 
 		// Check if validation required
 		if (!EW_SERVER_VALIDATE)
 			return ($gsFormError == "");
-		if (!$this->cuit_cuil->FldIsDetailKey && !is_null($this->cuit_cuil->FormValue) && $this->cuit_cuil->FormValue == "") {
+		if ($this->cuit_cuil->MultiUpdate <> "" && !$this->cuit_cuil->FldIsDetailKey && !is_null($this->cuit_cuil->FormValue) && $this->cuit_cuil->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->cuit_cuil->FldCaption(), $this->cuit_cuil->ReqErrMsg));
 		}
-		if (!$this->id_actividad->FldIsDetailKey && !is_null($this->id_actividad->FormValue) && $this->id_actividad->FormValue == "") {
+		if ($this->id_actividad->MultiUpdate <> "" && !$this->id_actividad->FldIsDetailKey && !is_null($this->id_actividad->FormValue) && $this->id_actividad->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->id_actividad->FldCaption(), $this->id_actividad->ReqErrMsg));
 		}
-		if (!$this->propietario->FldIsDetailKey && !is_null($this->propietario->FormValue) && $this->propietario->FormValue == "") {
+		if ($this->propietario->MultiUpdate <> "" && !$this->propietario->FldIsDetailKey && !is_null($this->propietario->FormValue) && $this->propietario->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->propietario->FldCaption(), $this->propietario->ReqErrMsg));
 		}
-		if (!$this->comercio->FldIsDetailKey && !is_null($this->comercio->FormValue) && $this->comercio->FormValue == "") {
+		if ($this->comercio->MultiUpdate <> "" && !$this->comercio->FldIsDetailKey && !is_null($this->comercio->FormValue) && $this->comercio->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->comercio->FldCaption(), $this->comercio->ReqErrMsg));
 		}
-		if (!$this->direccion_comercio->FldIsDetailKey && !is_null($this->direccion_comercio->FormValue) && $this->direccion_comercio->FormValue == "") {
+		if ($this->direccion_comercio->MultiUpdate <> "" && !$this->direccion_comercio->FldIsDetailKey && !is_null($this->direccion_comercio->FormValue) && $this->direccion_comercio->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->direccion_comercio->FldCaption(), $this->direccion_comercio->ReqErrMsg));
 		}
-		if (!ew_CheckEmail($this->mail->FormValue)) {
-			ew_AddMessage($gsFormError, $this->mail->FldErrMsg());
+		if ($this->mail->MultiUpdate <> "") {
+			if (!ew_CheckEmail($this->mail->FormValue)) {
+				ew_AddMessage($gsFormError, $this->mail->FldErrMsg());
+			}
 		}
-		if (!$this->cel->FldIsDetailKey && !is_null($this->cel->FormValue) && $this->cel->FormValue == "") {
+		if ($this->cel->MultiUpdate <> "" && !$this->cel->FldIsDetailKey && !is_null($this->cel->FormValue) && $this->cel->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->cel->FldCaption(), $this->cel->ReqErrMsg));
-		}
-
-		// Validate detail grid
-		$DetailTblVar = explode(",", $this->getCurrentDetailTable());
-		if (in_array("socios_detalles", $DetailTblVar) && $GLOBALS["socios_detalles"]->DetailAdd) {
-			if (!isset($GLOBALS["socios_detalles_grid"])) $GLOBALS["socios_detalles_grid"] = new csocios_detalles_grid(); // get detail page object
-			$GLOBALS["socios_detalles_grid"]->ValidateGridForm();
-		}
-		if (in_array("socios_cuotas", $DetailTblVar) && $GLOBALS["socios_cuotas"]->DetailAdd) {
-			if (!isset($GLOBALS["socios_cuotas_grid"])) $GLOBALS["socios_cuotas_grid"] = new csocios_cuotas_grid(); // get detail page object
-			$GLOBALS["socios_cuotas_grid"]->ValidateGridForm();
-		}
-		if (in_array("deudas", $DetailTblVar) && $GLOBALS["deudas"]->DetailAdd) {
-			if (!isset($GLOBALS["deudas_grid"])) $GLOBALS["deudas_grid"] = new cdeudas_grid(); // get detail page object
-			$GLOBALS["deudas_grid"]->ValidateGridForm();
 		}
 
 		// Return validate result
@@ -944,123 +992,83 @@ class csocios_add extends csocios {
 		return $ValidateForm;
 	}
 
-	// Add record
-	function AddRow($rsold = NULL) {
-		global $conn, $Language, $Security;
-
-		// Begin transaction
-		if ($this->getCurrentDetailTable() <> "")
-			$conn->BeginTrans();
-
-		// Load db values from rsold
-		if ($rsold) {
-			$this->LoadDbValues($rsold);
-		}
-		$rsnew = array();
-
-		// cuit_cuil
-		$this->cuit_cuil->SetDbValueDef($rsnew, $this->cuit_cuil->CurrentValue, NULL, FALSE);
-
-		// id_actividad
-		$this->id_actividad->SetDbValueDef($rsnew, $this->id_actividad->CurrentValue, NULL, FALSE);
-
-		// propietario
-		$this->propietario->SetDbValueDef($rsnew, $this->propietario->CurrentValue, NULL, FALSE);
-
-		// comercio
-		$this->comercio->SetDbValueDef($rsnew, $this->comercio->CurrentValue, NULL, FALSE);
-
-		// direccion_comercio
-		$this->direccion_comercio->SetDbValueDef($rsnew, $this->direccion_comercio->CurrentValue, NULL, FALSE);
-
-		// mail
-		$this->mail->SetDbValueDef($rsnew, $this->mail->CurrentValue, NULL, FALSE);
-
-		// tel
-		$this->tel->SetDbValueDef($rsnew, $this->tel->CurrentValue, NULL, FALSE);
-
-		// cel
-		$this->cel->SetDbValueDef($rsnew, $this->cel->CurrentValue, NULL, FALSE);
-
-		// activo
-		$this->activo->SetDbValueDef($rsnew, $this->activo->CurrentValue, NULL, FALSE);
-
-		// socio_nro
-		// id_usuario
-
-		if (!$Security->IsAdmin() && $Security->IsLoggedIn()) { // Non system admin
-			$rsnew['id_usuario'] = CurrentUserID();
-		}
-
-		// Call Row Inserting event
-		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
-		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
-		if ($bInsertRow) {
-			$conn->raiseErrorFn = 'ew_ErrorFn';
-			$AddRow = $this->Insert($rsnew);
-			$conn->raiseErrorFn = '';
-			if ($AddRow) {
-			}
+	// Update record based on key values
+	function EditRow() {
+		global $conn, $Security, $Language;
+		$sFilter = $this->KeyFilter();
+		$this->CurrentFilter = $sFilter;
+		$sSql = $this->SQL();
+		$conn->raiseErrorFn = 'ew_ErrorFn';
+		$rs = $conn->Execute($sSql);
+		$conn->raiseErrorFn = '';
+		if ($rs === FALSE)
+			return FALSE;
+		if ($rs->EOF) {
+			$EditRow = FALSE; // Update Failed
 		} else {
-			if ($this->getSuccessMessage() <> "" || $this->getFailureMessage() <> "") {
 
-				// Use the message, do nothing
-			} elseif ($this->CancelMessage <> "") {
-				$this->setFailureMessage($this->CancelMessage);
-				$this->CancelMessage = "";
+			// Save old values
+			$rsold = &$rs->fields;
+			$this->LoadDbValues($rsold);
+			$rsnew = array();
+
+			// cuit_cuil
+			$this->cuit_cuil->SetDbValueDef($rsnew, $this->cuit_cuil->CurrentValue, NULL, $this->cuit_cuil->ReadOnly || $this->cuit_cuil->MultiUpdate <> "1");
+
+			// id_actividad
+			$this->id_actividad->SetDbValueDef($rsnew, $this->id_actividad->CurrentValue, NULL, $this->id_actividad->ReadOnly || $this->id_actividad->MultiUpdate <> "1");
+
+			// propietario
+			$this->propietario->SetDbValueDef($rsnew, $this->propietario->CurrentValue, NULL, $this->propietario->ReadOnly || $this->propietario->MultiUpdate <> "1");
+
+			// comercio
+			$this->comercio->SetDbValueDef($rsnew, $this->comercio->CurrentValue, NULL, $this->comercio->ReadOnly || $this->comercio->MultiUpdate <> "1");
+
+			// direccion_comercio
+			$this->direccion_comercio->SetDbValueDef($rsnew, $this->direccion_comercio->CurrentValue, NULL, $this->direccion_comercio->ReadOnly || $this->direccion_comercio->MultiUpdate <> "1");
+
+			// mail
+			$this->mail->SetDbValueDef($rsnew, $this->mail->CurrentValue, NULL, $this->mail->ReadOnly || $this->mail->MultiUpdate <> "1");
+
+			// tel
+			$this->tel->SetDbValueDef($rsnew, $this->tel->CurrentValue, NULL, $this->tel->ReadOnly || $this->tel->MultiUpdate <> "1");
+
+			// cel
+			$this->cel->SetDbValueDef($rsnew, $this->cel->CurrentValue, NULL, $this->cel->ReadOnly || $this->cel->MultiUpdate <> "1");
+
+			// activo
+			$this->activo->SetDbValueDef($rsnew, $this->activo->CurrentValue, NULL, $this->activo->ReadOnly || $this->activo->MultiUpdate <> "1");
+
+			// Call Row Updating event
+			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
+			if ($bUpdateRow) {
+				$conn->raiseErrorFn = 'ew_ErrorFn';
+				if (count($rsnew) > 0)
+					$EditRow = $this->Update($rsnew, "", $rsold);
+				else
+					$EditRow = TRUE; // No field to update
+				$conn->raiseErrorFn = '';
+				if ($EditRow) {
+				}
 			} else {
-				$this->setFailureMessage($Language->Phrase("InsertCancelled"));
-			}
-			$AddRow = FALSE;
-		}
+				if ($this->getSuccessMessage() <> "" || $this->getFailureMessage() <> "") {
 
-		// Get insert id if necessary
-		if ($AddRow) {
-			$this->socio_nro->setDbValue($conn->Insert_ID());
-			$rsnew['socio_nro'] = $this->socio_nro->DbValue;
-		}
-
-		// Add detail records
-		if ($AddRow) {
-			$DetailTblVar = explode(",", $this->getCurrentDetailTable());
-			if (in_array("socios_detalles", $DetailTblVar) && $GLOBALS["socios_detalles"]->DetailAdd) {
-				$GLOBALS["socios_detalles"]->id_socio->setSessionValue($this->socio_nro->CurrentValue); // Set master key
-				if (!isset($GLOBALS["socios_detalles_grid"])) $GLOBALS["socios_detalles_grid"] = new csocios_detalles_grid(); // Get detail page object
-				$AddRow = $GLOBALS["socios_detalles_grid"]->GridInsert();
-				if (!$AddRow)
-					$GLOBALS["socios_detalles"]->id_socio->setSessionValue(""); // Clear master key if insert failed
-			}
-			if (in_array("socios_cuotas", $DetailTblVar) && $GLOBALS["socios_cuotas"]->DetailAdd) {
-				$GLOBALS["socios_cuotas"]->id_socio->setSessionValue($this->socio_nro->CurrentValue); // Set master key
-				if (!isset($GLOBALS["socios_cuotas_grid"])) $GLOBALS["socios_cuotas_grid"] = new csocios_cuotas_grid(); // Get detail page object
-				$AddRow = $GLOBALS["socios_cuotas_grid"]->GridInsert();
-				if (!$AddRow)
-					$GLOBALS["socios_cuotas"]->id_socio->setSessionValue(""); // Clear master key if insert failed
-			}
-			if (in_array("deudas", $DetailTblVar) && $GLOBALS["deudas"]->DetailAdd) {
-				$GLOBALS["deudas"]->id_socio->setSessionValue($this->socio_nro->CurrentValue); // Set master key
-				if (!isset($GLOBALS["deudas_grid"])) $GLOBALS["deudas_grid"] = new cdeudas_grid(); // Get detail page object
-				$AddRow = $GLOBALS["deudas_grid"]->GridInsert();
-				if (!$AddRow)
-					$GLOBALS["deudas"]->id_socio->setSessionValue(""); // Clear master key if insert failed
+					// Use the message, do nothing
+				} elseif ($this->CancelMessage <> "") {
+					$this->setFailureMessage($this->CancelMessage);
+					$this->CancelMessage = "";
+				} else {
+					$this->setFailureMessage($Language->Phrase("UpdateCancelled"));
+				}
+				$EditRow = FALSE;
 			}
 		}
 
-		// Commit/Rollback transaction
-		if ($this->getCurrentDetailTable() <> "") {
-			if ($AddRow) {
-				$conn->CommitTrans(); // Commit transaction
-			} else {
-				$conn->RollbackTrans(); // Rollback transaction
-			}
-		}
-		if ($AddRow) {
-
-			// Call Row Inserted event
-			$rs = ($rsold == NULL) ? NULL : $rsold->fields;
-			$this->Row_Inserted($rs, $rsnew);
-		}
-		return $AddRow;
+		// Call Row_Updated event
+		if ($EditRow)
+			$this->Row_Updated($rsold, $rsnew);
+		$rs->Close();
+		return $EditRow;
 	}
 
 	// Show link optionally based on User ID
@@ -1071,82 +1079,13 @@ class csocios_add extends csocios {
 		return TRUE;
 	}
 
-	// Set up detail parms based on QueryString
-	function SetUpDetailParms() {
-
-		// Get the keys for master table
-		if (isset($_GET[EW_TABLE_SHOW_DETAIL])) {
-			$sDetailTblVar = $_GET[EW_TABLE_SHOW_DETAIL];
-			$this->setCurrentDetailTable($sDetailTblVar);
-		} else {
-			$sDetailTblVar = $this->getCurrentDetailTable();
-		}
-		if ($sDetailTblVar <> "") {
-			$DetailTblVar = explode(",", $sDetailTblVar);
-			if (in_array("socios_detalles", $DetailTblVar)) {
-				if (!isset($GLOBALS["socios_detalles_grid"]))
-					$GLOBALS["socios_detalles_grid"] = new csocios_detalles_grid;
-				if ($GLOBALS["socios_detalles_grid"]->DetailAdd) {
-					if ($this->CopyRecord)
-						$GLOBALS["socios_detalles_grid"]->CurrentMode = "copy";
-					else
-						$GLOBALS["socios_detalles_grid"]->CurrentMode = "add";
-					$GLOBALS["socios_detalles_grid"]->CurrentAction = "gridadd";
-
-					// Save current master table to detail table
-					$GLOBALS["socios_detalles_grid"]->setCurrentMasterTable($this->TableVar);
-					$GLOBALS["socios_detalles_grid"]->setStartRecordNumber(1);
-					$GLOBALS["socios_detalles_grid"]->id_socio->FldIsDetailKey = TRUE;
-					$GLOBALS["socios_detalles_grid"]->id_socio->CurrentValue = $this->socio_nro->CurrentValue;
-					$GLOBALS["socios_detalles_grid"]->id_socio->setSessionValue($GLOBALS["socios_detalles_grid"]->id_socio->CurrentValue);
-				}
-			}
-			if (in_array("socios_cuotas", $DetailTblVar)) {
-				if (!isset($GLOBALS["socios_cuotas_grid"]))
-					$GLOBALS["socios_cuotas_grid"] = new csocios_cuotas_grid;
-				if ($GLOBALS["socios_cuotas_grid"]->DetailAdd) {
-					if ($this->CopyRecord)
-						$GLOBALS["socios_cuotas_grid"]->CurrentMode = "copy";
-					else
-						$GLOBALS["socios_cuotas_grid"]->CurrentMode = "add";
-					$GLOBALS["socios_cuotas_grid"]->CurrentAction = "gridadd";
-
-					// Save current master table to detail table
-					$GLOBALS["socios_cuotas_grid"]->setCurrentMasterTable($this->TableVar);
-					$GLOBALS["socios_cuotas_grid"]->setStartRecordNumber(1);
-					$GLOBALS["socios_cuotas_grid"]->id_socio->FldIsDetailKey = TRUE;
-					$GLOBALS["socios_cuotas_grid"]->id_socio->CurrentValue = $this->socio_nro->CurrentValue;
-					$GLOBALS["socios_cuotas_grid"]->id_socio->setSessionValue($GLOBALS["socios_cuotas_grid"]->id_socio->CurrentValue);
-				}
-			}
-			if (in_array("deudas", $DetailTblVar)) {
-				if (!isset($GLOBALS["deudas_grid"]))
-					$GLOBALS["deudas_grid"] = new cdeudas_grid;
-				if ($GLOBALS["deudas_grid"]->DetailAdd) {
-					if ($this->CopyRecord)
-						$GLOBALS["deudas_grid"]->CurrentMode = "copy";
-					else
-						$GLOBALS["deudas_grid"]->CurrentMode = "add";
-					$GLOBALS["deudas_grid"]->CurrentAction = "gridadd";
-
-					// Save current master table to detail table
-					$GLOBALS["deudas_grid"]->setCurrentMasterTable($this->TableVar);
-					$GLOBALS["deudas_grid"]->setStartRecordNumber(1);
-					$GLOBALS["deudas_grid"]->id_socio->FldIsDetailKey = TRUE;
-					$GLOBALS["deudas_grid"]->id_socio->CurrentValue = $this->socio_nro->CurrentValue;
-					$GLOBALS["deudas_grid"]->id_socio->setSessionValue($GLOBALS["deudas_grid"]->id_socio->CurrentValue);
-				}
-			}
-		}
-	}
-
 	// Set up Breadcrumb
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
 		$Breadcrumb = new cBreadcrumb();
 		$Breadcrumb->Add("list", $this->TableVar, "cciag_socioslist.php", "", $this->TableVar, TRUE);
-		$PageId = ($this->CurrentAction == "C") ? "Copy" : "Add";
-		$Breadcrumb->Add("add", $PageId, ew_CurrentUrl());
+		$PageId = "update";
+		$Breadcrumb->Add("update", $PageId, ew_CurrentUrl());
 	}
 
 	// Page Load event
@@ -1221,39 +1160,43 @@ class csocios_add extends csocios {
 <?php
 
 // Create page object
-if (!isset($socios_add)) $socios_add = new csocios_add();
+if (!isset($socios_update)) $socios_update = new csocios_update();
 
 // Page init
-$socios_add->Page_Init();
+$socios_update->Page_Init();
 
 // Page main
-$socios_add->Page_Main();
+$socios_update->Page_Main();
 
 // Global Page Rendering event (in userfn*.php)
 Page_Rendering();
 
 // Page Rendering event
-$socios_add->Page_Render();
+$socios_update->Page_Render();
 ?>
 <?php include_once $EW_RELATIVE_PATH . "cciag_header.php" ?>
 <script type="text/javascript">
 
 // Page object
-var socios_add = new ew_Page("socios_add");
-socios_add.PageID = "add"; // Page ID
-var EW_PAGE_ID = socios_add.PageID; // For backward compatibility
+var socios_update = new ew_Page("socios_update");
+socios_update.PageID = "update"; // Page ID
+var EW_PAGE_ID = socios_update.PageID; // For backward compatibility
 
 // Form object
-var fsociosadd = new ew_Form("fsociosadd");
+var fsociosupdate = new ew_Form("fsociosupdate");
 
 // Validate form
-fsociosadd.Validate = function() {
+fsociosupdate.Validate = function() {
 	if (!this.ValidateRequired)
 		return true; // Ignore validation
 	var $ = jQuery, fobj = this.GetForm(), $fobj = $(fobj);
 	this.PostAutoSuggest();
 	if ($fobj.find("#a_confirm").val() == "F")
 		return true;
+	if (!ew_UpdateSelected(fobj)) {
+		alert(ewLanguage.Phrase("NoFieldSelected"));
+		return false;
+	}
 	var elm, felm, uelm, addcnt = 0;
 	var $k = $fobj.find("#" + this.FormKeyCountName); // Get key_count
 	var rowcnt = ($k[0]) ? parseInt($k.val(), 10) : 1;
@@ -1263,26 +1206,45 @@ fsociosadd.Validate = function() {
 		var infix = ($k[0]) ? String(i) : "";
 		$fobj.data("rowindex", infix);
 			elm = this.GetElements("x" + infix + "_cuit_cuil");
-			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
-				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->cuit_cuil->FldCaption(), $socios->cuit_cuil->ReqErrMsg)) ?>");
+			uelm = this.GetElements("u" + infix + "_cuit_cuil");
+			if (uelm && uelm.checked) {
+				if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+					return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->cuit_cuil->FldCaption(), $socios->cuit_cuil->ReqErrMsg)) ?>");
+			}
 			elm = this.GetElements("x" + infix + "_id_actividad");
-			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
-				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->id_actividad->FldCaption(), $socios->id_actividad->ReqErrMsg)) ?>");
+			uelm = this.GetElements("u" + infix + "_id_actividad");
+			if (uelm && uelm.checked) {
+				if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+					return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->id_actividad->FldCaption(), $socios->id_actividad->ReqErrMsg)) ?>");
+			}
 			elm = this.GetElements("x" + infix + "_propietario");
-			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
-				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->propietario->FldCaption(), $socios->propietario->ReqErrMsg)) ?>");
+			uelm = this.GetElements("u" + infix + "_propietario");
+			if (uelm && uelm.checked) {
+				if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+					return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->propietario->FldCaption(), $socios->propietario->ReqErrMsg)) ?>");
+			}
 			elm = this.GetElements("x" + infix + "_comercio");
-			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
-				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->comercio->FldCaption(), $socios->comercio->ReqErrMsg)) ?>");
+			uelm = this.GetElements("u" + infix + "_comercio");
+			if (uelm && uelm.checked) {
+				if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+					return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->comercio->FldCaption(), $socios->comercio->ReqErrMsg)) ?>");
+			}
 			elm = this.GetElements("x" + infix + "_direccion_comercio");
-			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
-				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->direccion_comercio->FldCaption(), $socios->direccion_comercio->ReqErrMsg)) ?>");
+			uelm = this.GetElements("u" + infix + "_direccion_comercio");
+			if (uelm && uelm.checked) {
+				if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+					return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->direccion_comercio->FldCaption(), $socios->direccion_comercio->ReqErrMsg)) ?>");
+			}
 			elm = this.GetElements("x" + infix + "_mail");
-			if (elm && !ew_CheckEmail(elm.value))
+			uelm = this.GetElements("u" + infix + "_mail");
+			if (uelm && uelm.checked && elm && !ew_CheckEmail(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($socios->mail->FldErrMsg()) ?>");
 			elm = this.GetElements("x" + infix + "_cel");
-			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
-				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->cel->FldCaption(), $socios->cel->ReqErrMsg)) ?>");
+			uelm = this.GetElements("u" + infix + "_cel");
+			if (uelm && uelm.checked) {
+				if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+					return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $socios->cel->FldCaption(), $socios->cel->ReqErrMsg)) ?>");
+			}
 
 			// Set up row object
 			ew_ElementsToRow(fobj);
@@ -1291,20 +1253,11 @@ fsociosadd.Validate = function() {
 			if (!this.Form_CustomValidate(fobj))
 				return false;
 	}
-
-	// Process detail forms
-	var dfs = $fobj.find("input[name='detailpage']").get();
-	for (var i = 0; i < dfs.length; i++) {
-		var df = dfs[i], val = df.value;
-		if (val && ewForms[val])
-			if (!ewForms[val].Validate())
-				return false;
-	}
 	return true;
 }
 
 // Form_CustomValidate event
-fsociosadd.Form_CustomValidate = 
+fsociosupdate.Form_CustomValidate = 
  function(fobj) { // DO NOT CHANGE THIS LINE!
 
  	// Your custom validation code here, return false if invalid. 
@@ -1313,13 +1266,13 @@ fsociosadd.Form_CustomValidate =
 
 // Use JavaScript validation or not
 <?php if (EW_CLIENT_VALIDATE) { ?>
-fsociosadd.ValidateRequired = true;
+fsociosupdate.ValidateRequired = true;
 <?php } else { ?>
-fsociosadd.ValidateRequired = false; 
+fsociosupdate.ValidateRequired = false; 
 <?php } ?>
 
 // Dynamic selection lists
-fsociosadd.Lists["x_id_actividad"] = {"LinkField":"x_id_actividad","Ajax":true,"AutoFill":false,"DisplayFields":["x_rubro","x_actividad","",""],"ParentFields":[],"FilterFields":[],"Options":[]};
+fsociosupdate.Lists["x_id_actividad"] = {"LinkField":"x_id_actividad","Ajax":true,"AutoFill":false,"DisplayFields":["x_rubro","x_actividad","",""],"ParentFields":[],"FilterFields":[],"Options":[]};
 
 // Form object for search
 </script>
@@ -1332,31 +1285,64 @@ fsociosadd.Lists["x_id_actividad"] = {"LinkField":"x_id_actividad","Ajax":true,"
 <?php echo $Language->SelectionForm(); ?>
 <div class="clearfix"></div>
 </div>
-<?php $socios_add->ShowPageHeader(); ?>
+<?php $socios_update->ShowPageHeader(); ?>
 <?php
-$socios_add->ShowMessage();
+$socios_update->ShowMessage();
 ?>
-<form name="fsociosadd" id="fsociosadd" class="form-horizontal ewForm ewAddForm" action="<?php echo ew_CurrentPage() ?>" method="post">
-<?php if ($socios_add->CheckToken) { ?>
-<input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $socios_add->Token ?>">
+<form name="fsociosupdate" id="fsociosupdate" class="form-horizontal ewForm ewUpdateForm" action="<?php echo ew_CurrentPage() ?>" method="post">
+<?php if ($socios_update->CheckToken) { ?>
+<input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $socios_update->Token ?>">
 <?php } ?>
 <input type="hidden" name="t" value="socios">
-<input type="hidden" name="a_add" id="a_add" value="A">
-<div>
+<input type="hidden" name="a_update" id="a_update" value="U">
+<?php if ($socios->CurrentAction == "F") { // Confirm page ?>
+<input type="hidden" name="a_confirm" id="a_confirm" value="F">
+<?php } ?>
+<?php foreach ($socios_update->RecKeys as $key) { ?>
+<?php $keyvalue = is_array($key) ? implode($EW_COMPOSITE_KEY_SEPARATOR, $key) : $key; ?>
+<input type="hidden" name="key_m[]" value="<?php echo ew_HtmlEncode($keyvalue) ?>">
+<?php } ?>
+<div id="tbl_sociosupdate">
+	<div class="form-group">
+		<label class="col-sm-2"><input type="checkbox" name="u" id="u" onclick="ew_SelectAll(this);"<?php echo $socios_update->Disabled ?>> <?php echo $Language->Phrase("UpdateSelectAll") ?></label>
+	</div>
 <?php if ($socios->cuit_cuil->Visible) { // cuit_cuil ?>
 	<div id="r_cuit_cuil" class="form-group">
-		<label id="elh_socios_cuit_cuil" for="x_cuit_cuil" class="col-sm-2 control-label ewLabel"><?php echo $socios->cuit_cuil->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
+		<label for="x_cuit_cuil" class="col-sm-2 control-label">
+<?php if ($socios->CurrentAction <> "F") { ?>
+<input type="checkbox" name="u_cuit_cuil" id="u_cuit_cuil" value="1"<?php echo ($socios->cuit_cuil->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<?php } else { ?>
+<input type="checkbox" disabled="disabled"<?php echo ($socios->cuit_cuil->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<input type="hidden" name="u_cuit_cuil" id="u_cuit_cuil" value="<?php echo $socios->cuit_cuil->MultiUpdate ?>">
+<?php } ?>
+ <?php echo $socios->cuit_cuil->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $socios->cuit_cuil->CellAttributes() ?>>
+<?php if ($socios->CurrentAction <> "F") { ?>
 <span id="el_socios_cuit_cuil">
 <input type="text" data-field="x_cuit_cuil" name="x_cuit_cuil" id="x_cuit_cuil" size="30" maxlength="14" placeholder="<?php echo ew_HtmlEncode($socios->cuit_cuil->PlaceHolder) ?>" value="<?php echo $socios->cuit_cuil->EditValue ?>"<?php echo $socios->cuit_cuil->EditAttributes() ?>>
 </span>
+<?php } else { ?>
+<span id="el_socios_cuit_cuil">
+<span<?php echo $socios->cuit_cuil->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $socios->cuit_cuil->ViewValue ?></p></span>
+</span>
+<input type="hidden" data-field="x_cuit_cuil" name="x_cuit_cuil" id="x_cuit_cuil" value="<?php echo ew_HtmlEncode($socios->cuit_cuil->FormValue) ?>">
+<?php } ?>
 <?php echo $socios->cuit_cuil->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($socios->id_actividad->Visible) { // id_actividad ?>
 	<div id="r_id_actividad" class="form-group">
-		<label id="elh_socios_id_actividad" for="x_id_actividad" class="col-sm-2 control-label ewLabel"><?php echo $socios->id_actividad->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
+		<label for="x_id_actividad" class="col-sm-2 control-label">
+<?php if ($socios->CurrentAction <> "F") { ?>
+<input type="checkbox" name="u_id_actividad" id="u_id_actividad" value="1"<?php echo ($socios->id_actividad->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<?php } else { ?>
+<input type="checkbox" disabled="disabled"<?php echo ($socios->id_actividad->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<input type="hidden" name="u_id_actividad" id="u_id_actividad" value="<?php echo $socios->id_actividad->MultiUpdate ?>">
+<?php } ?>
+ <?php echo $socios->id_actividad->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $socios->id_actividad->CellAttributes() ?>>
+<?php if ($socios->CurrentAction <> "F") { ?>
 <span id="el_socios_id_actividad">
 <select data-field="x_id_actividad" id="x_id_actividad" name="x_id_actividad"<?php echo $socios->id_actividad->EditAttributes() ?>>
 <?php
@@ -1390,73 +1376,178 @@ $sSqlWrk .= " ORDER BY `rubro` ASC";
 ?>
 <input type="hidden" name="s_x_id_actividad" id="s_x_id_actividad" value="s=<?php echo ew_Encrypt($sSqlWrk) ?>&amp;f0=<?php echo ew_Encrypt("`id_actividad` = {filter_value}"); ?>&amp;t0=3">
 </span>
+<?php } else { ?>
+<span id="el_socios_id_actividad">
+<span<?php echo $socios->id_actividad->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $socios->id_actividad->ViewValue ?></p></span>
+</span>
+<input type="hidden" data-field="x_id_actividad" name="x_id_actividad" id="x_id_actividad" value="<?php echo ew_HtmlEncode($socios->id_actividad->FormValue) ?>">
+<?php } ?>
 <?php echo $socios->id_actividad->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($socios->propietario->Visible) { // propietario ?>
 	<div id="r_propietario" class="form-group">
-		<label id="elh_socios_propietario" for="x_propietario" class="col-sm-2 control-label ewLabel"><?php echo $socios->propietario->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
+		<label for="x_propietario" class="col-sm-2 control-label">
+<?php if ($socios->CurrentAction <> "F") { ?>
+<input type="checkbox" name="u_propietario" id="u_propietario" value="1"<?php echo ($socios->propietario->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<?php } else { ?>
+<input type="checkbox" disabled="disabled"<?php echo ($socios->propietario->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<input type="hidden" name="u_propietario" id="u_propietario" value="<?php echo $socios->propietario->MultiUpdate ?>">
+<?php } ?>
+ <?php echo $socios->propietario->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $socios->propietario->CellAttributes() ?>>
+<?php if ($socios->CurrentAction <> "F") { ?>
 <span id="el_socios_propietario">
 <input type="text" data-field="x_propietario" name="x_propietario" id="x_propietario" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->propietario->PlaceHolder) ?>" value="<?php echo $socios->propietario->EditValue ?>"<?php echo $socios->propietario->EditAttributes() ?>>
 </span>
+<?php } else { ?>
+<span id="el_socios_propietario">
+<span<?php echo $socios->propietario->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $socios->propietario->ViewValue ?></p></span>
+</span>
+<input type="hidden" data-field="x_propietario" name="x_propietario" id="x_propietario" value="<?php echo ew_HtmlEncode($socios->propietario->FormValue) ?>">
+<?php } ?>
 <?php echo $socios->propietario->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($socios->comercio->Visible) { // comercio ?>
 	<div id="r_comercio" class="form-group">
-		<label id="elh_socios_comercio" for="x_comercio" class="col-sm-2 control-label ewLabel"><?php echo $socios->comercio->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
+		<label for="x_comercio" class="col-sm-2 control-label">
+<?php if ($socios->CurrentAction <> "F") { ?>
+<input type="checkbox" name="u_comercio" id="u_comercio" value="1"<?php echo ($socios->comercio->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<?php } else { ?>
+<input type="checkbox" disabled="disabled"<?php echo ($socios->comercio->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<input type="hidden" name="u_comercio" id="u_comercio" value="<?php echo $socios->comercio->MultiUpdate ?>">
+<?php } ?>
+ <?php echo $socios->comercio->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $socios->comercio->CellAttributes() ?>>
+<?php if ($socios->CurrentAction <> "F") { ?>
 <span id="el_socios_comercio">
 <input type="text" data-field="x_comercio" name="x_comercio" id="x_comercio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->comercio->PlaceHolder) ?>" value="<?php echo $socios->comercio->EditValue ?>"<?php echo $socios->comercio->EditAttributes() ?>>
 </span>
+<?php } else { ?>
+<span id="el_socios_comercio">
+<span<?php echo $socios->comercio->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $socios->comercio->ViewValue ?></p></span>
+</span>
+<input type="hidden" data-field="x_comercio" name="x_comercio" id="x_comercio" value="<?php echo ew_HtmlEncode($socios->comercio->FormValue) ?>">
+<?php } ?>
 <?php echo $socios->comercio->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($socios->direccion_comercio->Visible) { // direccion_comercio ?>
 	<div id="r_direccion_comercio" class="form-group">
-		<label id="elh_socios_direccion_comercio" for="x_direccion_comercio" class="col-sm-2 control-label ewLabel"><?php echo $socios->direccion_comercio->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
+		<label for="x_direccion_comercio" class="col-sm-2 control-label">
+<?php if ($socios->CurrentAction <> "F") { ?>
+<input type="checkbox" name="u_direccion_comercio" id="u_direccion_comercio" value="1"<?php echo ($socios->direccion_comercio->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<?php } else { ?>
+<input type="checkbox" disabled="disabled"<?php echo ($socios->direccion_comercio->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<input type="hidden" name="u_direccion_comercio" id="u_direccion_comercio" value="<?php echo $socios->direccion_comercio->MultiUpdate ?>">
+<?php } ?>
+ <?php echo $socios->direccion_comercio->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $socios->direccion_comercio->CellAttributes() ?>>
+<?php if ($socios->CurrentAction <> "F") { ?>
 <span id="el_socios_direccion_comercio">
 <input type="text" data-field="x_direccion_comercio" name="x_direccion_comercio" id="x_direccion_comercio" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->direccion_comercio->PlaceHolder) ?>" value="<?php echo $socios->direccion_comercio->EditValue ?>"<?php echo $socios->direccion_comercio->EditAttributes() ?>>
 </span>
+<?php } else { ?>
+<span id="el_socios_direccion_comercio">
+<span<?php echo $socios->direccion_comercio->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $socios->direccion_comercio->ViewValue ?></p></span>
+</span>
+<input type="hidden" data-field="x_direccion_comercio" name="x_direccion_comercio" id="x_direccion_comercio" value="<?php echo ew_HtmlEncode($socios->direccion_comercio->FormValue) ?>">
+<?php } ?>
 <?php echo $socios->direccion_comercio->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($socios->mail->Visible) { // mail ?>
 	<div id="r_mail" class="form-group">
-		<label id="elh_socios_mail" for="x_mail" class="col-sm-2 control-label ewLabel"><?php echo $socios->mail->FldCaption() ?></label>
+		<label for="x_mail" class="col-sm-2 control-label">
+<?php if ($socios->CurrentAction <> "F") { ?>
+<input type="checkbox" name="u_mail" id="u_mail" value="1"<?php echo ($socios->mail->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<?php } else { ?>
+<input type="checkbox" disabled="disabled"<?php echo ($socios->mail->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<input type="hidden" name="u_mail" id="u_mail" value="<?php echo $socios->mail->MultiUpdate ?>">
+<?php } ?>
+ <?php echo $socios->mail->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $socios->mail->CellAttributes() ?>>
+<?php if ($socios->CurrentAction <> "F") { ?>
 <span id="el_socios_mail">
 <input type="text" data-field="x_mail" name="x_mail" id="x_mail" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($socios->mail->PlaceHolder) ?>" value="<?php echo $socios->mail->EditValue ?>"<?php echo $socios->mail->EditAttributes() ?>>
 </span>
+<?php } else { ?>
+<span id="el_socios_mail">
+<span<?php echo $socios->mail->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $socios->mail->ViewValue ?></p></span>
+</span>
+<input type="hidden" data-field="x_mail" name="x_mail" id="x_mail" value="<?php echo ew_HtmlEncode($socios->mail->FormValue) ?>">
+<?php } ?>
 <?php echo $socios->mail->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($socios->tel->Visible) { // tel ?>
 	<div id="r_tel" class="form-group">
-		<label id="elh_socios_tel" for="x_tel" class="col-sm-2 control-label ewLabel"><?php echo $socios->tel->FldCaption() ?></label>
+		<label for="x_tel" class="col-sm-2 control-label">
+<?php if ($socios->CurrentAction <> "F") { ?>
+<input type="checkbox" name="u_tel" id="u_tel" value="1"<?php echo ($socios->tel->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<?php } else { ?>
+<input type="checkbox" disabled="disabled"<?php echo ($socios->tel->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<input type="hidden" name="u_tel" id="u_tel" value="<?php echo $socios->tel->MultiUpdate ?>">
+<?php } ?>
+ <?php echo $socios->tel->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $socios->tel->CellAttributes() ?>>
+<?php if ($socios->CurrentAction <> "F") { ?>
 <span id="el_socios_tel">
 <input type="text" data-field="x_tel" name="x_tel" id="x_tel" size="30" maxlength="40" placeholder="<?php echo ew_HtmlEncode($socios->tel->PlaceHolder) ?>" value="<?php echo $socios->tel->EditValue ?>"<?php echo $socios->tel->EditAttributes() ?>>
 </span>
+<?php } else { ?>
+<span id="el_socios_tel">
+<span<?php echo $socios->tel->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $socios->tel->ViewValue ?></p></span>
+</span>
+<input type="hidden" data-field="x_tel" name="x_tel" id="x_tel" value="<?php echo ew_HtmlEncode($socios->tel->FormValue) ?>">
+<?php } ?>
 <?php echo $socios->tel->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($socios->cel->Visible) { // cel ?>
 	<div id="r_cel" class="form-group">
-		<label id="elh_socios_cel" for="x_cel" class="col-sm-2 control-label ewLabel"><?php echo $socios->cel->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
+		<label for="x_cel" class="col-sm-2 control-label">
+<?php if ($socios->CurrentAction <> "F") { ?>
+<input type="checkbox" name="u_cel" id="u_cel" value="1"<?php echo ($socios->cel->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<?php } else { ?>
+<input type="checkbox" disabled="disabled"<?php echo ($socios->cel->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<input type="hidden" name="u_cel" id="u_cel" value="<?php echo $socios->cel->MultiUpdate ?>">
+<?php } ?>
+ <?php echo $socios->cel->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $socios->cel->CellAttributes() ?>>
+<?php if ($socios->CurrentAction <> "F") { ?>
 <span id="el_socios_cel">
 <input type="text" data-field="x_cel" name="x_cel" id="x_cel" size="30" maxlength="40" placeholder="<?php echo ew_HtmlEncode($socios->cel->PlaceHolder) ?>" value="<?php echo $socios->cel->EditValue ?>"<?php echo $socios->cel->EditAttributes() ?>>
 </span>
+<?php } else { ?>
+<span id="el_socios_cel">
+<span<?php echo $socios->cel->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $socios->cel->ViewValue ?></p></span>
+</span>
+<input type="hidden" data-field="x_cel" name="x_cel" id="x_cel" value="<?php echo ew_HtmlEncode($socios->cel->FormValue) ?>">
+<?php } ?>
 <?php echo $socios->cel->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($socios->activo->Visible) { // activo ?>
 	<div id="r_activo" class="form-group">
-		<label id="elh_socios_activo" class="col-sm-2 control-label ewLabel"><?php echo $socios->activo->FldCaption() ?></label>
+		<label class="col-sm-2 control-label">
+<?php if ($socios->CurrentAction <> "F") { ?>
+<input type="checkbox" name="u_activo" id="u_activo" value="1"<?php echo ($socios->activo->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<?php } else { ?>
+<input type="checkbox" disabled="disabled"<?php echo ($socios->activo->MultiUpdate == "1") ? " checked=\"checked\"" : "" ?>>
+<input type="hidden" name="u_activo" id="u_activo" value="<?php echo $socios->activo->MultiUpdate ?>">
+<?php } ?>
+ <?php echo $socios->activo->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $socios->activo->CellAttributes() ?>>
+<?php if ($socios->CurrentAction <> "F") { ?>
 <span id="el_socios_activo">
 <div id="tp_x_activo" class="<?php echo EW_ITEM_TEMPLATE_CLASSNAME ?>"><input type="radio" name="x_activo" id="x_activo" value="{value}"<?php echo $socios->activo->EditAttributes() ?>></div>
 <div id="dsl_x_activo" data-repeatcolumn="5" class="ewItemList">
@@ -1480,117 +1571,33 @@ if (is_array($arwrk)) {
 ?>
 </div>
 </span>
+<?php } else { ?>
+<span id="el_socios_activo">
+<span<?php echo $socios->activo->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $socios->activo->ViewValue ?></p></span>
+</span>
+<input type="hidden" data-field="x_activo" name="x_activo" id="x_activo" value="<?php echo ew_HtmlEncode($socios->activo->FormValue) ?>">
+<?php } ?>
 <?php echo $socios->activo->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
-</div>
-<?php if (strval($socios->socio_nro->getSessionValue()) <> "") { ?>
-<input type="hidden" name="x_socio_nro" id="x_socio_nro" value="<?php echo ew_HtmlEncode(strval($socios->socio_nro->getSessionValue())) ?>">
+	<div class="form-group">
+		<div class="col-sm-offset-2 col-sm-10">
+<?php if ($socios->CurrentAction <> "F") { // Confirm page ?>
+<button class="btn btn-primary ewButton" name="btnAction" id="btnAction" type="submit" onclick="this.form.a_update.value='F';"><?php echo $Language->Phrase("UpdateBtn") ?></button>
+<?php } else { ?>
+<button class="btn btn-primary ewButton" name="btnAction" id="btnAction" type="submit"><?php echo $Language->Phrase("ConfirmBtn") ?></button>
+<button class="btn btn-default ewButton" name="btnCancel" id="btnCancel" type="submit" onclick="this.form.a_update.value='X';"><?php echo $Language->Phrase("CancelBtn") ?></button>
 <?php } ?>
-<?php if ($socios->getCurrentDetailTable() <> "") { ?>
-<?php
-	$FirstActiveDetailTable = "";
-	$ActiveTableItemClass = "";
-	$ActiveTableDivClass = "";
-?>
-<div class="ewMultiPage">
-<div class="tabbable" id="socios_add_details">
-	<ul class="nav nav-pills">
-<?php
-	if (in_array("socios_detalles", explode(",", $socios->getCurrentDetailTable())) && $socios_detalles->DetailAdd) {
-		if ($FirstActiveDetailTable == "" || $FirstActiveDetailTable == "socios_detalles") {
-			$FirstActiveDetailTable = "socios_detalles";
-			$ActiveTableItemClass = " class=\"active\"";
-		} else {
-			$ActiveTableItemClass = "";
-		}
-?>
-		<li<?php echo $ActiveTableItemClass ?>><a href="#tab_socios_detalles" data-toggle="tab"><?php echo $Language->TablePhrase("socios_detalles", "TblCaption") ?></a></li>
-<?php
-	}
-?>
-<?php
-	if (in_array("socios_cuotas", explode(",", $socios->getCurrentDetailTable())) && $socios_cuotas->DetailAdd) {
-		if ($FirstActiveDetailTable == "" || $FirstActiveDetailTable == "socios_cuotas") {
-			$FirstActiveDetailTable = "socios_cuotas";
-			$ActiveTableItemClass = " class=\"active\"";
-		} else {
-			$ActiveTableItemClass = "";
-		}
-?>
-		<li<?php echo $ActiveTableItemClass ?>><a href="#tab_socios_cuotas" data-toggle="tab"><?php echo $Language->TablePhrase("socios_cuotas", "TblCaption") ?></a></li>
-<?php
-	}
-?>
-<?php
-	if (in_array("deudas", explode(",", $socios->getCurrentDetailTable())) && $deudas->DetailAdd) {
-		if ($FirstActiveDetailTable == "" || $FirstActiveDetailTable == "deudas") {
-			$FirstActiveDetailTable = "deudas";
-			$ActiveTableItemClass = " class=\"active\"";
-		} else {
-			$ActiveTableItemClass = "";
-		}
-?>
-		<li<?php echo $ActiveTableItemClass ?>><a href="#tab_deudas" data-toggle="tab"><?php echo $Language->TablePhrase("deudas", "TblCaption") ?></a></li>
-<?php
-	}
-?>
-	</ul>
-	<div class="tab-content">
-<?php
-	if (in_array("socios_detalles", explode(",", $socios->getCurrentDetailTable())) && $socios_detalles->DetailAdd) {
-		if ($FirstActiveDetailTable == "" || $FirstActiveDetailTable == "socios_detalles") {
-			$FirstActiveDetailTable = "socios_detalles";
-			$ActiveTableDivClass = " active";
-		} else {
-			$ActiveTableDivClass = "";
-		}
-?>
-		<div class="tab-pane<?php echo $ActiveTableDivClass ?>" id="tab_socios_detalles">
-<?php include_once "cciag_socios_detallesgrid.php" ?>
 		</div>
-<?php } ?>
-<?php
-	if (in_array("socios_cuotas", explode(",", $socios->getCurrentDetailTable())) && $socios_cuotas->DetailAdd) {
-		if ($FirstActiveDetailTable == "" || $FirstActiveDetailTable == "socios_cuotas") {
-			$FirstActiveDetailTable = "socios_cuotas";
-			$ActiveTableDivClass = " active";
-		} else {
-			$ActiveTableDivClass = "";
-		}
-?>
-		<div class="tab-pane<?php echo $ActiveTableDivClass ?>" id="tab_socios_cuotas">
-<?php include_once "cciag_socios_cuotasgrid.php" ?>
-		</div>
-<?php } ?>
-<?php
-	if (in_array("deudas", explode(",", $socios->getCurrentDetailTable())) && $deudas->DetailAdd) {
-		if ($FirstActiveDetailTable == "" || $FirstActiveDetailTable == "deudas") {
-			$FirstActiveDetailTable = "deudas";
-			$ActiveTableDivClass = " active";
-		} else {
-			$ActiveTableDivClass = "";
-		}
-?>
-		<div class="tab-pane<?php echo $ActiveTableDivClass ?>" id="tab_deudas">
-<?php include_once "cciag_deudasgrid.php" ?>
-		</div>
-<?php } ?>
-	</div>
-</div>
-</div>
-<?php } ?>
-<div class="form-group">
-	<div class="col-sm-offset-2 col-sm-10">
-<button class="btn btn-primary ewButton" name="btnAction" id="btnAction" type="submit"><?php echo $Language->Phrase("AddBtn") ?></button>
 	</div>
 </div>
 </form>
 <script type="text/javascript">
-fsociosadd.Init();
+fsociosupdate.Init();
 </script>
 <?php
-$socios_add->ShowPageFooter();
+$socios_update->ShowPageFooter();
 if (EW_DEBUG_ENABLED)
 	echo ew_DebugMsg();
 ?>
@@ -1602,5 +1609,5 @@ if (EW_DEBUG_ENABLED)
 </script>
 <?php include_once $EW_RELATIVE_PATH . "cciag_footer.php" ?>
 <?php
-$socios_add->Page_Terminate();
+$socios_update->Page_Terminate();
 ?>
